@@ -1,0 +1,82 @@
+{
+  "name": "@whoisteam/patcherjs",
+  "version": "0.0.1",
+  "description": "Typescript binary patching utility for windows that works as a standalone application or a library",
+  "homepage": "https://github.com/whois-team/patcherjs",
+  "os": [
+    "nt"
+  ],
+  "main": "./dist/standalone/executable.js",
+  "type": "module",
+  "types": "dist/index.d.ts",
+  "keywords": [
+    "patcher",
+    "binary",
+    "filedrop",
+    "command line",
+    "patching",
+    "updater",
+    "diff",
+    "patch"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "7zip-bin": "^5.2.0",
+    "colors-cli": "^1.0.32",
+    "debug": "^4.3.4",
+    "elevated": "^1.1.5",
+    "esbuild": "^0.18.17",
+    "node-7z": "^3.0.0",
+    "supports-color": "^9.4.0",
+    "tmp": "^0.2.1"
+  },
+  "devDependencies": {
+    "@types/debug": "^4.1.8",
+    "@types/node": "^20.4.0",
+    "@types/node-7z": "^2.1.5",
+    "typedoc": "^0.24.8",
+    "typescript": "^5.1.6"
+  },
+  "scripts": {
+    "ts-build-clean": "tsc --build --clean && tsc --build",
+    "ts-build": "tsc --build",
+    "esbuild": "esbuild ./source/standalone/executable.ts --bundle --platform=node --outfile=./sea/executable.js",
+    "sea-build": "node ./dist/buildscripts/builder.js",
+    "sea-pack": "node ./dist/buildscripts/packer.js",
+    "sea-copy": "npm run sea-copy-config && npm run sea-copy-7z && npm run sea-copy-patch_files",
+    "sea-predist": "node ./dist/buildscripts/predist.js",
+    "sea-dist": "copy /b .\\sea\\sea-sfx.sfx + .\\sea\\sea-archive.7z .\\sea\\dist\\patcherjs-min.exe",
+    "sea-dist-prompt": "copy /b .\\sea\\sea-sfx-gui.sfx + .\\sea\\sea-sfx-config.txt + .\\sea\\sea-archive.7z .\\sea\\dist\\patcherjs-min.exe",
+    "sea-build-full": "npm run ts-build-clean && npm run esbuild && npm run sea-build && npm run sea-pack && npm run sea-copy && npm run sea-predist && npm run sea-dist",
+    "sea-build-full-clean": "npm run sea-cleanup-full && npm run sea-build-full",
+    "sea-cleanup-full": "npm run ts-build-clean && npm run sea-cleanup",
+    "sea-cleanup": "node ./dist/buildscripts/cleanup.js",
+    "sea-copy-config": "copy .\\config.json .\\sea\\predist\\config.json",
+    "sea-copy-patch_files": "xcopy .\\patch_files\\* .\\sea\\predist\\patch_files\\ /E /S /V /D /Y",
+    "sea-copy-7z": "xcopy .\\node_modules\\7zip-bin\\win\\* .\\sea\\predist\\win\\ /E /S /V /D /Y",
+    "generate-docs": "npx typedoc source/",
+    "start": "node ./dist/standalone/executable.js"
+  },
+  "scriptsComments": {
+    "#GENERAL SCRIPTS#": "#SECTION#",
+    "start": "Runs the patcher (executable.js)",
+    "#BUILD SCRIPTS#": "#SECTION#",
+    "ts-build-clean": "Typescript clean build to 'dist' folder",
+    "ts-build": "Typescript build to 'dist' folder",
+    "esbuild": "ESBuild the standalone executable into a JS file (executable.js) on the 'sea' folder",
+    "sea-build": "Executes the SEA (single executable application) building script (builder.js) according to nodes sea generation guidelines (needs ts-build to be ran first)",
+    "sea-pack": "Packs all files in 'patch_files_unpacked' and drops them into 'patch_files' to be used by the patcher",
+    "sea-copy": "Copies 'config.json', 'patch_files' folder contents and 7zip binaries from node_modules to 'predist' folder (needs npm install to be ran first)",
+    "sea-predist": "Compresses built SEA file and its additional files into a 7zip archive using predist script (predist.js) (needs ts-build to be ran first)",
+    "sea-dist": "Merges SFX 7zip module and 7zip archive into a single file (no prompts) (needs 'sea-build' to be ran first)",
+    "sea-dist-prompt": "Merges SFX 7zip module, SFX 7zip module script and 7zip archive into a single file (with prompt) [alternative to no prompt]",
+    "sea-build-full": "Run full SEA build process including SFX ready for distribution (runs 'ts-build-clean', 'esbuild', 'sea-build', 'sea-copy', 'sea-predist' and 'sea-dist')",
+    "sea-build-full-clean": "Same as 'sea-build-full' but executes 'sea-cleanup-full' first, serves as a full clean build",
+    "sea-cleanup-full": "Build Typescript files and fully clean up build space",
+    "sea-cleanup": "fully clean up build space",
+    "sea-copy-config": "Copies 'config.json' to 'predist' folder",
+    "sea-copy-patch_files": "Copies 'patch_files' folder contents to 'predist' folder",
+    "sea-copy-7z": "Copies 7-zip binaries from 'node_modules' to 'predist folder' (needs npm install to be ran first)",
+    "generate-docs": "Generates documentation using typedoc to 'docs' folder"
+  }
+}

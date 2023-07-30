@@ -1,0 +1,39 @@
+{
+  "compileOnSave": true,
+  "compilerOptions": {
+    "allowJs": true,
+    "allowSyntheticDefaultImports": true,
+    "alwaysStrict": false,
+    "checkJs": false,
+    "composite": true,
+    "declaration": true,
+    "emitDeclarationOnly": false,
+    "esModuleInterop": true,
+    //"isolatedModules": true,
+    "jsx": "preserve",
+    "lib": [
+      "ES2021",
+      "ES5",
+      "DOM",
+      "ESNext",
+      "ScriptHost"
+    ],
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "noEmit": false,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitAny": false,
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "outDir": "./dist",
+    "removeComments": true,
+    "rootDir": "source",
+    "baseUrl": ".",
+    "sourceMap": true,
+    "strict": true,
+    "target": "ESNext"
+  },
+  "include": [ "./source/**/*.ts" ],
+  "exclude": [ "node_modules" ]
+}

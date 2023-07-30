@@ -1,0 +1,91 @@
+{
+  "options": {
+    "general": {
+      "exitOnNonAdmin": true,
+      "debug": true,
+      "logging": false,
+      "runningOrder": [
+        "commands",
+        "filedrops",
+        "patches"
+      ],
+      "commandsOrder": [
+        "tasks",
+        "services",
+        "kill",
+        "general"
+      ],
+      "onlyPackingMode": false
+    },
+    "patches": {
+      "runPatches": true,
+      "forcePatch": false,
+      "fileSizeCheck": true,
+      "fileSizeThreshold": 0,
+      "skipWritePatch": false,
+      "failOnUnexpectedPreviousValue": false,
+      "warnOnUnexpectedPreviousValue": true,
+      "nullPatch": false,
+      "unpatchMode": false,
+      "verifyPatch": true,
+      "backupFiles": true,
+      "skipWritingBinary": false
+    },
+    "commands": {
+      "runCommands": true
+    },
+    "filedrops": {
+      "runFiledrops": true,
+      "isFiledropPacked": true,
+      "isFiledropCrypted": true,
+      "backupFiles": true
+    }
+  },
+  "patches": [
+    {
+      "name": "file.dll patch",
+      "patchFilename": "file.dll.patch",
+      "fileNamePath": "C:\\Program Files (x86)\\Someapp\\file.dll",
+      "enabled": true
+    }
+  ],
+  "commands": {
+    "tasks": [
+      {
+        "name": "TestTaskApp-1",
+        "command": "delete",
+        "enabled": true
+      }
+    ],
+    "kill": [
+      {
+        "name": "testapp.exe",
+        "enabled": true
+      }
+    ],
+    "services": [
+      {
+        "name": "SomeService",
+        "command": "delete",
+        "enabled": true
+      }
+    ],
+    "general": [
+      {
+        "name": "echo test",
+        "command": "echo \"test\"",
+        "enabled": true
+      }
+    ]
+  },
+  "filedrops": [
+    {
+      "name": "helloworld.dll",
+      "fileDropName": "helloworld.dll.pack",
+      "packedFileName": "helloworld.dll",
+      "fileNamePath": "C:\\Program Files (x86)\\Someapp\\helloworld.dll",
+      "decryptKey": "ad4bc8a11481000e4d8daf28412f867a",
+      "enabled": true
+    }
+  ]
+}
