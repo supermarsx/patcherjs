@@ -204,7 +204,7 @@ Patcherjs functions with a configuration json file using the following structure
     ],
     "services": [ // An array of system service commands to run
       {
-        "name": "AdobeARMservice", // Name of the service
+        "name": "TestService", // Name of the service
         "command": "delete", // Either 'stop', 'disable' or 'delete' the service
         "enabled": true // Set false to skip
       }
