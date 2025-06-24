@@ -62,7 +62,7 @@ export namespace Debug {
             return false;
         }
     }
-    export const disableDebug = disable();
+    export const disableDebug = disable;
 
     /**
      * Check if debugging is enabled
