@@ -62,7 +62,7 @@ export namespace Debug {
             return false;
         }
     }
-    export const disableDebug = disable();
+    export const disableDebug = disable;
 
     /**
      * Check if debugging is enabled
@@ -84,7 +84,7 @@ export namespace Debug {
         return debugStatus;
     }
     export const isDebuggingEnabled = isEnabled;
-    export const isDisabled = !isEnabled;
+    export function isDisabled(): boolean { return !isEnabled(); }
     export const isDebuggingDisabled = isDisabled;
 }
 
