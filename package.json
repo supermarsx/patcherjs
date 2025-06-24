@@ -34,6 +34,7 @@
     "@types/debug": "^4.1.8",
     "@types/node": "^20.4.0",
     "@types/node-7z": "^2.1.5",
+    "jest": "^30.0.2",
     "typedoc": "^0.24.8",
     "typescript": "^5.1.6"
   },
@@ -55,7 +56,8 @@
     "sea-copy-patch_files": "xcopy .\\patch_files\\* .\\sea\\predist\\patch_files\\ /E /S /V /D /Y",
     "sea-copy-7z": "xcopy .\\node_modules\\7zip-bin\\win\\* .\\sea\\predist\\win\\ /E /S /V /D /Y",
     "generate-docs": "npx typedoc source/",
-    "start": "node ./dist/standalone/executable.js"
+    "start": "node ./dist/standalone/executable.js",
+    "test": "npm run ts-build && NODE_OPTIONS=--experimental-vm-modules jest"
   },
   "scriptsComments": {
     "#GENERAL SCRIPTS#": "#SECTION#",
