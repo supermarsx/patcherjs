@@ -1,4 +1,4 @@
-﻿import Debug from '../auxiliary/debug.js';
+import Debug from '../auxiliary/debug.js';
 const { log } = Debug;
 
 import colorsCli from 'colors-cli';

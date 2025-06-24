@@ -1,4 +1,4 @@
-﻿import { exit } from 'process';
+import { exit } from 'process';
 
 import * as isElevated from 'elevated';
 
