@@ -42,7 +42,7 @@ export namespace Configuration {
         { filePath?: string }): Promise<ConfigurationObject> {
         try {
             const encoding: BufferEncoding = CONFIG_ENCODING;
-            const cantReadFile: boolean = await !(isFileReadable({ filePath }));
+            const cantReadFile: boolean = !(await isFileReadable({ filePath }));
             if (cantReadFile)
                 throw new Error(`Configuration file is not readable, is missing or corrupted`);
             const fileHandle: fs.FileHandle = await fs.open(filePath);

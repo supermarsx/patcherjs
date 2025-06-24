@@ -41,7 +41,7 @@ export namespace File {
         try {
             const encoding: BufferEncoding = 'utf-8';
             log({ message: `Opening file path, ${filePath}, in read mode`, color: white });
-            const cantReadFile: boolean = await !(isFileReadable({ filePath }));
+            const cantReadFile: boolean = !(await isFileReadable({ filePath }));
             if (cantReadFile)
                 throw new Error(`File is not readable, is missing or corrupted`);
             const fileHandle: FileHandle = await open(filePath);
@@ -83,7 +83,7 @@ export namespace File {
         { filePath: string; }): Promise<Buffer> {
         try {
             log({ message: `Opening file path, ${filePath}, in read mode`, color: white });
-            if (await !(isFileReadable({ filePath })))
+            if (!(await isFileReadable({ filePath })))
                 throw new Error(`File is not readable, is missing or corrupted`);
             const fileHandle: FileHandle = await open(filePath);
             log({ message: 'Getting file size', color: white });
@@ -124,7 +124,7 @@ export namespace File {
     }): Promise<number> {
         try {
             log({ message: `Opening file path, ${filePath}, in write mode`, color: white });
-            if (await !(isFileWritable({ filePath })))
+            if (!(await isFileWritable({ filePath })))
                 throw new Error(`File is not writable, is missing or corrupted`);
             const flags: string = 'w';
             const fileHandle: fs.FileHandle = await fs.open(filePath, flags);
