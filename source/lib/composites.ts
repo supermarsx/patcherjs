@@ -17,7 +17,6 @@ import Uac from './auxiliary/uac.js';
 const { adminCheck } = Uac;
 
 import Debug from './auxiliary/debug.js';
-const { log, enable } = Debug;
 
 import colorsCli from 'colors-cli';
 const { green_bt, red_bt, white } = colorsCli;
@@ -63,10 +62,10 @@ export namespace Patcher {
                     await runFunction({ configuration, functionName: nextFunction });
             }
         } catch (error) {
-            log({ message: `There was an error running patcher: ${error}`, color: red_bt });
+            Debug.log({ message: `There was an error running patcher: ${error}`, color: red_bt });
         } finally {
-            log({ message: `Patcher finished running`, color: green_bt });
-            log({ message: `Press any key to close application...`, color: white });
+            Debug.log({ message: `Patcher finished running`, color: green_bt });
+            Debug.log({ message: `Press any key to close application...`, color: white });
             await waitForKeypress();
         }
     }
@@ -87,7 +86,7 @@ export namespace Patcher {
         try {
             await runPackings({ configuration });
         } catch (error) {
-            log({ message: `Failed to run pack and encrypt file function`, color: red_bt });
+            Debug.log({ message: `Failed to run pack and encrypt file function`, color: red_bt });
         }
     }
 
@@ -120,7 +119,7 @@ export namespace Patcher {
                     throw new Error(`Unknown function: ${functionName}`);
             }
         } catch (error) {
-            log({ message: `Failed to process function ${error}`, color: red_bt });
+            Debug.log({ message: `Failed to process function ${error}`, color: red_bt });
             return;
         }
     }
@@ -139,7 +138,7 @@ export namespace Patcher {
     export async function runGeneralChecksAndInit({ configuration }:
         { configuration: ConfigurationObject }): Promise<void> {
         const { general } = configuration.options;
-        if (general.debug === true) await enable({ logging: general.logging });
+        if (general.debug === true) await Debug.enable({ logging: general.logging });
         if (general.exitOnNonAdmin === true) await adminCheck();
     }
 }
