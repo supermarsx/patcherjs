@@ -16,9 +16,8 @@ const { runPackings } = Packaging;
 import Uac from './auxiliary/uac.js';
 const { adminCheck } = Uac;
 
-import debug from './auxiliary/debug.js';
 import Debug from './auxiliary/debug.js';
-const { log } = Debug;
+const { log, enable } = Debug;
 
 import colorsCli from 'colors-cli';
 const { green_bt, red_bt, white } = colorsCli;
@@ -140,7 +139,7 @@ export namespace Patcher {
     export async function runGeneralChecksAndInit({ configuration }:
         { configuration: ConfigurationObject }): Promise<void> {
         const { general } = configuration.options;
-        if (general.debug === true) await debug.enable({ logging: general.logging });
+        if (general.debug === true) await enable({ logging: general.logging });
         if (general.exitOnNonAdmin === true) await adminCheck();
     }
 }
