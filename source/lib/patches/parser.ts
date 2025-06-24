@@ -1,4 +1,4 @@
-﻿import ParserWrappers from './parser.wrappers.js';
+import ParserWrappers from './parser.wrappers.js';
 const { hexParse, splitLines } = ParserWrappers;
 
 import Debug from '../auxiliary/debug.js';

@@ -1,4 +1,4 @@
-﻿import * as fs from 'fs/promises';
+import * as fs from 'fs/promises';
 import { open } from 'fs/promises';
 
 import BufferWrappers from '../patches/buffer.wrappers.js';

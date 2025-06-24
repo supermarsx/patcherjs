@@ -1,4 +1,4 @@
-﻿import { Stats } from 'fs';
+import { Stats } from 'fs';
 import { access, constants, copyFile, unlink, rm, readdir, open } from 'fs/promises';
 import { basename } from 'path';
 

@@ -1,4 +1,4 @@
-﻿import sevenBin from '7zip-bin';
+import sevenBin from '7zip-bin';
 import { Encoding, CipherGCMTypes } from 'crypto';
 
 import {
