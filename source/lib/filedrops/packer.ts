@@ -49,7 +49,7 @@ export namespace Packer {
         const destinationPath: string = getPackedPath({ filePath: sourcePath });
         log({ message: `Pack destination path is ${destinationPath}`, color: white });
         const options: {} = {
-            method: [PACKMETHOD],
+            method: PACKMETHOD,
             $bin: SEVENZIPBIN_FILEPATH,
             password: password
         };

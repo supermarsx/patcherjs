@@ -27,7 +27,7 @@ export namespace Predist {
             debug.enable({ logging: false });
             debug.log({ message: `Packaging ${seaArchiveName}`, color: white });
             const options: {} = {
-                method: [PACKMETHOD],
+                method: PACKMETHOD,
                 $bin: SEVENZIPBIN_FILEPATH
             };
             const packageStream: ZipStream = Seven.add(`./sea/${seaArchiveName}`, `./sea/predist/*`, options);
