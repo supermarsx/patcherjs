@@ -59,7 +59,8 @@
     "generate-docs": "npx typedoc source/",
     "start": "node ./dist/standalone/executable.js",
     "test": "npm run ts-build && NODE_OPTIONS=--experimental-vm-modules jest",
-    "lint": "ESLINT_USE_FLAT_CONFIG=false eslint -c .eslintrc.json \"source/**/*.ts\""
+    "lint": "ESLINT_USE_FLAT_CONFIG=false eslint -c .eslintrc.json \"source/**/*.ts\"",
+    "typecheck": "tsc --noEmit"
   },
   "scriptsComments": {
     "#GENERAL SCRIPTS#": "#SECTION#",
