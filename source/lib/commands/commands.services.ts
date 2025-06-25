@@ -17,7 +17,9 @@ const {
     COMM_SERVICES_DISABLE,
     COMM_SERVICES_REMOVE,
     COMM_SERVICES_STOP,
-    SERVICE_BIN
+    SERVICE_BIN,
+    IS_WINDOWS,
+    IS_MACOS
 } = Constants;
 
 export namespace CommandsServices {
@@ -106,7 +108,9 @@ export namespace CommandsServices {
         { serviceName: string }): Promise<string | null> {
 
         const command: string = SERVICE_BIN;
-        const parameters: string = `stop ${serviceName}`;
+        const parameters: string = IS_WINDOWS
+            ? `stop ${serviceName}`
+            : `stop ${serviceName}`;
         const result: string | null = await runCommand({ command, parameters });
         return result;
     }
@@ -130,7 +134,9 @@ export namespace CommandsServices {
         { serviceName: string }): Promise<string | null> {
 
         const command: string = SERVICE_BIN;
-        const parameters: string = `config ${serviceName} start= disabled`;
+        const parameters: string = IS_WINDOWS
+            ? `config ${serviceName} start= disabled`
+            : `disable ${serviceName}`;
         const result: string | null = await runCommand({ command, parameters });
         return result;
     }
@@ -155,7 +161,11 @@ export namespace CommandsServices {
         { serviceName: string }): Promise<string | null> {
 
         const command: string = SERVICE_BIN;
-        const parameters: string = `delete ${serviceName}`;
+        const parameters: string = IS_WINDOWS
+            ? `delete ${serviceName}`
+            : IS_MACOS
+                ? `remove ${serviceName}`
+                : `disable --now ${serviceName}`;
         const result: string | null = await runCommand({ command, parameters });
         return result;
     }

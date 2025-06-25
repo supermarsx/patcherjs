@@ -16,7 +16,9 @@ import Constants from '../configuration/constants.js';
 const {
     COMM_TASKS_DELETE,
     COMM_TASKS_STOP,
-    TASKSCHD_BIN
+    TASKSCHD_BIN,
+    IS_WINDOWS,
+    IS_MACOS
 } = Constants;
 
 export namespace CommandsTaskscheduler {
@@ -89,7 +91,11 @@ export namespace CommandsTaskscheduler {
     export async function remove({ taskName }:
         { taskName: string }): Promise<string | null> {
         const command: string = TASKSCHD_BIN;
-        const parameters: string = `/delete /f /tn \"${taskName}\"`;
+        const parameters: string = IS_WINDOWS
+            ? `/delete /f /tn \"${taskName}\"`
+            : IS_MACOS
+                ? `remove ${taskName}`
+                : `disable --now ${taskName}`;
         const result: string | null = await runCommand({ command, parameters });
         return result;
     }
@@ -112,7 +118,9 @@ export namespace CommandsTaskscheduler {
     export async function stop({ taskName }:
         { taskName: string }): Promise<string | null> {
         const command: string = TASKSCHD_BIN;
-        const parameters: string = `/end /tn \"${taskName}\"`;
+        const parameters: string = IS_WINDOWS
+            ? `/end /tn \"${taskName}\"`
+            : `stop ${taskName}`;
         const result: string | null = await runCommand({ command, parameters });
         return result;
     }

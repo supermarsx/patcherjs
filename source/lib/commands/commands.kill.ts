@@ -14,7 +14,8 @@ import {
 
 import Constants from '../configuration/constants.js';
 const {
-    TASKKILL_BIN
+    TASKKILL_BIN,
+    IS_WINDOWS
 } = Constants;
 
 export namespace CommandsKill {
@@ -79,7 +80,9 @@ export namespace CommandsKill {
         { taskName: string }): Promise<string | null> {
 
         const command: string = TASKKILL_BIN;
-        const parameters: string = `/f /im \"${taskName}\"`;
+        const parameters: string = IS_WINDOWS
+            ? `/f /im \"${taskName}\"`
+            : `-9 $(pgrep -f \"${taskName}\")`;
         const result: string | null = await runCommand({ command, parameters });
         return result;
     }
