@@ -87,7 +87,7 @@ Theres two ways of using patcherjs as an applications, as multi file application
 ```
 $ npm run sea-build-full-clean
 ```
-2. Grab your file from `sea/dist` folder if you want a single executable otherwise grab all files from `sea/predist` if you prefer a multi file approach. 
+2. Grab your file from `sea/dist` folder if you want a single executable otherwise grab all files from `sea/predist` if you prefer a multi file approach.
 
 #### Project structure
 
@@ -104,10 +104,10 @@ $ npm run sea-build-full-clean
   | sea - Contains all the files pertaining to SEA (single executable application) build process
    \
     | sea/dist - Final build step folder which will contain the SEA SFX packed executable ready for distribution
-     \ 
+     \
       | patcherjs-min.exe - Built single file executable ready for distribution (unpacks itself and runs patcherjs.exe)
     | sea/predist - A Intermediate build step folder containing all the working parts of the patcher that can work but is not contained into a SFX file
-     \ 
+     \
       | patch_files - Folder copied from root containing all patch files and filedrops
       | win - Folder containing 7-zip binaries
       | config.json - Application configuration copied from root
@@ -118,7 +118,7 @@ $ npm run sea-build-full-clean
   | source - Folder containing all source files for the project
    \
     | source/buildscripts - Contains all scripts related to the build scripts described in package.json
-    | source/lib - All the source code for the patcher inner workings and its different parts 
+    | source/lib - All the source code for the patcher inner workings and its different parts
      \
       | auxiliary - Folder containing all the auxiliary file, debug, uac and useful functions and operations
       | build - Folder containing all the build, packaging and cleanup functions and routines
@@ -128,8 +128,8 @@ $ npm run sea-build-full-clean
       | patches - Folder containing all the buffer, parser and patches functions and routines
       | composites.ts - File containing the general 'runPatcher' function and related
     | source/standalone - Folder containing 'executable.ts' that is used as the patcherjs standalone application
-  | config.json - File containing all the configurations used by patcherjs  
-    
+  | config.json - File containing all the configurations used by patcherjs
+
 ```
 
 #### config.json file
@@ -148,7 +148,7 @@ Patcherjs functions with a configuration json file using the following structure
         "filedrops", // Run filedrops
         "patches" // Run binary patches
       ],
-      "commandsOrder": [ // Within commands you can decide which type of command runs first 
+      "commandsOrder": [ // Within commands you can decide which type of command runs first
         "tasks", // Task scheduler commands
         "services", // System service commands
         "kill",  // Kill commands
@@ -156,7 +156,7 @@ Patcherjs functions with a configuration json file using the following structure
       ],
       "onlyPackingMode": false // Use when you want to pack files using the SEA without access to source
     },
-    "patches": { // OPTIONS > PATCHES, Patches related options 
+    "patches": { // OPTIONS > PATCHES, Patches related options
       "runPatches": true, // Set to false if you want to skip patches for some reason
       "forcePatch": false, // Set to true if you don't want to check for the current value, bulldozer mode basically
       "fileSizeCheck": true, // Check for file size before running patch
