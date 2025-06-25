@@ -18,6 +18,9 @@
       "ESNext",
       "ScriptHost"
     ],
+    "types": [
+      "node"
+    ],
     "module": "ESNext",
     "moduleResolution": "node",
     "noEmit": false,
