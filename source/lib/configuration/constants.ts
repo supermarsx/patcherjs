@@ -1,6 +1,6 @@
 import sevenBin from '7zip-bin';
 import { Encoding, CipherGCMTypes } from 'crypto';
-import { join } from 'path';
+import { join, sep } from 'path';
 
 import {
     CryptBufferSubsets
@@ -64,8 +64,9 @@ namespace Constants {
 
     // PATCHES
     export const PATCHES_BACKUPEXT: string = `.bak`;
-    export const PATCHES_BASEPATH: string = join('patch_files');
-    export const PATCHES_BASEUNPACKEDPATH: string = join('patch_files_unpacked');
+    export const PATCHES_BASEPATH: string = join('patch_files', sep);
+    export const PATCHES_BASEUNPACKEDPATH: string = join('patch_files_unpacked', sep);
+
 
     // COMMANDS TASKSCHEDULER
     export const COMM_TASKS_DELETE: string = `delete`;
