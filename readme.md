@@ -101,6 +101,9 @@ $ npm run sea-build-full-clean
 ```
 2. Grab your file from `sea/dist` folder if you want a single executable otherwise grab all files from `sea/predist` if you prefer a multi file approach.
 
+> **Note**
+> The build pipeline expects a Windows environment and uses `signtool` to remove the signature from the copied Node binary. When running on other platforms this step is skipped and the resulting executable will remain unsigned.
+
 #### Project structure
 
 `Project folder`

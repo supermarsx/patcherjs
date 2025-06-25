@@ -30,14 +30,20 @@ export namespace Builder {
         await runCommand({ command: nodeBin, parameters: blobParameters });
 
         debug.log({ message: `Copying node binary`, color: white });
-        const binaryName: string = `./sea/predist/patcherjs.exe`;
+        const binaryName: string = process.platform === 'win32'
+            ? `./sea/predist/patcherjs.exe`
+            : `./sea/predist/patcherjs`;
         const nodeCopyParameters: string = `-e "require('fs').copyFileSync(process.execPath, '${binaryName}')"`;
         await runCommand({ command: nodeBin, parameters: nodeCopyParameters });
 
-        debug.log({ message: `Removing signature`, color: white });
-        const signtoolBin: string = `signtool`;
-        const signtoolUnsigningParameters: string = `remove /s ${binaryName}`;
-        await runCommand({ command: signtoolBin, parameters: signtoolUnsigningParameters });
+        if (process.platform === 'win32') {
+            debug.log({ message: `Removing signature`, color: white });
+            const signtoolBin: string = `signtool`;
+            const signtoolUnsigningParameters: string = `remove /s ${binaryName}`;
+            await runCommand({ command: signtoolBin, parameters: signtoolUnsigningParameters });
+        } else {
+            debug.log({ message: `Skipping signature removal step on non-Windows platform`, color: white });
+        }
 
         debug.log({ message: `Injecting script`, color: white });
         const npxBin: string = `npx`;
