@@ -4,6 +4,8 @@ const { log } = Debug;
 import colorsCli from 'colors-cli';
 const { red_bt, white } = colorsCli;
 
+import { join } from 'path';
+
 import File from '../auxiliary/file.js';
 const { backupFile, getFileSizeUsingPath, readBinaryFile, readPatchFile, writeBinaryFile } = File;
 
@@ -73,7 +75,7 @@ export namespace Patches {
             const patchOptions: PatchOptionsObject = configuration.options.patches;
 
             await prepatchChecksAndRoutines({ patchOptions, patch });
-            const patchFileData: string = await readPatchFile({ filePath: `${PATCHES_BASEPATH}${patch.patchFilename}` });
+            const patchFileData: string = await readPatchFile({ filePath: join(PATCHES_BASEPATH, patch.patchFilename) });
             const patchData: PatchArray = await parsePatchFile({ fileData: patchFileData });
             const filePath: string = patch.fileNamePath;
 
