@@ -1,5 +1,5 @@
-import { Patches } from '../dist/lib/patches/patches.js';
-import { ConfigurationDefaults } from '../dist/lib/configuration/configuration.defaults.js';
+import { Patches } from '../source/lib/patches/patches.ts';
+import { ConfigurationDefaults } from '../source/lib/configuration/configuration.defaults.ts';
 import fs from 'fs';
 
 const patchDir = 'patch_files';
