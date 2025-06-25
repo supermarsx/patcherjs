@@ -1,4 +1,4 @@
-import { Parser } from '../dist/lib/patches/parser.js';
+import { Parser } from '../source/lib/patches/parser.ts';
 
 describe('Parser.parsePatchFile', () => {
   test('parses patch data into objects', async () => {

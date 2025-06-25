@@ -35,6 +35,7 @@
     "@types/node": "^20.4.0",
     "@types/node-7z": "^2.1.5",
     "jest": "^30.0.2",
+    "ts-jest": "^29.1.1",
     "typedoc": "^0.24.8",
     "typescript": "^5.1.6"
   },
@@ -57,7 +58,7 @@
     "sea-copy-7z": "node ./dist/buildscripts/copyFiles.js sevenzip",
     "generate-docs": "npx typedoc source/",
     "start": "node ./dist/standalone/executable.js",
-    "test": "npm run ts-build && NODE_OPTIONS=--experimental-vm-modules jest"
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest"
   },
   "scriptsComments": {
     "#GENERAL SCRIPTS#": "#SECTION#",
