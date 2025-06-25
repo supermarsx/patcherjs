@@ -43,7 +43,7 @@ export namespace ParserWrappers {
     export function splitLines({ fileData }:
         { fileData: string }): Array<string> {
         try {
-            const patchData: Array<string> = fileData.split('\n');
+            const patchData: Array<string> = fileData.split(/\r?\n/);
             return patchData;
         } catch (error: any) {
             log({ message: `An error has occurred ${error}`, color: red_bt });
