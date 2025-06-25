@@ -66,17 +66,21 @@ export namespace DebugLogging {
 
         const calleeFunction: string | null = getCallingFunctionName();
         const calleeFilename: string | null = getCallingFilename();
-        if (calleeFunction === null || calleeFilename === null)
-            console.log(`   Debug error, there was an error getting callee function or filename`);
-            //throw new Error(`Can't debug, there was an error getting callee function or filename`);
+        if (calleeFunction === null || calleeFilename === null) {
+            const debugError: Debugger = DebugLib.default(`DebugLogging`);
+            debugError.enabled = true;
+            debugError(color(`Debug error, there was an error getting callee function or filename`));
+        }
+        const safeCalleeFunction: string = calleeFunction ?? 'unknown';
+        const safeCalleeFilename: string = calleeFilename ?? 'unknown';
 
         const loggingEnabled: boolean = getEnvBoolean({ envVarName: LOGGING });
-        if (loggingEnabled === true && calleeFunction !== 'logToFile') {
-            const logMessage: string = `${calleeFilename}::${calleeFunction} ::: ${message}`;
+        if (loggingEnabled === true && safeCalleeFunction !== 'logToFile') {
+            const logMessage: string = `${safeCalleeFilename}::${safeCalleeFunction} ::: ${message}`;
             logToFile({ message: logMessage });
         }
 
-        const debug: Debugger = DebugLib.default(`${calleeFilename}::${calleeFunction}`);
+        const debug: Debugger = DebugLib.default(`${safeCalleeFilename}::${safeCalleeFunction}`);
         debug.enabled = true;
         debug(color(message));
         return;
