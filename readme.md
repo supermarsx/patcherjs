@@ -80,6 +80,13 @@ There are a collection of scripts that are used help manage the build process
   },
 ```
 
+#### Running tests
+
+Run the Jest suite with the provided npm script. It builds the TypeScript sources and then executes Jest.
+```sh
+npm test
+```
+
 #### Example files
 
 The project comes with an example `.patch` file and a `.dll` file to be packed, these files should be removed and you should add your own files.
