@@ -4,7 +4,7 @@ A small typescript binary patching utility for windows, works both as a standalo
 
 This tool/library is intended for patch developers and enthusiasts to streamline patch tool distribution.
 
-![screenshot-patcherjs-min](https://github.com/whois-team/patcherjs/assets/17675589/4f156087-8a3b-4c53-a692-c249e3155efd)
+![screenshot-patcherjs-min](https://github.com/supermarsx/patcherjs/assets/17675589/4f156087-8a3b-4c53-a692-c249e3155efd)
 
 ## Starting up
 
@@ -42,7 +42,7 @@ Download from releases or clone the repository
 
 ##### Clone the repository
 ```
-$ git clone https://github.com/whois-team/patcherjs
+$ git clone https://github.com/supermarsx/patcherjs
 $ npm install
 ```
 #### npm scripts
