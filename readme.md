@@ -19,6 +19,7 @@ Simple running example
 import { Patcher } from 'patcherjs';
 
 Patcher.runPatcher({});
+Patcher.runPatcher({ configFilePath: './my-config.json' });
 ```
 
 ### Use as standalone application or development
@@ -44,7 +45,11 @@ Download from releases or clone the repository
 ```
 $ git clone https://github.com/supermarsx/patcherjs
 $ npm install
+$ npm run ts-build
+$ node dist/standalone/executable.js
+$ node dist/standalone/executable.js --config ./my-config.json
 ```
+The `--config` option allows you to specify a custom configuration file instead of the default `config.json`.
 #### npm scripts
 
 There are a collection of scripts that are used help manage the build process
