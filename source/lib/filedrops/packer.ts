@@ -20,6 +20,7 @@ export namespace Packer {
      * @param params.archivePath Archive path
      * @param params.buffer Buffer to pack if path isn't used
      * @param params.password Archive password
+     * @param params.preserveSource Whether to keep the original file. Defaults to `true`.
      * @remarks
      * Use either path or buffer as input
      * @example
@@ -29,8 +30,8 @@ export namespace Packer {
      * @returns Packed buffer
      * @since 0.0.1
      */
-    export async function packFile({ archivePath, buffer, password }:
-        { archivePath?: string, buffer?: Buffer, password: string }): Promise<Buffer> {
+    export async function packFile({ archivePath, buffer, password, preserveSource = true }:
+        { archivePath?: string, buffer?: Buffer, password: string, preserveSource?: boolean }): Promise<Buffer> {
         log({ message: `Packing file`, color: white });
         var sourcePath: string;
         if (archivePath) {
@@ -57,7 +58,8 @@ export namespace Packer {
         log({ message: `Packed file successfully`, color: white });
         const packedBuffer: Buffer = await readBinaryFile({ filePath: destinationPath });
         await deleteFile({ filePath: destinationPath });
-        await deleteFile({ filePath: sourcePath });
+        if (preserveSource === false)
+            await deleteFile({ filePath: sourcePath });
         return packedBuffer;
     }
 
