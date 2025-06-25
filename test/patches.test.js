@@ -5,7 +5,7 @@ import { join } from 'path';
 
 const patchDir = join('patch_files');
 const testPatchPath = join(patchDir, 'test.patch');
-const testBinPath = 'test/tmp.bin';
+const testBinPath = join('test', 'tmp.bin');
 
 describe('Patches.runPatches', () => {
   beforeAll(() => {

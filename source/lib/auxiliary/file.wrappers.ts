@@ -1,6 +1,6 @@
 import { Stats } from 'fs';
 import { access, constants, copyFile, unlink, rm, readdir, open } from 'fs/promises';
-import { basename } from 'path';
+import { basename, join } from 'path';
 
 import { FileHandle } from 'fs/promises';
 
@@ -207,7 +207,7 @@ export namespace FileWrappers {
         return new Promise(function (resolve, reject) {
             readdir(folderPath)
                 .then(function (filenames) {
-                    const completeFilePath: string = `${folderPath}\\${filenames[0]}`;
+                    const completeFilePath: string = join(folderPath, filenames[0]);
                     resolve(completeFilePath);
                 }).catch(function (error) {
                     reject(error);
