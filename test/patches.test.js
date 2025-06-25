@@ -1,9 +1,10 @@
 import { Patches } from '../source/lib/patches/patches.ts';
 import { ConfigurationDefaults } from '../source/lib/configuration/configuration.defaults.ts';
 import fs from 'fs';
+import { join } from 'path';
 
-const patchDir = 'patch_files';
-const testPatchPath = `${patchDir}\\test.patch`;
+const patchDir = join('patch_files');
+const testPatchPath = join(patchDir, 'test.patch');
 const testBinPath = 'test/tmp.bin';
 
 describe('Patches.runPatches', () => {

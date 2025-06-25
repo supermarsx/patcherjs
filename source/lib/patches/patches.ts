@@ -24,6 +24,7 @@ import {
 } from './parser.types.js';
 
 import Constants from '../configuration/constants.js';
+import { join } from 'path';
 const {
     PATCHES_BASEPATH
 } = Constants;
@@ -73,7 +74,7 @@ export namespace Patches {
             const patchOptions: PatchOptionsObject = configuration.options.patches;
 
             await prepatchChecksAndRoutines({ patchOptions, patch });
-            const patchFileData: string = await readPatchFile({ filePath: `${PATCHES_BASEPATH}${patch.patchFilename}` });
+            const patchFileData: string = await readPatchFile({ filePath: join(PATCHES_BASEPATH, patch.patchFilename) });
             const patchData: PatchArray = await parsePatchFile({ fileData: patchFileData });
             const filePath: string = patch.fileNamePath;
 

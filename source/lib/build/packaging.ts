@@ -12,6 +12,7 @@ const { log } = Debug;
 
 import colorsCli from "colors-cli";
 const { red_bt, white, green_bt } = colorsCli;
+import { join } from 'path';
 
 import {
     ConfigurationObject,
@@ -72,7 +73,7 @@ export namespace Packaging {
 
             var fileData: Buffer;
             const { isFiledropPacked, isFiledropCrypted } = filedropOptions;
-            const filePath: string = `${PATCHES_BASEUNPACKEDPATH}${filedrop.packedFileName}`;
+            const filePath: string = join(PATCHES_BASEUNPACKEDPATH, filedrop.packedFileName);
             fileData = await readBinaryFile({ filePath });
             if (isFiledropPacked === true)
                 fileData = await packFile({ buffer: fileData, password: filedrop.decryptKey })
@@ -80,7 +81,7 @@ export namespace Packaging {
                 fileData = await encryptFile({ buffer: fileData, key: filedrop.decryptKey });
 
             await writeBinaryFile({
-                filePath: `${PATCHES_BASEPATH}${filedrop.fileDropName}`, buffer: fileData
+                filePath: join(PATCHES_BASEPATH, filedrop.fileDropName), buffer: fileData
             });
             log({ message: `File was packed successfully`, color: green_bt });
         } catch (error) {

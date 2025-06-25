@@ -12,6 +12,7 @@ const { log } = Debug;
 
 import colorsCli from 'colors-cli';
 const { red_bt, white, green_bt } = colorsCli;
+import { join } from 'path';
 
 import { ConfigurationObject, FiledropsObject, FiledropsOptionsObject } from '../configuration/configuration.types.js';
 
@@ -61,7 +62,7 @@ export namespace Filedrops {
             await prefiledropChecksAndRoutines({ filedropOptions, filedrop });
             var fileData: Buffer;
             const { isFiledropPacked, isFiledropCrypted } = configuration.options.filedrops;
-            const filePath: string = `${PATCHES_BASEPATH}${filedrop.fileDropName}`;
+            const filePath: string = join(PATCHES_BASEPATH, filedrop.fileDropName);
             if (isFiledropCrypted === true)
                 fileData = await decryptFile({ filePath, key: filedrop.decryptKey });
             else
