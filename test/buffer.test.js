@@ -1,4 +1,4 @@
-import { BufferUtils } from '../dist/lib/patches/buffer.js';
+import { BufferUtils } from '../source/lib/patches/buffer.ts';
 
 describe('BufferUtils.patchBuffer', () => {
   test('patches buffer value', () => {
