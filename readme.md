@@ -82,7 +82,10 @@ There are a collection of scripts that are used help manage the build process
 
 #### Running tests
 
-Run the Jest suite with the provided npm script. It builds the TypeScript sources and then executes Jest.
+You can execute the project's test suite using the bundled Jest runner. The
+`test` script compiles the TypeScript sources and then launches Jest. From the
+repository root simply run:
+
 ```sh
 npm test
 ```
