@@ -3,9 +3,6 @@
   "version": "0.0.1",
   "description": "Typescript binary patching utility for windows that works as a standalone application or a library",
   "homepage": "https://github.com/supermarsx/patcherjs",
-  "os": [
-    "nt"
-  ],
   "main": "./dist/standalone/executable.js",
   "type": "module",
   "types": "dist/index.d.ts",
