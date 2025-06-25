@@ -1,8 +1,8 @@
 {
-  "name": "@whoisteam/patcherjs",
+  "name": "@supermarsx/patcherjs",
   "version": "0.0.1",
   "description": "Typescript binary patching utility for windows that works as a standalone application or a library",
-  "homepage": "https://github.com/whois-team/patcherjs",
+  "homepage": "https://github.com/supermarsx/patcherjs",
   "os": [
     "nt"
   ],
@@ -34,6 +34,9 @@
     "@types/debug": "^4.1.8",
     "@types/node": "^20.4.0",
     "@types/node-7z": "^2.1.5",
+    "@typescript-eslint/eslint-plugin": "^8.35.0",
+    "@typescript-eslint/parser": "^8.35.0",
+    "eslint": "^9.29.0",
     "jest": "^30.0.2",
     "ts-jest": "^29.1.1",
     "typedoc": "^0.24.8",
@@ -58,7 +61,8 @@
     "sea-copy-7z": "node ./dist/buildscripts/copyFiles.js sevenzip",
     "generate-docs": "npx typedoc source/",
     "start": "node ./dist/standalone/executable.js",
-    "test": "NODE_OPTIONS=--experimental-vm-modules jest"
+    "test": "npm run ts-build && NODE_OPTIONS=--experimental-vm-modules jest",
+    "lint": "ESLINT_USE_FLAT_CONFIG=false eslint -c .eslintrc.json \"source/**/*.ts\""
   },
   "scriptsComments": {
     "#GENERAL SCRIPTS#": "#SECTION#",
