@@ -9,14 +9,27 @@ import {
 const { floor, random } = Math;
 
 namespace Constants {
+    /** Operating system checks */
+    export const IS_WINDOWS: boolean = process.platform === 'win32';
+    export const IS_MACOS: boolean = process.platform === 'darwin';
+    export const IS_UBUNTU: boolean = process.platform === 'linux';
+
     /** Task scheduler application binary name */
-    export const TASKSCHD_BIN: string = `schtasks.exe`;
+    export const TASKSCHD_BIN: string = IS_WINDOWS
+        ? `schtasks.exe`
+        : IS_MACOS
+            ? `launchctl`
+            : `systemctl`;
 
     /** System services application binary name */
-    export const SERVICE_BIN: string = `sc.exe`;
+    export const SERVICE_BIN: string = IS_WINDOWS
+        ? `sc.exe`
+        : IS_MACOS
+            ? `launchctl`
+            : `systemctl`;
 
     /** Task kill binary name */
-    export const TASKKILL_BIN: string = `taskkill.exe`;
+    export const TASKKILL_BIN: string = IS_WINDOWS ? `taskkill.exe` : `kill`;
 
     /** Debugging name environment variable names */
     /** Debugging env var name */
