@@ -1,6 +1,6 @@
 # patcherjs
 
-A small typescript binary patching utility for windows, works both as a standalone application or library adaptable to specific usage scenarios.
+A small TypeScript binary patching utility. Originally built for Windows, it works both as a standalone application or library and will support Linux and macOS.
 
 This tool/library is intended for patch developers and enthusiasts to streamline patch tool distribution.
 
@@ -50,6 +50,16 @@ $ node dist/standalone/executable.js
 $ node dist/standalone/executable.js --config ./my-config.json
 ```
 The `--config` option allows you to specify a custom configuration file instead of the default `config.json`.
+
+#### Running on Linux/macOS
+
+Once the project adds support for these platforms the steps are the same:
+
+```bash
+npm run ts-build
+node dist/standalone/executable.js --config ./my-config.json
+```
+The build pipeline will skip the signing step on non-Windows systems.
 #### npm scripts
 
 There are a collection of scripts that are used help manage the build process
