@@ -1,5 +1,5 @@
-import Command from '../commands/command.js';
-const { runCommand } = Command;
+import { rm, mkdir } from 'fs/promises';
+import { join } from 'path';
 
 import { Debug as debug } from '../auxiliary/debug.js';
 
@@ -22,39 +22,41 @@ export namespace Cleanup {
         debug.enable({ logging: false });
         debug.log({ message: `Cleaning up build space`, color: white });
 
-        const parameters: string = '';
+        const deletePath = async (path: string, recursive: boolean = false) => {
+            try {
+                await rm(path, { force: true, recursive });
+            } catch {
+                // ignore errors while deleting
+            }
+        };
 
-        debug.log({ message: `Deleting .\\sea\\sea-prep.blob`, color: white });
-        const seaBlob: string = `del .\\sea\\sea-prep.blob`;
-        await runCommand({ command: seaBlob, parameters });
+        debug.log({ message: `Deleting ./sea/sea-prep.blob`, color: white });
+        await deletePath(join('sea', 'sea-prep.blob'));
 
-        debug.log({ message: `Deleting .\\sea\\sea-archive.7z`, color: white });
-        const seaArchive: string = `del .\\sea\\sea-archive.7z`;
-        await runCommand({ command: seaArchive, parameters });
+        debug.log({ message: `Deleting ./sea/sea-archive.7z`, color: white });
+        await deletePath(join('sea', 'sea-archive.7z'));
 
-        debug.log({ message: `Deleting .\\sea\\executable.js`, color: white });
-        const executablejs: string = `del .\\sea\\executable.js`;
-        await runCommand({ command: executablejs, parameters });
+        debug.log({ message: `Deleting ./sea/executable.js`, color: white });
+        await deletePath(join('sea', 'executable.js'));
 
-        debug.log({ message: `Deleting .\\sea\\predist\\* files`, color: white });
-        const seaPredist: string = `rmdir /s /q .\\sea\\predist\\ && mkdir .\\sea\\predist\\`;
-        await runCommand({ command: seaPredist, parameters });
+        debug.log({ message: `Deleting ./sea/predist/* files`, color: white });
+        await deletePath(join('sea', 'predist'), true);
+        await mkdir(join('sea', 'predist'), { recursive: true });
 
-        debug.log({ message: `Deleting .\\sea\\dist\\* files`, color: white });
-        const seaDist: string = `rmdir /s /q .\\sea\\dist\\ && mkdir .\\sea\\dist\\`;
-        await runCommand({ command: seaDist, parameters });
+        debug.log({ message: `Deleting ./sea/dist/* files`, color: white });
+        await deletePath(join('sea', 'dist'), true);
+        await mkdir(join('sea', 'dist'), { recursive: true });
 
-        debug.log({ message: `Deleting .\\dist\\* files`, color: white });
-        const dist: string = `rmdir /s /q .\\dist\\ && mkdir .\\dist\\`;
-        await runCommand({ command: dist, parameters });
+        debug.log({ message: `Deleting ./dist/* files`, color: white });
+        await deletePath('dist', true);
+        await mkdir('dist', { recursive: true });
 
-        debug.log({ message: `Deleting .\\docs\\* files`, color: white });
-        const docs: string = `rmdir /s /q .\\docs\\ && mkdir .\\docs\\`;
-        await runCommand({ command: docs, parameters });
+        debug.log({ message: `Deleting ./docs/* files`, color: white });
+        await deletePath('docs', true);
+        await mkdir('docs', { recursive: true });
 
-        debug.log({ message: `Deleting .\\tsconfig.tsbuildinfo`, color: white });
-        const tsbuildinfo: string = `del .\\tsconfig.tsbuildinfo`;
-        await runCommand({ command: tsbuildinfo, parameters });
+        debug.log({ message: `Deleting ./tsconfig.tsbuildinfo`, color: white });
+        await deletePath('tsconfig.tsbuildinfo');
 
         debug.log({ message: `Finished deleting build files`, color: green_bt });
     }
