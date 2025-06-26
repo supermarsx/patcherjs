@@ -45,7 +45,7 @@
     {
       "name": "file.dll patch",
       "patchFilename": "file.dll.patch",
-      "fileNamePath": "C:\\Program Files (x86)\\Someapp\\file.dll",
+      "fileNamePath": "${HOME}/Someapp/file.dll",
       "enabled": true
     }
   ],
@@ -83,7 +83,7 @@
       "name": "helloworld.dll",
       "fileDropName": "helloworld.dll.pack",
       "packedFileName": "helloworld.dll",
-      "fileNamePath": "C:\\Program Files (x86)\\Someapp\\helloworld.dll",
+      "fileNamePath": "${HOME}/Someapp/helloworld.dll",
       "decryptKey": "ad4bc8a11481000e4d8daf28412f867a",
       "enabled": true
     }
