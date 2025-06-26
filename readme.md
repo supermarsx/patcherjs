@@ -209,7 +209,7 @@ Patcherjs functions with a configuration json file using the following structure
     {
       "name": "file.dll patch", // Patch display name, not important
       "patchFilename": "file.dll.patch", // .patch filename
-      "fileNamePath": "C:\\Program Files (x86)\\Someapp\\file.dll", // File path to patch, use double slash always to escape characters
+      "fileNamePath": "${HOME}/Someapp/file.dll", // File path to patch, using HOME for cross-platform support
       "enabled": true // Is this specific patch enabled, set false to skip
     }
   ],
@@ -247,7 +247,7 @@ Patcherjs functions with a configuration json file using the following structure
       "name": "helloworld.dll", // Display name
       "fileDropName": "helloworld.dll.pack", // Packed filename inside 'patch_files' directory
       "packedFileName": "helloworld.dll", // Original filename inside 'patch_files_unpacked' folder
-      "fileNamePath": "C:\\Program Files (x86)\\Someapp\\helloworld.dll", // Destination filename, always escape your backslashes
+      "fileNamePath": "${HOME}/Someapp/helloworld.dll", // Destination filename, using HOME for cross-platform support
       "decryptKey": "ad4bc8a11481000e4d8daf28412f867a", // Encryption/decryption password
       "enabled": true // Set to false to skip
     }
