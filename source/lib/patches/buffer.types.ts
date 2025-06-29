@@ -6,5 +6,7 @@ export type OptionsType = {
     nullPatch: boolean,
     failOnUnexpectedPreviousValue: boolean,
     warnOnUnexpectedPreviousValue: boolean,
-    skipWritePatch: boolean
+    skipWritePatch: boolean,
+    /** Allow patching offsets past the end of the file */
+    allowOffsetOverflow: boolean
 };

@@ -51,7 +51,8 @@ export namespace BufferUtils {
             nullPatch: false,
             failOnUnexpectedPreviousValue: false,
             warnOnUnexpectedPreviousValue: true,
-            skipWritePatch: false
+            skipWritePatch: false,
+            allowOffsetOverflow: false
         } }:
         {
             buffer: Buffer,
@@ -153,14 +154,21 @@ export namespace BufferUtils {
             nullPatch,
             failOnUnexpectedPreviousValue,
             warnOnUnexpectedPreviousValue,
-            skipWritePatch
+            skipWritePatch,
+            allowOffsetOverflow
         } = options;
 
         const handle = await fs.open(filePath, 'r+');
+        const stats = await handle.stat();
+        const fileSize: number = Number(stats.size);
         try {
             for (const patch of patchData) {
                 const { offset, previousValue, newValue } = patch;
                 const position = Number(offset);
+                if (position >= fileSize && allowOffsetOverflow !== true) {
+                    log({ message: `Offset ${offset} exceeds file size ${fileSize}, skipping patch`, color: yellow_bt });
+                    continue;
+                }
                 const buf = Buffer.alloc(1);
                 await handle.read(buf, 0, 1, position);
                 const currentValue: number = buf.readUInt8(0);

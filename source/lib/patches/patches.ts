@@ -2,7 +2,7 @@ import Debug from '../auxiliary/debug.js';
 const { log } = Debug;
 
 import colorsCli from 'colors-cli';
-const { red_bt, white } = colorsCli;
+const { red_bt, white, yellow_bt } = colorsCli;
 
 
 import { join } from 'path';
@@ -152,10 +152,15 @@ export namespace Patches {
         { fileDataBuffer: Buffer, patchData: PatchArray, patchOptions: PatchOptionsObject }): Buffer {
 
         var buffer: Buffer = fileDataBuffer;
+        const fileSize: number = buffer.length;
         for (const patch of patchData) {
             const { offset, previousValue, newValue } = patch;
             const offsetNumber: number = Number(offset);
-            const { forcePatch, unpatchMode, nullPatch, failOnUnexpectedPreviousValue, warnOnUnexpectedPreviousValue, skipWritePatch } = patchOptions;
+            const { forcePatch, unpatchMode, nullPatch, failOnUnexpectedPreviousValue, warnOnUnexpectedPreviousValue, skipWritePatch, allowOffsetOverflow } = patchOptions;
+            if (offsetNumber >= fileSize && allowOffsetOverflow !== true) {
+                log({ message: `Offset ${offset} exceeds file size ${fileSize}, skipping patch`, color: yellow_bt });
+                continue;
+            }
             buffer = patchBuffer({
                 buffer, offset: offsetNumber, previousValue, newValue,
                 options: {
@@ -164,7 +169,8 @@ export namespace Patches {
                     nullPatch,
                     failOnUnexpectedPreviousValue,
                     warnOnUnexpectedPreviousValue,
-                    skipWritePatch
+                    skipWritePatch,
+                    allowOffsetOverflow
                 }
             });
         }
