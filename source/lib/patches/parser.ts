@@ -1,5 +1,5 @@
 import ParserWrappers from './parser.wrappers.js';
-const { hexParse, splitLines } = ParserWrappers;
+const { hexParse, hexParseBig, splitLines } = ParserWrappers;
 
 import Debug from '../auxiliary/debug.js';
 const { log } = Debug;
@@ -105,7 +105,11 @@ export namespace Parser {
             const [offsetString, valuesString] = patchLine.split(offsetValuesDelimiter);
             const [previousValueString, newValueString] = valuesString.split(previousNewValueDelimiter);
 
-            const offset: number = hexParse({ hexString: offsetString });
+            let offset: bigint;
+            if (offsetString.length > 8)
+                offset = hexParseBig({ hexString: offsetString });
+            else
+                offset = BigInt(hexParse({ hexString: offsetString }));
             const previousValue: number = hexParse({ hexString: previousValueString });
             const newValue: number = hexParse({ hexString: newValueString });
 
@@ -119,7 +123,7 @@ export namespace Parser {
         } catch (error: any) {
             log({ message: `An error has occurred: ${error}`, color: red_bt });
             const returnValue: PatchObject = {
-                offset: 0,
+                offset: BigInt(0),
                 previousValue: 0,
                 newValue: 0
             };

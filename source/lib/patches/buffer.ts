@@ -1,6 +1,8 @@
 import BufferWrappers from '../patches/buffer.wrappers.js';
 const { createBuffer } = BufferWrappers;
 
+import * as fs from 'fs/promises';
+
 import Debug from '../auxiliary/debug.js';
 const { log } = Debug;
 
@@ -8,6 +10,7 @@ import colorsCli from 'colors-cli';
 const { white, yellow_bt, red_bt } = colorsCli;
 
 import { OptionsType } from '../patches/buffer.types.js';
+import { PatchArray } from './parser.types.js';
 
 export * from './buffer.types.js';
 export * from './buffer.wrappers.js';
@@ -130,6 +133,99 @@ export namespace BufferUtils {
             log({ message: `An error has occurred: ${error}`, color: red_bt });
             const errorBufferSize: number = 0;
             return createBuffer({ size: errorBufferSize });
+        }
+    }
+
+    /**
+     * Patch offsets in a large file using fs read/write with position
+     *
+     * @param params.filePath Path to file
+     * @param params.patchData Array of patch objects
+     * @param params.options Patch options
+     * @since 0.0.2
+     */
+    export async function patchLargeFile({ filePath, patchData, options }:
+        { filePath: string, patchData: PatchArray, options: OptionsType }): Promise<void> {
+
+        const {
+            forcePatch,
+            unpatchMode,
+            nullPatch,
+            failOnUnexpectedPreviousValue,
+            warnOnUnexpectedPreviousValue,
+            skipWritePatch
+        } = options;
+
+        const handle = await fs.open(filePath, 'r+');
+        try {
+            for (const patch of patchData) {
+                const { offset, previousValue, newValue } = patch;
+                const position = Number(offset);
+                const buf = Buffer.alloc(1);
+                await handle.read(buf, 0, 1, position);
+                const currentValue: number = buf.readUInt8(0);
+
+                if ((failOnUnexpectedPreviousValue === true && currentValue !== previousValue && unpatchMode === false) ||
+                    (failOnUnexpectedPreviousValue === true && currentValue !== newValue && unpatchMode === true)) {
+                    let expectedValue: number = previousValue;
+                    if (unpatchMode === true)
+                        expectedValue = newValue;
+                    throw new Error(`Found unexpected previous value at offset ${offset}: ${currentValue}, expected ${expectedValue}`);
+                }
+
+                if ((warnOnUnexpectedPreviousValue === true && currentValue !== previousValue && unpatchMode === false) ||
+                    (warnOnUnexpectedPreviousValue === true && currentValue !== newValue && unpatchMode === true)) {
+                    let value: number = previousValue;
+                    if (unpatchMode === true)
+                        value = newValue;
+                    log({ message: `Found unexpected previous value at offset ${offset}: ${currentValue}, expected ${value}`, color: yellow_bt });
+                }
+
+                let valueToWrite: number | null = null;
+
+                if (currentValue === newValue && unpatchMode === false) {
+                    log({ message: `Offset is already patched ${offset}: ${currentValue}, new value ${newValue}`, color: yellow_bt });
+                } else if (currentValue === previousValue && unpatchMode === true) {
+                    log({ message: `Offset is already unpatched ${offset}: ${currentValue}, previous value ${previousValue}`, color: yellow_bt });
+                } else if (forcePatch === true) {
+                    if (nullPatch === true) {
+                        log({ message: `Force null patching offset ${offset}`, color: yellow_bt });
+                        valueToWrite = 0;
+                    } else {
+                        if (unpatchMode === true) {
+                            log({ message: `Force unpatching offset ${offset}`, color: yellow_bt });
+                            valueToWrite = previousValue;
+                        } else {
+                            log({ message: `Force patching offset ${offset}`, color: yellow_bt });
+                            valueToWrite = newValue;
+                        }
+                    }
+                } else {
+                    if (previousValue === currentValue) {
+                        if (nullPatch === true) {
+                            log({ message: `Null patching offset ${offset}`, color: yellow_bt });
+                            valueToWrite = 0;
+                        } else {
+                            if (unpatchMode === true) {
+                                log({ message: `Unpatching offset ${offset}`, color: white });
+                                valueToWrite = previousValue;
+                            } else {
+                                log({ message: `Patching offset ${offset}`, color: white });
+                                valueToWrite = newValue;
+                            }
+                        }
+                    }
+                }
+
+                if (valueToWrite !== null && skipWritePatch === false) {
+                    buf.writeUInt8(valueToWrite, 0);
+                    await handle.write(buf, 0, 1, position);
+                } else if (valueToWrite !== null) {
+                    log({ message: `Skipping buffer write`, color: white });
+                }
+            }
+        } finally {
+            await handle.close();
         }
     }
 
