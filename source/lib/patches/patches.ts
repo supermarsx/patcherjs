@@ -153,8 +153,8 @@ export namespace Patches {
 
         var buffer: Buffer = fileDataBuffer;
         const fileSize: number = buffer.length;
-        for (const patch of patchData) {
-            const { offset, previousValue, newValue } = patch;
+            for (const patch of patchData) {
+            const { offset, previousValue, newValue, byteLength } = patch;
             const offsetNumber: number = Number(offset);
             const { forcePatch, unpatchMode, nullPatch, failOnUnexpectedPreviousValue, warnOnUnexpectedPreviousValue, skipWritePatch, allowOffsetOverflow } = patchOptions;
             if (offsetNumber >= fileSize && allowOffsetOverflow !== true) {
@@ -162,7 +162,7 @@ export namespace Patches {
                 continue;
             }
             buffer = patchBuffer({
-                buffer, offset: offsetNumber, previousValue, newValue,
+                buffer, offset: offsetNumber, previousValue, newValue, byteLength,
                 options: {
                     forcePatch,
                     unpatchMode,

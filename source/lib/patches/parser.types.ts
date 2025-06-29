@@ -5,9 +5,11 @@ export type PatchObject = {
     /** Decimal offset value */
     offset: bigint,
     /** Decimal current/previous value to find */
-    previousValue: number,
+    previousValue: number | bigint,
     /** Decimal new value to previous/current value */
-    newValue: number
+    newValue: number | bigint,
+    /** Number of bytes this patch touches */
+    byteLength: 1 | 2 | 4 | 8
 };
 
 /**

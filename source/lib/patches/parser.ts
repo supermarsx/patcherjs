@@ -105,18 +105,30 @@ export namespace Parser {
             const [offsetString, valuesString] = patchLine.split(offsetValuesDelimiter);
             const [previousValueString, newValueString] = valuesString.split(previousNewValueDelimiter);
 
+            const valueLength = Math.max(previousValueString.length, newValueString.length);
+            const byteLength = (valueLength / 2) as 1 | 2 | 4 | 8;
+
             let offset: bigint;
             if (offsetString.length > 8)
                 offset = hexParseBig({ hexString: offsetString });
             else
                 offset = BigInt(hexParse({ hexString: offsetString }));
-            const previousValue: number = hexParse({ hexString: previousValueString });
-            const newValue: number = hexParse({ hexString: newValueString });
+
+            let previousValue: number | bigint;
+            let newValue: number | bigint;
+            if (byteLength === 8) {
+                previousValue = hexParseBig({ hexString: previousValueString });
+                newValue = hexParseBig({ hexString: newValueString });
+            } else {
+                previousValue = hexParse({ hexString: previousValueString });
+                newValue = hexParse({ hexString: newValueString });
+            }
 
             const patchObject = {
                 offset,
                 previousValue,
-                newValue
+                newValue,
+                byteLength
             };
 
             return patchObject;
@@ -125,7 +137,8 @@ export namespace Parser {
             const returnValue: PatchObject = {
                 offset: BigInt(0),
                 previousValue: 0,
-                newValue: 0
+                newValue: 0,
+                byteLength: 1
             };
             return returnValue;
         }

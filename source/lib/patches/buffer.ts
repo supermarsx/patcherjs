@@ -45,6 +45,7 @@ export namespace BufferUtils {
         offset,
         previousValue,
         newValue,
+        byteLength = 1,
         options = {
             forcePatch: false,
             unpatchMode: false,
@@ -57,8 +58,9 @@ export namespace BufferUtils {
         {
             buffer: Buffer,
             offset: number,
-            previousValue: number,
-            newValue: number,
+            previousValue: number | bigint,
+            newValue: number | bigint,
+            byteLength?: 1 | 2 | 4 | 8,
             options: OptionsType
         }): Buffer {
 
@@ -72,11 +74,27 @@ export namespace BufferUtils {
             skipWritePatch
         } = options;
         try {
-            const currentValue: number = buffer.readUInt8(offset);
+            let currentValue: number | bigint;
+            switch (byteLength) {
+                case 1:
+                    currentValue = buffer.readUInt8(offset);
+                    break;
+                case 2:
+                    currentValue = buffer.readUInt16LE(offset);
+                    break;
+                case 4:
+                    currentValue = buffer.readUInt32LE(offset);
+                    break;
+                case 8:
+                    currentValue = buffer.readBigUInt64LE(offset);
+                    break;
+                default:
+                    throw new Error(`Unsupported byte length ${byteLength}`);
+            }
 
             if ((failOnUnexpectedPreviousValue === true && currentValue !== previousValue && unpatchMode === false) ||
                 (failOnUnexpectedPreviousValue === true && currentValue !== newValue && unpatchMode === true)) {
-                var expectedValue: number = previousValue;
+                let expectedValue: number | bigint = previousValue;
                 if (unpatchMode === true)
                     expectedValue = newValue;
                 throw new Error(`Found unexpected previous value at offset ${offset}: ${currentValue}, expected ${expectedValue}`);
@@ -84,7 +102,7 @@ export namespace BufferUtils {
 
             if ((warnOnUnexpectedPreviousValue === true && currentValue !== previousValue && unpatchMode === false) ||
                 (warnOnUnexpectedPreviousValue === true && currentValue !== newValue && unpatchMode === true)) {
-                var value: number = previousValue;
+                let value: number | bigint = previousValue;
                 if (unpatchMode === true)
                     value = newValue;
 
@@ -103,28 +121,28 @@ export namespace BufferUtils {
             if (forcePatch === true) {
                 if (nullPatch === true) {
                     log({ message: `Force null patching offset ${offset}`, color: yellow_bt });
-                    writeBuffer({ buffer, value: 0, offset, skipWritePatch });
+                    writeBuffer({ buffer, value: 0, offset, skipWritePatch, byteLength });
                 } else {
                     if (unpatchMode === true) {
                         log({ message: `Force unpatching offset ${offset}`, color: yellow_bt });
-                        writeBuffer({ buffer, value: previousValue, offset, skipWritePatch });
+                        writeBuffer({ buffer, value: previousValue, offset, skipWritePatch, byteLength });
                     } else {
                         log({ message: `Force patching offset ${offset}`, color: yellow_bt });
-                        writeBuffer({ buffer, value: newValue, offset, skipWritePatch });
+                        writeBuffer({ buffer, value: newValue, offset, skipWritePatch, byteLength });
                     }
                 }
             } else {
                 if (previousValue === currentValue) {
                     if (nullPatch === true) {
                         log({ message: `Null patching offset ${offset}`, color: yellow_bt });
-                        writeBufferNull({ buffer, offset, skipWritePatch });
+                        writeBufferNull({ buffer, offset, skipWritePatch, byteLength });
                     } else {
                         if (unpatchMode === true) {
                             log({ message: `Unpatching offset ${offset}`, color: white });
-                            writeBuffer({ buffer, value: previousValue, offset, skipWritePatch });
+                                writeBuffer({ buffer, value: previousValue, offset, skipWritePatch, byteLength });
                         } else {
                             log({ message: `Patching offset ${offset}`, color: white });
-                            writeBuffer({ buffer, value: newValue, offset, skipWritePatch });
+                                writeBuffer({ buffer, value: newValue, offset, skipWritePatch, byteLength });
                         }
                     }
                 }
@@ -163,19 +181,35 @@ export namespace BufferUtils {
         const fileSize: number = Number(stats.size);
         try {
             for (const patch of patchData) {
-                const { offset, previousValue, newValue } = patch;
+                const { offset, previousValue, newValue, byteLength } = patch;
                 const position = Number(offset);
                 if (position >= fileSize && allowOffsetOverflow !== true) {
                     log({ message: `Offset ${offset} exceeds file size ${fileSize}, skipping patch`, color: yellow_bt });
                     continue;
                 }
-                const buf = Buffer.alloc(1);
-                await handle.read(buf, 0, 1, position);
-                const currentValue: number = buf.readUInt8(0);
+                const buf = Buffer.alloc(byteLength);
+                await handle.read(buf, 0, byteLength, position);
+                let currentValue: number | bigint;
+                switch (byteLength) {
+                    case 1:
+                        currentValue = buf.readUInt8(0);
+                        break;
+                    case 2:
+                        currentValue = buf.readUInt16LE(0);
+                        break;
+                    case 4:
+                        currentValue = buf.readUInt32LE(0);
+                        break;
+                    case 8:
+                        currentValue = buf.readBigUInt64LE(0);
+                        break;
+                    default:
+                        throw new Error(`Unsupported byte length ${byteLength}`);
+                }
 
                 if ((failOnUnexpectedPreviousValue === true && currentValue !== previousValue && unpatchMode === false) ||
                     (failOnUnexpectedPreviousValue === true && currentValue !== newValue && unpatchMode === true)) {
-                    let expectedValue: number = previousValue;
+                    let expectedValue: number | bigint = previousValue;
                     if (unpatchMode === true)
                         expectedValue = newValue;
                     throw new Error(`Found unexpected previous value at offset ${offset}: ${currentValue}, expected ${expectedValue}`);
@@ -183,13 +217,13 @@ export namespace BufferUtils {
 
                 if ((warnOnUnexpectedPreviousValue === true && currentValue !== previousValue && unpatchMode === false) ||
                     (warnOnUnexpectedPreviousValue === true && currentValue !== newValue && unpatchMode === true)) {
-                    let value: number = previousValue;
+                    let value: number | bigint = previousValue;
                     if (unpatchMode === true)
                         value = newValue;
                     log({ message: `Found unexpected previous value at offset ${offset}: ${currentValue}, expected ${value}`, color: yellow_bt });
                 }
 
-                let valueToWrite: number | null = null;
+                let valueToWrite: number | bigint | null = null;
 
                 if (currentValue === newValue && unpatchMode === false) {
                     log({ message: `Offset is already patched ${offset}: ${currentValue}, new value ${newValue}`, color: yellow_bt });
@@ -226,8 +260,21 @@ export namespace BufferUtils {
                 }
 
                 if (valueToWrite !== null && skipWritePatch === false) {
-                    buf.writeUInt8(valueToWrite, 0);
-                    await handle.write(buf, 0, 1, position);
+                    switch (byteLength) {
+                        case 1:
+                            buf.writeUInt8(Number(valueToWrite), 0);
+                            break;
+                        case 2:
+                            buf.writeUInt16LE(Number(valueToWrite), 0);
+                            break;
+                        case 4:
+                            buf.writeUInt32LE(Number(valueToWrite), 0);
+                            break;
+                        case 8:
+                            buf.writeBigUInt64LE(BigInt(valueToWrite), 0);
+                            break;
+                    }
+                    await handle.write(buf, 0, byteLength, position);
                 } else if (valueToWrite !== null) {
                     log({ message: `Skipping buffer write`, color: white });
                 }
@@ -250,10 +297,10 @@ export namespace BufferUtils {
      * @returns
      * @since 0.0.1
      */
-    function writeBufferNull({ buffer, offset, skipWritePatch }:
-        { buffer: Buffer, offset: number, skipWritePatch: boolean }): void {
+    function writeBufferNull({ buffer, offset, skipWritePatch, byteLength }:
+        { buffer: Buffer, offset: number, skipWritePatch: boolean, byteLength: 1 | 2 | 4 | 8 }): void {
         const nullValue: number = 0;
-        writeBuffer({ buffer, value: nullValue, offset, skipWritePatch });
+        writeBuffer({ buffer, value: nullValue, offset, skipWritePatch, byteLength });
     }
 
     /**
@@ -270,10 +317,23 @@ export namespace BufferUtils {
      * @returns Nada
      * @since 0.0.1
      */
-    function writeBuffer({ buffer, value, offset, skipWritePatch }:
-        { buffer: Buffer, value: number, offset: number, skipWritePatch: boolean }): void {
+    function writeBuffer({ buffer, value, offset, skipWritePatch, byteLength }:
+        { buffer: Buffer, value: number | bigint, offset: number, skipWritePatch: boolean, byteLength: 1 | 2 | 4 | 8 }): void {
         if (skipWritePatch === false)
-            buffer.writeUInt8(value, offset);
+            switch (byteLength) {
+                case 1:
+                    buffer.writeUInt8(Number(value), offset);
+                    break;
+                case 2:
+                    buffer.writeUInt16LE(Number(value), offset);
+                    break;
+                case 4:
+                    buffer.writeUInt32LE(Number(value), offset);
+                    break;
+                case 8:
+                    buffer.writeBigUInt64LE(BigInt(value), offset);
+                    break;
+            }
         else
             log({ message: `Skipping buffer write`, color: white });
     }
