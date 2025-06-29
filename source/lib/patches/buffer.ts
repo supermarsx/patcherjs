@@ -1,6 +1,3 @@
-import BufferWrappers from '../patches/buffer.wrappers.js';
-const { createBuffer } = BufferWrappers;
-
 import * as fs from 'fs/promises';
 
 import Debug from '../auxiliary/debug.js';
@@ -74,10 +71,15 @@ export namespace BufferUtils {
             failOnUnexpectedPreviousValue,
             warnOnUnexpectedPreviousValue,
             skipWritePatch,
-            bigEndian = false,
-            verifyPatch = false
+            verifyPatch = false,
+            allowOffsetOverflow,
+            bigEndian = false
         } = options;
         try {
+            if (allowOffsetOverflow !== true && offset + byteLength > buffer.length) {
+                log({ message: `Offset ${offset} with length ${byteLength} exceeds buffer size ${buffer.length}, skipping patch`, color: yellow_bt });
+                return buffer;
+            }
             let currentValue: number | bigint;
             switch (byteLength) {
                 case 1:
@@ -154,8 +156,7 @@ export namespace BufferUtils {
             return buffer;
         } catch (error: any) {
             log({ message: `An error has occurred: ${error}`, color: red_bt });
-            const errorBufferSize: number = 0;
-            return createBuffer({ size: errorBufferSize });
+            throw error;
         }
     }
 
@@ -192,8 +193,8 @@ export namespace BufferUtils {
                 if (offset > maxSafe)
                     throw new Error(`Offset ${offset} exceeds Number.MAX_SAFE_INTEGER`);
                 const position = Number(offset);
-                if (position >= fileSize && allowOffsetOverflow !== true) {
-                    log({ message: `Offset ${offset} exceeds file size ${fileSize}, skipping patch`, color: yellow_bt });
+                if (position + byteLength > fileSize && allowOffsetOverflow !== true) {
+                    log({ message: `Offset ${offset} with length ${byteLength} exceeds file size ${fileSize}, skipping patch`, color: yellow_bt });
                     continue;
                 }
                 const buf = Buffer.alloc(byteLength);
