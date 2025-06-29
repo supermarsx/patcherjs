@@ -23,6 +23,7 @@
       "fileSizeCheck": true,
       "fileSizeThreshold": 0,
       "skipWritePatch": false,
+      "bigEndian": false,
       "failOnUnexpectedPreviousValue": false,
       "warnOnUnexpectedPreviousValue": true,
       "nullPatch": false,

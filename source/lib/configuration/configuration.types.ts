@@ -19,6 +19,8 @@ export type ConfigurationObject = {
             skipWritePatch: boolean,
             /** Allow patching offsets past the end of the file */
             allowOffsetOverflow: boolean,
+            /** Treat multi-byte values as big-endian */
+            bigEndian: boolean,
             failOnUnexpectedPreviousValue: boolean,
             warnOnUnexpectedPreviousValue: boolean,
             nullPatch: boolean,

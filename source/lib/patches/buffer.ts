@@ -53,7 +53,8 @@ export namespace BufferUtils {
             failOnUnexpectedPreviousValue: false,
             warnOnUnexpectedPreviousValue: true,
             skipWritePatch: false,
-            allowOffsetOverflow: false
+            allowOffsetOverflow: false,
+            bigEndian: false
         } }:
         {
             buffer: Buffer,
@@ -71,7 +72,8 @@ export namespace BufferUtils {
             nullPatch,
             failOnUnexpectedPreviousValue,
             warnOnUnexpectedPreviousValue,
-            skipWritePatch
+            skipWritePatch,
+            bigEndian = false
         } = options;
         try {
             let currentValue: number | bigint;
@@ -80,13 +82,13 @@ export namespace BufferUtils {
                     currentValue = buffer.readUInt8(offset);
                     break;
                 case 2:
-                    currentValue = buffer.readUInt16LE(offset);
+                    currentValue = bigEndian ? buffer.readUInt16BE(offset) : buffer.readUInt16LE(offset);
                     break;
                 case 4:
-                    currentValue = buffer.readUInt32LE(offset);
+                    currentValue = bigEndian ? buffer.readUInt32BE(offset) : buffer.readUInt32LE(offset);
                     break;
                 case 8:
-                    currentValue = buffer.readBigUInt64LE(offset);
+                    currentValue = bigEndian ? buffer.readBigUInt64BE(offset) : buffer.readBigUInt64LE(offset);
                     break;
                 default:
                     throw new Error(`Unsupported byte length ${byteLength}`);
@@ -121,28 +123,28 @@ export namespace BufferUtils {
             if (forcePatch === true) {
                 if (nullPatch === true) {
                     log({ message: `Force null patching offset ${offset}`, color: yellow_bt });
-                    writeBuffer({ buffer, value: 0, offset, skipWritePatch, byteLength });
+                    writeBuffer({ buffer, value: 0, offset, skipWritePatch, byteLength, bigEndian });
                 } else {
                     if (unpatchMode === true) {
                         log({ message: `Force unpatching offset ${offset}`, color: yellow_bt });
-                        writeBuffer({ buffer, value: previousValue, offset, skipWritePatch, byteLength });
+                        writeBuffer({ buffer, value: previousValue, offset, skipWritePatch, byteLength, bigEndian });
                     } else {
                         log({ message: `Force patching offset ${offset}`, color: yellow_bt });
-                        writeBuffer({ buffer, value: newValue, offset, skipWritePatch, byteLength });
+                        writeBuffer({ buffer, value: newValue, offset, skipWritePatch, byteLength, bigEndian });
                     }
                 }
             } else {
                 if (previousValue === currentValue) {
                     if (nullPatch === true) {
                         log({ message: `Null patching offset ${offset}`, color: yellow_bt });
-                        writeBufferNull({ buffer, offset, skipWritePatch, byteLength });
+                        writeBufferNull({ buffer, offset, skipWritePatch, byteLength, bigEndian });
                     } else {
                         if (unpatchMode === true) {
                             log({ message: `Unpatching offset ${offset}`, color: white });
-                                writeBuffer({ buffer, value: previousValue, offset, skipWritePatch, byteLength });
+                                writeBuffer({ buffer, value: previousValue, offset, skipWritePatch, byteLength, bigEndian });
                         } else {
                             log({ message: `Patching offset ${offset}`, color: white });
-                                writeBuffer({ buffer, value: newValue, offset, skipWritePatch, byteLength });
+                                writeBuffer({ buffer, value: newValue, offset, skipWritePatch, byteLength, bigEndian });
                         }
                     }
                 }
@@ -173,7 +175,8 @@ export namespace BufferUtils {
             failOnUnexpectedPreviousValue,
             warnOnUnexpectedPreviousValue,
             skipWritePatch,
-            allowOffsetOverflow
+            allowOffsetOverflow,
+            bigEndian = false
         } = options;
 
         const handle = await fs.open(filePath, 'r+');
@@ -198,13 +201,13 @@ export namespace BufferUtils {
                         currentValue = buf.readUInt8(0);
                         break;
                     case 2:
-                        currentValue = buf.readUInt16LE(0);
+                        currentValue = bigEndian ? buf.readUInt16BE(0) : buf.readUInt16LE(0);
                         break;
                     case 4:
-                        currentValue = buf.readUInt32LE(0);
+                        currentValue = bigEndian ? buf.readUInt32BE(0) : buf.readUInt32LE(0);
                         break;
                     case 8:
-                        currentValue = buf.readBigUInt64LE(0);
+                        currentValue = bigEndian ? buf.readBigUInt64BE(0) : buf.readBigUInt64LE(0);
                         break;
                     default:
                         throw new Error(`Unsupported byte length ${byteLength}`);
@@ -268,13 +271,22 @@ export namespace BufferUtils {
                             buf.writeUInt8(Number(valueToWrite), 0);
                             break;
                         case 2:
-                            buf.writeUInt16LE(Number(valueToWrite), 0);
+                            if (bigEndian)
+                                buf.writeUInt16BE(Number(valueToWrite), 0);
+                            else
+                                buf.writeUInt16LE(Number(valueToWrite), 0);
                             break;
                         case 4:
-                            buf.writeUInt32LE(Number(valueToWrite), 0);
+                            if (bigEndian)
+                                buf.writeUInt32BE(Number(valueToWrite), 0);
+                            else
+                                buf.writeUInt32LE(Number(valueToWrite), 0);
                             break;
                         case 8:
-                            buf.writeBigUInt64LE(BigInt(valueToWrite), 0);
+                            if (bigEndian)
+                                buf.writeBigUInt64BE(BigInt(valueToWrite), 0);
+                            else
+                                buf.writeBigUInt64LE(BigInt(valueToWrite), 0);
                             break;
                     }
                     await handle.write(buf, 0, byteLength, position);
@@ -300,10 +312,10 @@ export namespace BufferUtils {
      * @returns
      * @since 0.0.1
      */
-    function writeBufferNull({ buffer, offset, skipWritePatch, byteLength }:
-        { buffer: Buffer, offset: number, skipWritePatch: boolean, byteLength: 1 | 2 | 4 | 8 }): void {
+    function writeBufferNull({ buffer, offset, skipWritePatch, byteLength, bigEndian }:
+        { buffer: Buffer, offset: number, skipWritePatch: boolean, byteLength: 1 | 2 | 4 | 8, bigEndian: boolean }): void {
         const nullValue: number = 0;
-        writeBuffer({ buffer, value: nullValue, offset, skipWritePatch, byteLength });
+        writeBuffer({ buffer, value: nullValue, offset, skipWritePatch, byteLength, bigEndian });
     }
 
     /**
@@ -320,21 +332,30 @@ export namespace BufferUtils {
      * @returns Nada
      * @since 0.0.1
      */
-    function writeBuffer({ buffer, value, offset, skipWritePatch, byteLength }:
-        { buffer: Buffer, value: number | bigint, offset: number, skipWritePatch: boolean, byteLength: 1 | 2 | 4 | 8 }): void {
+    function writeBuffer({ buffer, value, offset, skipWritePatch, byteLength, bigEndian }:
+        { buffer: Buffer, value: number | bigint, offset: number, skipWritePatch: boolean, byteLength: 1 | 2 | 4 | 8, bigEndian: boolean }): void {
         if (skipWritePatch === false)
             switch (byteLength) {
                 case 1:
                     buffer.writeUInt8(Number(value), offset);
                     break;
                 case 2:
-                    buffer.writeUInt16LE(Number(value), offset);
+                    if (bigEndian)
+                        buffer.writeUInt16BE(Number(value), offset);
+                    else
+                        buffer.writeUInt16LE(Number(value), offset);
                     break;
                 case 4:
-                    buffer.writeUInt32LE(Number(value), offset);
+                    if (bigEndian)
+                        buffer.writeUInt32BE(Number(value), offset);
+                    else
+                        buffer.writeUInt32LE(Number(value), offset);
                     break;
                 case 8:
-                    buffer.writeBigUInt64LE(BigInt(value), offset);
+                    if (bigEndian)
+                        buffer.writeBigUInt64BE(BigInt(value), offset);
+                    else
+                        buffer.writeBigUInt64LE(BigInt(value), offset);
                     break;
             }
         else

@@ -8,5 +8,7 @@ export type OptionsType = {
     warnOnUnexpectedPreviousValue: boolean,
     skipWritePatch: boolean,
     /** Allow patching offsets past the end of the file */
-    allowOffsetOverflow: boolean
+    allowOffsetOverflow: boolean,
+    /** Treat multi-byte values as big-endian */
+    bigEndian?: boolean
 };

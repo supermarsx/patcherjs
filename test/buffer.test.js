@@ -77,6 +77,61 @@ describe('BufferUtils.patchBuffer', () => {
     expect(buf.readUInt32LE(2)).toBe(0x89abcdef);
     expect(buf.readBigUInt64LE(6)).toBe(0x1122334455667788n);
   });
+
+  test('patches big-endian values', () => {
+    const buf = Buffer.alloc(14);
+    BufferUtils.patchBuffer({
+      buffer: buf,
+      offset: 0,
+      previousValue: 0x0000,
+      newValue: 0x1234,
+      byteLength: 2,
+      options: {
+        forcePatch: false,
+        unpatchMode: false,
+        nullPatch: false,
+        failOnUnexpectedPreviousValue: false,
+        warnOnUnexpectedPreviousValue: false,
+        skipWritePatch: false,
+        bigEndian: true
+      }
+    });
+    BufferUtils.patchBuffer({
+      buffer: buf,
+      offset: 2,
+      previousValue: 0x00000000,
+      newValue: 0x89abcdef,
+      byteLength: 4,
+      options: {
+        forcePatch: false,
+        unpatchMode: false,
+        nullPatch: false,
+        failOnUnexpectedPreviousValue: false,
+        warnOnUnexpectedPreviousValue: false,
+        skipWritePatch: false,
+        bigEndian: true
+      }
+    });
+    BufferUtils.patchBuffer({
+      buffer: buf,
+      offset: 6,
+      previousValue: 0x0000000000000000n,
+      newValue: 0x1122334455667788n,
+      byteLength: 8,
+      options: {
+        forcePatch: false,
+        unpatchMode: false,
+        nullPatch: false,
+        failOnUnexpectedPreviousValue: false,
+        warnOnUnexpectedPreviousValue: false,
+        skipWritePatch: false,
+        bigEndian: true
+      }
+    });
+    expect(buf.readUInt16BE(0)).toBe(0x1234);
+    expect(buf.readUInt32BE(2)).toBe(0x89abcdef);
+    expect(buf.readBigUInt64BE(6)).toBe(0x1122334455667788n);
+  });
 });
 
 describe('BufferUtils.patchLargeFile', () => {
@@ -120,6 +175,31 @@ describe('BufferUtils.patchLargeFile', () => {
     await BufferUtils.patchLargeFile({ filePath, patchData, options: opts });
     const result = await fsPromises.readFile(filePath);
     expect(Array.from(result)).toEqual([0x00, 0xff, 0x02, 0xaa]);
+    await fsPromises.rm(dir, { recursive: true, force: true });
+  });
+
+  test('patches big-endian file content', async () => {
+    const dir = await fsPromises.mkdtemp(join(os.tmpdir(), 'large-'));
+    const filePath = join(dir, 'tmp.bin');
+    await fsPromises.writeFile(filePath, Buffer.from([0x00, 0x00, 0x00, 0x00]));
+    const patchData = [
+      { offset: 0n, previousValue: 0x0000, newValue: 0x1122, byteLength: 2 },
+      { offset: 2n, previousValue: 0x0000, newValue: 0x3344, byteLength: 2 }
+    ];
+    const opts = {
+      forcePatch: false,
+      unpatchMode: false,
+      nullPatch: false,
+      failOnUnexpectedPreviousValue: false,
+      warnOnUnexpectedPreviousValue: false,
+      skipWritePatch: false,
+      allowOffsetOverflow: false,
+      bigEndian: true
+    };
+    await BufferUtils.patchLargeFile({ filePath, patchData, options: opts });
+    const result = await fsPromises.readFile(filePath);
+    expect(result.readUInt16BE(0)).toBe(0x1122);
+    expect(result.readUInt16BE(2)).toBe(0x3344);
     await fsPromises.rm(dir, { recursive: true, force: true });
   });
 });
