@@ -271,7 +271,7 @@ use 16-digit hexadecimal offsets. For example:
 ```
 `patcherjs` automatically switches to 64‑bit mode when a
 patch includes an offset longer than eight hex digits or the
-target file is larger than 2&nbsp;GB.
+target file exceeds the `LARGE_FILE_THRESHOLD` (2&nbsp;GB).
 ```
 OFFSET: PREVIOUS_VALUE NEW_VALUE
 ```

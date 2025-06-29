@@ -79,6 +79,8 @@ namespace Constants {
     export const PATCHES_BACKUPEXT: string = `.bak`;
     export const PATCHES_BASEPATH: string = join('patch_files', sep);
     export const PATCHES_BASEUNPACKEDPATH: string = join('patch_files_unpacked', sep);
+    /** Threshold for considering a file "large" when patching */
+    export const LARGE_FILE_THRESHOLD: number = 0x80000000;
 
 
     // COMMANDS TASKSCHEDULER

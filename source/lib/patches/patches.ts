@@ -28,7 +28,8 @@ import {
 
 import Constants from '../configuration/constants.js';
 const {
-    PATCHES_BASEPATH
+    PATCHES_BASEPATH,
+    LARGE_FILE_THRESHOLD
 } = Constants;
 
 export namespace Patches {
@@ -82,7 +83,7 @@ export namespace Patches {
 
             const fileSize: number = await getFileSizeUsingPath({ filePath });
             const hasBigOffset: boolean = patchData.some(p => p.offset > 0xffffffffn);
-            if (hasBigOffset || fileSize > 2147483648) {
+            if (hasBigOffset || fileSize > LARGE_FILE_THRESHOLD) {
                 if (patchOptions.skipWritingBinary === false)
                     await patchLargeFile({ filePath, patchData, options: patchOptions });
                 else
