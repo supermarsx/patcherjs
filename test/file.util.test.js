@@ -1,6 +1,7 @@
 import fs from 'fs';
 import { join } from 'path';
 import os from 'os';
+import { jest } from '@jest/globals';
 import { File } from '../source/lib/auxiliary/file.ts';
 import Constants from '../source/lib/configuration/constants.ts';
 
@@ -63,5 +64,49 @@ describe('File utilities', () => {
 
   test('firstFilenameInFolder rejects on failure', async () => {
     await expect(File.firstFilenameInFolder({ folderPath: '/missing' })).rejects.toThrow();
+  });
+});
+
+describe('File utilities failure mocks', () => {
+  test('readPatchFile returns empty string when open fails', async () => {
+    jest.resetModules();
+    jest.unstable_mockModule('fs/promises', () => {
+      const actual = jest.requireActual('fs/promises');
+      return { ...actual, open: jest.fn(async () => { throw new Error('fail'); }) };
+    });
+    const { File: MockFile } = await import('../source/lib/auxiliary/file.ts');
+    const res = await MockFile.readPatchFile({ filePath: 'any' });
+    expect(res).toBe('');
+  });
+
+  test('writeBinaryFile returns 0 when open fails', async () => {
+    jest.resetModules();
+    jest.unstable_mockModule('fs/promises', () => {
+      const actual = jest.requireActual('fs/promises');
+      return { ...actual, open: jest.fn(async () => { throw new Error('fail'); }) };
+    });
+    const { File: MockFile } = await import('../source/lib/auxiliary/file.ts');
+    const bytes = await MockFile.writeBinaryFile({ filePath: 'any', buffer: Buffer.from([1]) });
+    expect(bytes).toBe(0);
+  });
+
+  test('backupFile rejects when copyFile fails', async () => {
+    jest.resetModules();
+    jest.unstable_mockModule('fs/promises', () => {
+      const actual = jest.requireActual('fs/promises');
+      return { ...actual, copyFile: jest.fn(async () => { throw new Error('fail'); }) };
+    });
+    const { FileWrappers } = await import('../source/lib/auxiliary/file.wrappers.ts');
+    await expect(FileWrappers.backupFile({ filePath: 'any' })).rejects.toThrow();
+  });
+
+  test('firstFilenameInFolder rejects when readdir fails', async () => {
+    jest.resetModules();
+    jest.unstable_mockModule('fs/promises', () => {
+      const actual = jest.requireActual('fs/promises');
+      return { ...actual, readdir: jest.fn(async () => { throw new Error('fail'); }) };
+    });
+    const { FileWrappers } = await import('../source/lib/auxiliary/file.wrappers.ts');
+    await expect(FileWrappers.firstFilenameInFolder({ folderPath: 'dir' })).rejects.toThrow();
   });
 });
