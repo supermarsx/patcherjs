@@ -160,28 +160,69 @@ describe('BufferUtils.patchBuffer', () => {
     Buffer.prototype.writeUInt8 = function(value, offset) {
       return originalWrite.call(this, value ^ 0xff, offset);
     };
-    let result;
     try {
-      result = BufferUtils.patchBuffer({
-        buffer: buf,
-        offset: 0,
-        previousValue: 0x00,
-        newValue: 0x01,
-        byteLength: 1,
-        options: {
-          forcePatch: false,
-          unpatchMode: false,
-          nullPatch: false,
-          failOnUnexpectedPreviousValue: false,
-          warnOnUnexpectedPreviousValue: false,
-          skipWritePatch: false,
-          verifyPatch: true
-        }
-      });
+      expect(() => {
+        BufferUtils.patchBuffer({
+          buffer: buf,
+          offset: 0,
+          previousValue: 0x00,
+          newValue: 0x01,
+          byteLength: 1,
+          options: {
+            forcePatch: false,
+            unpatchMode: false,
+            nullPatch: false,
+            failOnUnexpectedPreviousValue: false,
+            warnOnUnexpectedPreviousValue: false,
+            skipWritePatch: false,
+            verifyPatch: true
+          }
+        });
+      }).toThrow('Failed to verify patch');
     } finally {
       Buffer.prototype.writeUInt8 = originalWrite;
     }
-    expect(result.length).toBe(0);
+  });
+
+  test('patches value when offset sits at end of buffer', () => {
+    const buf = Buffer.from([0x00, 0x01]);
+    BufferUtils.patchBuffer({
+      buffer: buf,
+      offset: 1,
+      previousValue: 0x01,
+      newValue: 0xaa,
+      byteLength: 1,
+      options: {
+        forcePatch: false,
+        unpatchMode: false,
+        nullPatch: false,
+        failOnUnexpectedPreviousValue: false,
+        warnOnUnexpectedPreviousValue: false,
+        skipWritePatch: false
+      }
+    });
+    expect(Array.from(buf)).toEqual([0x00, 0xaa]);
+  });
+
+  test('skips patch that would overflow buffer', () => {
+    const buf = Buffer.from([0x00, 0x01]);
+    BufferUtils.patchBuffer({
+      buffer: buf,
+      offset: 1,
+      previousValue: 0x0000,
+      newValue: 0x1122,
+      byteLength: 2,
+      options: {
+        forcePatch: false,
+        unpatchMode: false,
+        nullPatch: false,
+        failOnUnexpectedPreviousValue: false,
+        warnOnUnexpectedPreviousValue: false,
+        skipWritePatch: false,
+        allowOffsetOverflow: false
+      }
+    });
+    expect(Array.from(buf)).toEqual([0x00, 0x01]);
   });
 });
 
@@ -248,6 +289,28 @@ describe('BufferUtils.patchLargeFile', () => {
     await BufferUtils.patchLargeFile({ filePath, patchData, options: opts });
     const result = await fsPromises.readFile(filePath);
     expect(Array.from(result)).toEqual([0x00, 0x01, 0x02, 0x03]);
+    await fsPromises.rm(dir, { recursive: true, force: true });
+  });
+
+  test('patches multi-byte value when it fits at end of file', async () => {
+    const dir = await fsPromises.mkdtemp(join(os.tmpdir(), 'large-'));
+    const filePath = join(dir, 'tmp.bin');
+    await fsPromises.writeFile(filePath, Buffer.from([0x00, 0x01, 0x02, 0x03]));
+    const patchData = [
+      { offset: 2n, previousValue: 0x0302, newValue: 0xbbaa, byteLength: 2 }
+    ];
+    const opts = {
+      forcePatch: false,
+      unpatchMode: false,
+      nullPatch: false,
+      failOnUnexpectedPreviousValue: false,
+      warnOnUnexpectedPreviousValue: false,
+      skipWritePatch: false,
+      allowOffsetOverflow: false
+    };
+    await BufferUtils.patchLargeFile({ filePath, patchData, options: opts });
+    const result = await fsPromises.readFile(filePath);
+    expect(Array.from(result)).toEqual([0x00, 0x01, 0xaa, 0xbb]);
     await fsPromises.rm(dir, { recursive: true, force: true });
   });
 
