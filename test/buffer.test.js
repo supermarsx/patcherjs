@@ -1,5 +1,6 @@
 import { BufferUtils } from '../source/lib/patches/buffer.ts';
 import fs from 'fs';
+import fsPromises from 'fs/promises';
 import { join } from 'path';
 import os from 'os';
 
@@ -97,5 +98,36 @@ describe('BufferUtils.patchLargeFile', () => {
     };
     await expect(BufferUtils.patchLargeFile({ filePath, patchData, options: opts })).rejects.toThrow('Number.MAX_SAFE_INTEGER');
     fs.rmSync(dir, { recursive: true, force: true });
+  });
+
+  test('patches file content', async () => {
+    const dir = await fsPromises.mkdtemp(join(os.tmpdir(), 'large-'));
+    const filePath = join(dir, 'tmp.bin');
+    await fsPromises.writeFile(filePath, Buffer.from([0x00, 0x01, 0x02, 0x03]));
+    const patchData = [
+      { offset: 1n, previousValue: 0x01, newValue: 0xff, byteLength: 1 },
+      { offset: 3n, previousValue: 0x03, newValue: 0xaa, byteLength: 1 }
+    ];
+    const opts = {
+      forcePatch: false,
+      unpatchMode: false,
+      nullPatch: false,
+      failOnUnexpectedPreviousValue: false,
+      warnOnUnexpectedPreviousValue: false,
+      skipWritePatch: false,
+      allowOffsetOverflow: false
+    };
+    await BufferUtils.patchLargeFile({ filePath, patchData, options: opts });
+    const result = await fsPromises.readFile(filePath);
+    expect(Array.from(result)).toEqual([0x00, 0xff, 0x02, 0xaa]);
+    await fsPromises.rm(dir, { recursive: true, force: true });
+  });
+});
+
+describe('BufferUtils.truncateBuffer', () => {
+  test('buffers larger than 200 bytes are truncated', () => {
+    const buf = Buffer.alloc(250, 0xff);
+    const truncated = BufferUtils.truncateBuffer({ buffer: buf });
+    expect(truncated.length).toBe(200);
   });
 });
