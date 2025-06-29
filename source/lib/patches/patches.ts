@@ -13,8 +13,8 @@ const { backupFile, getFileSizeUsingPath, readBinaryFile, readPatchFile, writeBi
 import Parser from './parser.js';
 const { parsePatchFile } = Parser;
 
-import Buffer from './buffer.js';
-const { patchBuffer, patchLargeFile } = Buffer;
+import BufferUtils from './buffer.js';
+const { patchBuffer, patchLargeFile } = BufferUtils;
 
 import {
     ConfigurationObject,
