@@ -17,6 +17,8 @@ export type ConfigurationObject = {
             fileSizeCheck: boolean,
             fileSizeThreshold: number,
             skipWritePatch: boolean,
+            /** Allow patching offsets past the end of the file */
+            allowOffsetOverflow: boolean,
             failOnUnexpectedPreviousValue: boolean,
             warnOnUnexpectedPreviousValue: boolean,
             nullPatch: boolean,

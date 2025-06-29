@@ -60,4 +60,24 @@ describe('Patches.runPatches', () => {
     const data = fs.readFileSync(testBinPath);
     expect(data[0]).toBe(0x00);
   });
+
+  test('out-of-range offsets do not enlarge file', async () => {
+    const config = ConfigurationDefaults.getDefaultConfigurationObject();
+    fs.writeFileSync(testBinPath, Buffer.from([0x00]));
+    config.patches = [
+      { name: 'big', patchFilename: 'big.patch', fileNamePath: testBinPath, enabled: true }
+    ];
+    const pOpts = config.options.patches;
+    pOpts.backupFiles = false;
+    pOpts.fileSizeCheck = false;
+    pOpts.skipWritingBinary = false;
+    pOpts.warnOnUnexpectedPreviousValue = false;
+    pOpts.failOnUnexpectedPreviousValue = false;
+    pOpts.allowOffsetOverflow = false;
+    pOpts.runPatches = true;
+
+    await Patches.runPatches({ configuration: config });
+    const stats = fs.statSync(testBinPath);
+    expect(stats.size).toBe(1);
+  });
 });

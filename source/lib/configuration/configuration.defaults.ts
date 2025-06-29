@@ -39,6 +39,7 @@ export namespace ConfigurationDefaults {
                     fileSizeCheck: true,
                     fileSizeThreshold: 0,
                     skipWritePatch: false,
+                    allowOffsetOverflow: false,
                     failOnUnexpectedPreviousValue: false,
                     warnOnUnexpectedPreviousValue: true,
                     nullPatch: false,
