@@ -180,8 +180,11 @@ export namespace BufferUtils {
         const stats = await handle.stat();
         const fileSize: number = Number(stats.size);
         try {
+            const maxSafe = BigInt(Number.MAX_SAFE_INTEGER);
             for (const patch of patchData) {
                 const { offset, previousValue, newValue, byteLength } = patch;
+                if (offset > maxSafe)
+                    throw new Error(`Offset ${offset} exceeds Number.MAX_SAFE_INTEGER`);
                 const position = Number(offset);
                 if (position >= fileSize && allowOffsetOverflow !== true) {
                     log({ message: `Offset ${offset} exceeds file size ${fileSize}, skipping patch`, color: yellow_bt });
