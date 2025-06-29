@@ -187,6 +187,7 @@ Patcherjs functions with a configuration json file using the following structure
       "fileSizeCheck": true, // Check for file size before running patch
       "fileSizeThreshold": 0, // File size check threshold
       "skipWritePatch": false, // Skip writing patch (mostly for debug purposes, like simulate a patch but not actually patch)
+      "bigEndian": false, // Read and write multi-byte values using big-endian
       "failOnUnexpectedPreviousValue": false, // Fail patches if an unexpected previous/current value is found
       "warnOnUnexpectedPreviousValue": true, // Warn/throw a debug message that an unexpected previous/current value was found
       "nullPatch": false, // Just patch the offsets to null (basically 0, mostly useful just for debug)
