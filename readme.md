@@ -275,6 +275,10 @@ target file is larger than 2&nbsp;GB.
 ```
 OFFSET: PREVIOUS_VALUE NEW_VALUE
 ```
+The value fields may contain 2, 4, 8 or 16 hex digits
+(representing 1, 2, 4 or 8 bytes respectively). `patcherjs`
+will automatically use the correct width when applying
+the patch.
 ### Creating .patch files
 
 You can create patch files by exporting patches from x64dbg or vbindiff applications.
