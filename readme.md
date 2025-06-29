@@ -264,6 +264,14 @@ Offsets may exceed 32-bits and are parsed as BigInt:
 0002EB40: 03 00
 0006AA00: 04 10
 ```
+When patching binaries that require 64-bit addressing,
+use 16-digit hexadecimal offsets. For example:
+```
+0000000012345678: 00 ff
+```
+`patcherjs` automatically switches to 64‑bit mode when a
+patch includes an offset longer than eight hex digits or the
+target file is larger than 2&nbsp;GB.
 ```
 OFFSET: PREVIOUS_VALUE NEW_VALUE
 ```
