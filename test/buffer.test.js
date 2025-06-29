@@ -177,6 +177,49 @@ describe('BufferUtils.patchBuffer', () => {
     expect(result).toBe(buf);
     expect(Array.from(buf)).toEqual([0x00, 0x01]);
   });
+
+  test('verifies written value when verifyPatch is true', () => {
+    const buf = Buffer.from([0x00]);
+    BufferUtils.patchBuffer({
+      buffer: buf,
+      offset: 0,
+      previousValue: 0x00,
+      newValue: 0xff,
+      byteLength: 1,
+      options: {
+        forcePatch: false,
+        unpatchMode: false,
+        nullPatch: false,
+        failOnUnexpectedPreviousValue: false,
+        warnOnUnexpectedPreviousValue: false,
+        skipWritePatch: false,
+        verifyPatch: true
+      }
+    });
+    expect(buf[0]).toBe(0xff);
+  });
+
+  test('throws when verification fails', () => {
+    const buf = Buffer.from([0x00]);
+    expect(() => {
+      BufferUtils.patchBuffer({
+        buffer: buf,
+        offset: 0,
+        previousValue: 0x00,
+        newValue: 0xff,
+        byteLength: 1,
+        options: {
+          forcePatch: false,
+          unpatchMode: false,
+          nullPatch: false,
+          failOnUnexpectedPreviousValue: false,
+          warnOnUnexpectedPreviousValue: false,
+          skipWritePatch: true,
+          verifyPatch: true
+        }
+      });
+    }).toThrow('Verification failed');
+  });
 });
 
 describe('BufferUtils.patchLargeFile', () => {
@@ -267,6 +310,50 @@ describe('BufferUtils.patchLargeFile', () => {
     const result = await fsPromises.readFile(filePath);
     expect(result.readUInt16BE(0)).toBe(0x1122);
     expect(result.readUInt16BE(2)).toBe(0x3344);
+    await fsPromises.rm(dir, { recursive: true, force: true });
+  });
+
+  test('verifies file patch when verifyPatch is true', async () => {
+    const dir = await fsPromises.mkdtemp(join(os.tmpdir(), 'large-'));
+    const filePath = join(dir, 'tmp.bin');
+    await fsPromises.writeFile(filePath, Buffer.from([0x00]));
+    const patchData = [
+      { offset: 0n, previousValue: 0x00, newValue: 0xff, byteLength: 1 }
+    ];
+    const opts = {
+      forcePatch: false,
+      unpatchMode: false,
+      nullPatch: false,
+      failOnUnexpectedPreviousValue: false,
+      warnOnUnexpectedPreviousValue: false,
+      skipWritePatch: false,
+      allowOffsetOverflow: false,
+      verifyPatch: true
+    };
+    await BufferUtils.patchLargeFile({ filePath, patchData, options: opts });
+    const result = await fsPromises.readFile(filePath);
+    expect(result[0]).toBe(0xff);
+    await fsPromises.rm(dir, { recursive: true, force: true });
+  });
+
+  test('throws when file verification fails', async () => {
+    const dir = await fsPromises.mkdtemp(join(os.tmpdir(), 'large-'));
+    const filePath = join(dir, 'tmp.bin');
+    await fsPromises.writeFile(filePath, Buffer.from([0x00]));
+    const patchData = [
+      { offset: 0n, previousValue: 0x00, newValue: 0xff, byteLength: 1 }
+    ];
+    const opts = {
+      forcePatch: false,
+      unpatchMode: false,
+      nullPatch: false,
+      failOnUnexpectedPreviousValue: false,
+      warnOnUnexpectedPreviousValue: false,
+      skipWritePatch: true,
+      allowOffsetOverflow: false,
+      verifyPatch: true
+    };
+    await expect(BufferUtils.patchLargeFile({ filePath, patchData, options: opts })).rejects.toThrow('Verification failed');
     await fsPromises.rm(dir, { recursive: true, force: true });
   });
 });

@@ -157,7 +157,7 @@ export namespace Patches {
             for (const patch of patchData) {
             const { offset, previousValue, newValue, byteLength } = patch;
             const offsetNumber: number = Number(offset);
-            const { forcePatch, unpatchMode, nullPatch, failOnUnexpectedPreviousValue, warnOnUnexpectedPreviousValue, skipWritePatch, allowOffsetOverflow } = patchOptions;
+            const { forcePatch, unpatchMode, nullPatch, failOnUnexpectedPreviousValue, warnOnUnexpectedPreviousValue, skipWritePatch, allowOffsetOverflow, bigEndian, verifyPatch } = patchOptions;
             if (offsetNumber >= fileSize && allowOffsetOverflow !== true) {
                 log({ message: `Offset ${offset} exceeds file size ${fileSize}, skipping patch`, color: yellow_bt });
                 continue;
@@ -171,7 +171,9 @@ export namespace Patches {
                     failOnUnexpectedPreviousValue,
                     warnOnUnexpectedPreviousValue,
                     skipWritePatch,
-                    allowOffsetOverflow
+                    allowOffsetOverflow,
+                    bigEndian,
+                    verifyPatch
                 }
             });
         }

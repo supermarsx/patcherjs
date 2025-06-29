@@ -62,6 +62,7 @@ describe('Patches.runPatches', () => {
     pOpts.warnOnUnexpectedPreviousValue = false;
     pOpts.failOnUnexpectedPreviousValue = false;
     pOpts.skipWritePatch = true;
+    pOpts.verifyPatch = false;
     pOpts.runPatches = true;
 
     await Patches.runPatches({ configuration: config });
