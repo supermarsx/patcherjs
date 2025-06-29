@@ -132,6 +132,51 @@ describe('BufferUtils.patchBuffer', () => {
     expect(buf.readUInt32BE(2)).toBe(0x89abcdef);
     expect(buf.readBigUInt64BE(6)).toBe(0x1122334455667788n);
   });
+
+  test('skips patch when offset exceeds buffer size', () => {
+    const buf = Buffer.from([0x00, 0x01]);
+    const result = BufferUtils.patchBuffer({
+      buffer: buf,
+      offset: 2,
+      previousValue: 0x00,
+      newValue: 0xff,
+      byteLength: 1,
+      options: {
+        forcePatch: false,
+        unpatchMode: false,
+        nullPatch: false,
+        failOnUnexpectedPreviousValue: false,
+        warnOnUnexpectedPreviousValue: false,
+        skipWritePatch: false,
+        allowOffsetOverflow: false
+      }
+    });
+    expect(result).toBe(buf);
+    expect(Array.from(buf)).toEqual([0x00, 0x01]);
+  });
+
+  test('skips patch when offset and length exceed buffer size', () => {
+    const buf = Buffer.from([0x00, 0x01]);
+    const result = BufferUtils.patchBuffer({
+      buffer: buf,
+      offset: 1,
+      previousValue: 0x0000,
+      newValue: 0xffff,
+      byteLength: 2,
+      options: {
+        forcePatch: false,
+        unpatchMode: false,
+        nullPatch: false,
+        failOnUnexpectedPreviousValue: false,
+        warnOnUnexpectedPreviousValue: false,
+        skipWritePatch: false,
+        allowOffsetOverflow: false,
+        bigEndian: true
+      }
+    });
+    expect(result).toBe(buf);
+    expect(Array.from(buf)).toEqual([0x00, 0x01]);
+  });
 });
 
 describe('BufferUtils.patchLargeFile', () => {
@@ -175,6 +220,28 @@ describe('BufferUtils.patchLargeFile', () => {
     await BufferUtils.patchLargeFile({ filePath, patchData, options: opts });
     const result = await fsPromises.readFile(filePath);
     expect(Array.from(result)).toEqual([0x00, 0xff, 0x02, 0xaa]);
+    await fsPromises.rm(dir, { recursive: true, force: true });
+  });
+
+  test('skips patches that exceed file size', async () => {
+    const dir = await fsPromises.mkdtemp(join(os.tmpdir(), 'large-'));
+    const filePath = join(dir, 'tmp.bin');
+    await fsPromises.writeFile(filePath, Buffer.from([0x00, 0x01, 0x02, 0x03]));
+    const patchData = [
+      { offset: 3n, previousValue: 0x0000, newValue: 0x1122, byteLength: 2 }
+    ];
+    const opts = {
+      forcePatch: false,
+      unpatchMode: false,
+      nullPatch: false,
+      failOnUnexpectedPreviousValue: false,
+      warnOnUnexpectedPreviousValue: false,
+      skipWritePatch: false,
+      allowOffsetOverflow: false
+    };
+    await BufferUtils.patchLargeFile({ filePath, patchData, options: opts });
+    const result = await fsPromises.readFile(filePath);
+    expect(Array.from(result)).toEqual([0x00, 0x01, 0x02, 0x03]);
     await fsPromises.rm(dir, { recursive: true, force: true });
   });
 
