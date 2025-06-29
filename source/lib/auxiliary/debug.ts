@@ -57,6 +57,7 @@ export namespace Debug {
     export function disable(): boolean {
         try {
             setEnv({ envVarName: DEBUGGING, varValue: false });
+            setEnv({ envVarName: LOGGING, varValue: false });
             return true;
         } catch {
             return false;
