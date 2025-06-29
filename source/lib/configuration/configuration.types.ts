@@ -24,6 +24,7 @@ export type ConfigurationObject = {
             verifyPatch: boolean,
             backupFiles: boolean,
             skipWritingBinary: boolean,
+            use64BitOffsets: boolean,
         },
         commands: {
             runCommands: boolean

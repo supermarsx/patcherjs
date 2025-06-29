@@ -14,7 +14,7 @@ import Parser from './parser.js';
 const { parsePatchFile } = Parser;
 
 import Buffer from './buffer.js';
-const { patchBuffer } = Buffer;
+const { patchBuffer, patchBufferBigInt } = Buffer;
 
 import {
     ConfigurationObject,
@@ -142,20 +142,40 @@ export namespace Patches {
         { fileDataBuffer: Buffer, patchData: PatchArray, patchOptions: PatchOptionsObject }): Buffer {
 
         var buffer: Buffer = fileDataBuffer;
+        const { use64BitOffsets } = patchOptions;
         for (const patch of patchData) {
             const { offset, previousValue, newValue } = patch;
             const { forcePatch, unpatchMode, nullPatch, failOnUnexpectedPreviousValue, warnOnUnexpectedPreviousValue, skipWritePatch } = patchOptions;
-            buffer = patchBuffer({
-                buffer, offset, previousValue, newValue,
-                options: {
-                    forcePatch,
-                    unpatchMode,
-                    nullPatch,
-                    failOnUnexpectedPreviousValue,
-                    warnOnUnexpectedPreviousValue,
-                    skipWritePatch
-                }
-            });
+            if (use64BitOffsets === true)
+                buffer = patchBufferBigInt({
+                    buffer,
+                    offset: BigInt(offset),
+                    previousValue,
+                    newValue,
+                    options: {
+                        forcePatch,
+                        unpatchMode,
+                        nullPatch,
+                        failOnUnexpectedPreviousValue,
+                        warnOnUnexpectedPreviousValue,
+                        skipWritePatch
+                    }
+                });
+            else
+                buffer = patchBuffer({
+                    buffer,
+                    offset,
+                    previousValue,
+                    newValue,
+                    options: {
+                        forcePatch,
+                        unpatchMode,
+                        nullPatch,
+                        failOnUnexpectedPreviousValue,
+                        warnOnUnexpectedPreviousValue,
+                        skipWritePatch
+                    }
+                });
         }
         return buffer;
     }

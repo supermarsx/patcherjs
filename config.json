@@ -29,7 +29,8 @@
       "unpatchMode": false,
       "verifyPatch": true,
       "backupFiles": true,
-      "skipWritingBinary": false
+      "skipWritingBinary": false,
+      "use64BitOffsets": false
     },
     "commands": {
       "runCommands": true

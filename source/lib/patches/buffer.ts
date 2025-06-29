@@ -134,6 +134,39 @@ export namespace BufferUtils {
     }
 
     /**
+     * Patch a buffer using a bigint offset
+     *
+     * @param params.buffer Buffer to patch
+     * @param params.offset BigInt offset
+     * @param params.previousValue Decimal previous value to find
+     * @param params.newValue Decimal new value to write
+     * @param params.options Patch options object
+     * @returns Patched buffer
+     */
+    export function patchBufferBigInt({
+        buffer,
+        offset,
+        previousValue,
+        newValue,
+        options
+    }:{
+        buffer: Buffer,
+        offset: bigint,
+        previousValue: number,
+        newValue: number,
+        options: OptionsType
+    }): Buffer {
+        const numericOffset: number = Number(offset);
+        return patchBuffer({
+            buffer,
+            offset: numericOffset,
+            previousValue,
+            newValue,
+            options
+        });
+    }
+
+    /**
      * Write a null value to a buffer
      * 
      * @param params.buffer Buffer to manipulate
