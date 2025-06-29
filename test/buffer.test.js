@@ -1,4 +1,7 @@
 import { BufferUtils } from '../source/lib/patches/buffer.ts';
+import fs from 'fs';
+import { join } from 'path';
+import os from 'os';
 
 describe('BufferUtils.patchBuffer', () => {
   test('patches buffer value', () => {
@@ -72,5 +75,27 @@ describe('BufferUtils.patchBuffer', () => {
     expect(buf.readUInt16LE(0)).toBe(0x1234);
     expect(buf.readUInt32LE(2)).toBe(0x89abcdef);
     expect(buf.readBigUInt64LE(6)).toBe(0x1122334455667788n);
+  });
+});
+
+describe('BufferUtils.patchLargeFile', () => {
+  test('throws on offsets beyond Number.MAX_SAFE_INTEGER', async () => {
+    const dir = fs.mkdtempSync(join(os.tmpdir(), 'large-'));
+    const filePath = join(dir, 'tmp.bin');
+    fs.writeFileSync(filePath, Buffer.from([0x00]));
+    const patchData = [
+      { offset: BigInt(Number.MAX_SAFE_INTEGER) + 1n, previousValue: 0x00, newValue: 0xff, byteLength: 1 }
+    ];
+    const opts = {
+      forcePatch: false,
+      unpatchMode: false,
+      nullPatch: false,
+      failOnUnexpectedPreviousValue: false,
+      warnOnUnexpectedPreviousValue: false,
+      skipWritePatch: false,
+      allowOffsetOverflow: true
+    };
+    await expect(BufferUtils.patchLargeFile({ filePath, patchData, options: opts })).rejects.toThrow('Number.MAX_SAFE_INTEGER');
+    fs.rmSync(dir, { recursive: true, force: true });
   });
 });
