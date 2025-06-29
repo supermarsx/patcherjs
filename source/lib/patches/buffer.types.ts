@@ -10,5 +10,7 @@ export type OptionsType = {
     /** Allow patching offsets past the end of the file */
     allowOffsetOverflow: boolean,
     /** Treat multi-byte values as big-endian */
-    bigEndian?: boolean
+    bigEndian?: boolean,
+    /** Verify written values by re-reading them */
+    verifyPatch?: boolean
 };
