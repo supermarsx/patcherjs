@@ -30,6 +30,29 @@ export namespace ParserWrappers {
     }
 
     /**
+     * Parse a bigint from an hexadecimal formatted string
+     *
+     * @param params.hexString hexadecimal formatted string
+     * @example
+     * ```
+     * hexParseBig({ hexString: 'ffffffff9' });
+     * ```
+     * result: 68719476729n
+     * @returns BigInt representation of an hexadecimal formatted string or 0n on failure
+     * @since 0.0.2
+     */
+    export function hexParseBig({ hexString }:
+        { hexString: string }): bigint {
+        try {
+            const value: bigint = BigInt('0x' + hexString);
+            return value;
+        } catch (error: any) {
+            log({ message: `An error has occurred: ${error}`, color: red_bt });
+            return BigInt(0);
+        }
+    }
+
+    /**
      * Split a contiguous string containing line breaks into an array where each element is a line
      * 
      * @param params.fileData string containing line breaks

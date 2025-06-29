@@ -258,8 +258,8 @@ Patcherjs functions with a configuration json file using the following structure
 ## On .patch files
 ### .patch file format
 
-A .patch file should follow the following format:
-(uses 32 bit offsets)
+A .patch file should follow the following format.
+Offsets may exceed 32-bits and are parsed as BigInt:
 ```
 0002EB40: 03 00
 0006AA00: 04 10

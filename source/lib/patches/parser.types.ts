@@ -3,7 +3,7 @@
  */
 export type PatchObject = {
     /** Decimal offset value */
-    offset: number,
+    offset: bigint,
     /** Decimal current/previous value to find */
     previousValue: number,
     /** Decimal new value to previous/current value */

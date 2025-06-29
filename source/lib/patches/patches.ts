@@ -14,7 +14,7 @@ import Parser from './parser.js';
 const { parsePatchFile } = Parser;
 
 import Buffer from './buffer.js';
-const { patchBuffer } = Buffer;
+const { patchBuffer, patchLargeFile } = Buffer;
 
 import {
     ConfigurationObject,
@@ -80,9 +80,19 @@ export namespace Patches {
             const patchData: PatchArray = await parsePatchFile({ fileData: patchFileData });
             const filePath: string = patch.fileNamePath;
 
+            const fileSize: number = await getFileSizeUsingPath({ filePath });
+            const hasBigOffset: boolean = patchData.some(p => p.offset > 0xffffffffn);
+            if (hasBigOffset || fileSize > 2147483648) {
+                if (patchOptions.skipWritingBinary === false)
+                    await patchLargeFile({ filePath, patchData, options: patchOptions });
+                else
+                    log({ message: `Skipping writing binary file due to options`, color: white });
+                return;
+            }
+
             const fileDataBuffer: Buffer = await readBinaryFile({ filePath });
 
-            const patchedFileData: Buffer = await patchMultipleOffsets({ fileDataBuffer, patchData, patchOptions });
+            const patchedFileData: Buffer = patchMultipleOffsets({ fileDataBuffer, patchData, patchOptions });
             const buffer: Buffer = patchedFileData;
 
             if (patchOptions.skipWritingBinary === false)
@@ -144,9 +154,10 @@ export namespace Patches {
         var buffer: Buffer = fileDataBuffer;
         for (const patch of patchData) {
             const { offset, previousValue, newValue } = patch;
+            const offsetNumber: number = Number(offset);
             const { forcePatch, unpatchMode, nullPatch, failOnUnexpectedPreviousValue, warnOnUnexpectedPreviousValue, skipWritePatch } = patchOptions;
             buffer = patchBuffer({
-                buffer, offset, previousValue, newValue,
+                buffer, offset: offsetNumber, previousValue, newValue,
                 options: {
                     forcePatch,
                     unpatchMode,
