@@ -51,7 +51,8 @@ export namespace BufferUtils {
             warnOnUnexpectedPreviousValue: true,
             skipWritePatch: false,
             allowOffsetOverflow: false,
-            bigEndian: false
+            bigEndian: false,
+            verifyPatch: false
         } }:
         {
             buffer: Buffer,
@@ -70,6 +71,7 @@ export namespace BufferUtils {
             failOnUnexpectedPreviousValue,
             warnOnUnexpectedPreviousValue,
             skipWritePatch,
+            verifyPatch = false,
             allowOffsetOverflow,
             bigEndian = false
         } = options;
@@ -125,28 +127,28 @@ export namespace BufferUtils {
             if (forcePatch === true) {
                 if (nullPatch === true) {
                     log({ message: `Force null patching offset ${offset}`, color: yellow_bt });
-                    writeBuffer({ buffer, value: 0, offset, skipWritePatch, byteLength, bigEndian });
+                    writeBuffer({ buffer, value: 0, offset, skipWritePatch, byteLength, bigEndian, verifyPatch });
                 } else {
                     if (unpatchMode === true) {
                         log({ message: `Force unpatching offset ${offset}`, color: yellow_bt });
-                        writeBuffer({ buffer, value: previousValue, offset, skipWritePatch, byteLength, bigEndian });
+                        writeBuffer({ buffer, value: previousValue, offset, skipWritePatch, byteLength, bigEndian, verifyPatch });
                     } else {
                         log({ message: `Force patching offset ${offset}`, color: yellow_bt });
-                        writeBuffer({ buffer, value: newValue, offset, skipWritePatch, byteLength, bigEndian });
+                        writeBuffer({ buffer, value: newValue, offset, skipWritePatch, byteLength, bigEndian, verifyPatch });
                     }
                 }
             } else {
                 if (previousValue === currentValue) {
                     if (nullPatch === true) {
                         log({ message: `Null patching offset ${offset}`, color: yellow_bt });
-                        writeBufferNull({ buffer, offset, skipWritePatch, byteLength, bigEndian });
+                        writeBufferNull({ buffer, offset, skipWritePatch, byteLength, bigEndian, verifyPatch });
                     } else {
                         if (unpatchMode === true) {
                             log({ message: `Unpatching offset ${offset}`, color: white });
-                                writeBuffer({ buffer, value: previousValue, offset, skipWritePatch, byteLength, bigEndian });
+                                writeBuffer({ buffer, value: previousValue, offset, skipWritePatch, byteLength, bigEndian, verifyPatch });
                         } else {
                             log({ message: `Patching offset ${offset}`, color: white });
-                                writeBuffer({ buffer, value: newValue, offset, skipWritePatch, byteLength, bigEndian });
+                                writeBuffer({ buffer, value: newValue, offset, skipWritePatch, byteLength, bigEndian, verifyPatch });
                         }
                     }
                 }
@@ -177,7 +179,8 @@ export namespace BufferUtils {
             warnOnUnexpectedPreviousValue,
             skipWritePatch,
             allowOffsetOverflow,
-            bigEndian = false
+            bigEndian = false,
+            verifyPatch = false
         } = options;
 
         const handle = await fs.open(filePath, 'r+');
@@ -291,6 +294,29 @@ export namespace BufferUtils {
                             break;
                     }
                     await handle.write(buf, 0, byteLength, position);
+                    if (verifyPatch === true) {
+                        const verifyBuf = Buffer.alloc(byteLength);
+                        await handle.read(verifyBuf, 0, byteLength, position);
+                        let verifyValue: number | bigint;
+                        switch (byteLength) {
+                            case 1:
+                                verifyValue = verifyBuf.readUInt8(0);
+                                break;
+                            case 2:
+                                verifyValue = bigEndian ? verifyBuf.readUInt16BE(0) : verifyBuf.readUInt16LE(0);
+                                break;
+                            case 4:
+                                verifyValue = bigEndian ? verifyBuf.readUInt32BE(0) : verifyBuf.readUInt32LE(0);
+                                break;
+                            case 8:
+                                verifyValue = bigEndian ? verifyBuf.readBigUInt64BE(0) : verifyBuf.readBigUInt64LE(0);
+                                break;
+                            default:
+                                throw new Error(`Unsupported byte length ${byteLength}`);
+                        }
+                        if (verifyValue !== valueToWrite)
+                            throw new Error(`Failed to verify patch at offset ${offset}: ${verifyValue}, expected ${valueToWrite}`);
+                    }
                 } else if (valueToWrite !== null) {
                     log({ message: `Skipping buffer write`, color: white });
                 }
@@ -313,10 +339,10 @@ export namespace BufferUtils {
      * @returns
      * @since 0.0.1
      */
-    function writeBufferNull({ buffer, offset, skipWritePatch, byteLength, bigEndian }:
-        { buffer: Buffer, offset: number, skipWritePatch: boolean, byteLength: 1 | 2 | 4 | 8, bigEndian: boolean }): void {
+    function writeBufferNull({ buffer, offset, skipWritePatch, byteLength, bigEndian, verifyPatch }:
+        { buffer: Buffer, offset: number, skipWritePatch: boolean, byteLength: 1 | 2 | 4 | 8, bigEndian: boolean, verifyPatch: boolean }): void {
         const nullValue: number = 0;
-        writeBuffer({ buffer, value: nullValue, offset, skipWritePatch, byteLength, bigEndian });
+        writeBuffer({ buffer, value: nullValue, offset, skipWritePatch, byteLength, bigEndian, verifyPatch });
     }
 
     /**
@@ -333,8 +359,8 @@ export namespace BufferUtils {
      * @returns Nada
      * @since 0.0.1
      */
-    function writeBuffer({ buffer, value, offset, skipWritePatch, byteLength, bigEndian }:
-        { buffer: Buffer, value: number | bigint, offset: number, skipWritePatch: boolean, byteLength: 1 | 2 | 4 | 8, bigEndian: boolean }): void {
+    function writeBuffer({ buffer, value, offset, skipWritePatch, byteLength, bigEndian, verifyPatch }:
+        { buffer: Buffer, value: number | bigint, offset: number, skipWritePatch: boolean, byteLength: 1 | 2 | 4 | 8, bigEndian: boolean, verifyPatch: boolean }): void {
         if (skipWritePatch === false)
             switch (byteLength) {
                 case 1:
@@ -361,6 +387,28 @@ export namespace BufferUtils {
             }
         else
             log({ message: `Skipping buffer write`, color: white });
+
+        if (skipWritePatch === false && verifyPatch === true) {
+            let verifyValue: number | bigint;
+            switch (byteLength) {
+                case 1:
+                    verifyValue = buffer.readUInt8(offset);
+                    break;
+                case 2:
+                    verifyValue = bigEndian ? buffer.readUInt16BE(offset) : buffer.readUInt16LE(offset);
+                    break;
+                case 4:
+                    verifyValue = bigEndian ? buffer.readUInt32BE(offset) : buffer.readUInt32LE(offset);
+                    break;
+                case 8:
+                    verifyValue = bigEndian ? buffer.readBigUInt64BE(offset) : buffer.readBigUInt64LE(offset);
+                    break;
+                default:
+                    throw new Error(`Unsupported byte length ${byteLength}`);
+            }
+            if (verifyValue !== value)
+                throw new Error(`Failed to verify patch at offset ${offset}: ${verifyValue}, expected ${value}`);
+        }
     }
 
     /**
