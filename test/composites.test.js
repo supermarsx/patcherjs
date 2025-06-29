@@ -70,6 +70,12 @@ describe('Patcher.runFunction', () => {
     await Patcher.runFunction({ configuration: config, functionName: Constants.COMP_PATCHES });
     expect(Patches.default.runPatches).toHaveBeenCalledWith({ configuration: config });
   });
+
+  test('logs error when unknown function is provided', async () => {
+    const config = ConfigurationDefaults.getDefaultConfigurationObject();
+    await Patcher.runFunction({ configuration: config, functionName: 'bad' });
+    expect(Debug.default.log).toHaveBeenCalled();
+  });
 });
 
 describe('Patcher.runPatcher', () => {
