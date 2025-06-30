@@ -37,13 +37,14 @@ export namespace File {
      */
     export async function readPatchFile({ filePath }:
         { filePath: string; }): Promise<string> {
+        let fileHandle: FileHandle | undefined;
         try {
             const encoding: BufferEncoding = 'utf-8';
             log({ message: `Opening file path, ${filePath}, in read mode`, color: white });
             const cantReadFile: boolean = !(await isFileReadable({ filePath }));
             if (cantReadFile)
                 throw new Error(`File is not readable, is missing or corrupted`);
-            const fileHandle: FileHandle = await fs.open(filePath);
+            fileHandle = await open(filePath);
             const bufferSize: number = await getFileSize({ fileHandle });
             if (bufferSize === 0)
                 log({ message: 'File size is 0, file may be corrupted or invalid', color: yellow_bt });
@@ -58,12 +59,15 @@ export namespace File {
                 log({ message: `Patch file data size is 0, file may be corrupted or invalid`, color: yellow_bt });
             else
                 log({ message: `Read patch file successfully to buffer`, color: green_bt });
-            await fileHandle.close();
-            log({ message: `Closed file handle`, color: white });
             return fileData;
         } catch (error: any) {
             log({ message: `An error has occurred: ${error}`, color: red_bt });
             return '';
+        } finally {
+            if (fileHandle) {
+                await fileHandle.close();
+                log({ message: `Closed file handle`, color: white });
+            }
         }
     }
 
@@ -80,11 +84,12 @@ export namespace File {
      */
     export async function readBinaryFile({ filePath }:
         { filePath: string; }): Promise<Buffer> {
+        let fileHandle: FileHandle | undefined;
         try {
             log({ message: `Opening file path, ${filePath}, in read mode`, color: white });
             if (!(await isFileReadable({ filePath })))
                 throw new Error(`File is not readable, is missing or corrupted`);
-            const fileHandle: FileHandle = await fs.open(filePath);
+            fileHandle = await open(filePath);
             log({ message: 'Getting file size', color: white });
             const bufferSize: number = await getFileSize({ fileHandle });
             if (bufferSize === 0)
@@ -96,12 +101,15 @@ export namespace File {
             log({ message: 'Reading file handle to buffer', color: white });
             await fileHandle.read(buffer, 0, bufferSize);
             log({ message: 'Read binary file successfully to buffer', color: green_bt });
-            await fileHandle.close();
-            log({ message: 'Closed file handle', color: white });
             return buffer;
         } catch (error: any) {
             log({ message: `An error has occurred: ${error}`, color: red_bt });
             return createBuffer({ size: 0 });
+        } finally {
+            if (fileHandle) {
+                await fileHandle.close();
+                log({ message: 'Closed file handle', color: white });
+            }
         }
     }
     export const readFile = readBinaryFile;
@@ -121,12 +129,13 @@ export namespace File {
     export async function writeBinaryFile({ filePath, buffer }: {
         filePath: string, buffer: Buffer
     }): Promise<number> {
+        let fileHandle: fs.FileHandle | undefined;
         try {
             log({ message: `Opening file path, ${filePath}, in write mode`, color: white });
             if (!(await isFileWritable({ filePath })))
                 throw new Error(`File is not writable, is missing or corrupted`);
             const flags: string = 'w';
-            const fileHandle: fs.FileHandle = await fs.open(filePath, flags);
+            fileHandle = await fs.open(filePath, flags);
             const bufferSize: number = await getFileSize({ fileHandle });
             if (bufferSize === 0)
                 log({ message: 'File size is 0, file may be corrupted, invalid or is a new file/buffer', color: yellow_bt });
@@ -136,12 +145,15 @@ export namespace File {
             const writeResult: { bytesWritten: number } = await fileHandle.write(buffer);
             const { bytesWritten } = writeResult;
             log({ message: `Written ${bytesWritten} bytes to file`, color: green_bt });
-            await fileHandle.close();
-            log({ message: 'Closed file handle', color: white });
             return bytesWritten;
         } catch (error: any) {
             log({ message: `An error has occurred: ${error}`, color: red_bt });
             return 0;
+        } finally {
+            if (fileHandle) {
+                await fileHandle.close();
+                log({ message: 'Closed file handle', color: white });
+            }
         }
     }
     export const writeFile = writeBinaryFile;
