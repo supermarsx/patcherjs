@@ -40,7 +40,8 @@ export namespace Filedrops {
         }
         const { filedrops } = configuration;
         for (const filedrop of filedrops)
-            await runFiledrop({ configuration, filedrop });
+            if (filedrop.enabled === true)
+                await runFiledrop({ configuration, filedrop });
     }
 
     /**
@@ -57,6 +58,7 @@ export namespace Filedrops {
      */
     export async function runFiledrop({ configuration, filedrop }:
         { configuration: ConfigurationObject, filedrop: FiledropsObject }): Promise<void> {
+        if (filedrop.enabled !== true) return;
         try {
             const filedropOptions: FiledropsOptionsObject = configuration.options.filedrops;
             await prefiledropChecksAndRoutines({ filedropOptions, filedrop });

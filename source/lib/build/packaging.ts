@@ -50,7 +50,8 @@ export namespace Packaging {
 
         const { filedrops } = configuration;
         for (const filedrop of filedrops)
-            await runPacking({ configuration, filedrop });
+            if (filedrop.enabled === true)
+                await runPacking({ configuration, filedrop });
     }
 
     /**
@@ -67,6 +68,7 @@ export namespace Packaging {
      */
     async function runPacking({ configuration, filedrop }:
         { configuration: ConfigurationObject, filedrop: FiledropsObject }): Promise<void> {
+        if (filedrop.enabled !== true) return;
         try {
             log({ message: `Packing file ${filedrop.fileNamePath}`, color: white });
             const filedropOptions: FiledropsOptionsObject = configuration.options.filedrops;

@@ -51,4 +51,15 @@ describe('Filedrops.runFiledrops', () => {
     expect(File.default.readBinaryFile).not.toHaveBeenCalled();
     expect(File.default.backupFile).not.toHaveBeenCalled();
   });
+
+  test('skips disabled filedrops', async () => {
+    const config = ConfigurationDefaults.getDefaultConfigurationObject();
+    config.filedrops = [
+      { name: 'd', fileDropName: 'f.bin', packedFileName: 'f.pack', fileNamePath: 'out.bin', decryptKey: 'key', enabled: false }
+    ];
+    await Filedrops.runFiledrops({ configuration: config });
+    expect(Crypt.default.decryptFile).not.toHaveBeenCalled();
+    expect(Packer.default.unpackFile).not.toHaveBeenCalled();
+    expect(File.default.writeBinaryFile).not.toHaveBeenCalled();
+  });
 });

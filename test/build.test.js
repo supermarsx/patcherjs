@@ -147,4 +147,16 @@ describe('Packaging.runPackings', () => {
     expect(Crypt.default.encryptFile).toHaveBeenNthCalledWith(1, { buffer: expect.any(Buffer), key: 'k1' });
     expect(File.default.writeBinaryFile).toHaveBeenNthCalledWith(1, { filePath: join(Constants.PATCHES_BASEPATH, 'out1'), buffer: expect.any(Buffer) });
   });
+
+  test('skips disabled filedrops', async () => {
+    const config = ConfigurationDefaults.getDefaultConfigurationObject();
+    config.filedrops = [
+      { name: 'a', fileDropName: 'out1', packedFileName: 'p1', fileNamePath: 'f1', decryptKey: 'k1', enabled: false }
+    ];
+    await Packaging.runPackings({ configuration: config });
+    expect(File.default.readBinaryFile).not.toHaveBeenCalled();
+    expect(Packer.default.packFile).not.toHaveBeenCalled();
+    expect(Crypt.default.encryptFile).not.toHaveBeenCalled();
+    expect(File.default.writeBinaryFile).not.toHaveBeenCalled();
+  });
 });
