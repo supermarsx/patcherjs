@@ -60,13 +60,13 @@ export namespace Encryption {
         try {
             var fileData: Buffer | string;
 
-            if (filePath && filePath !== undefined && typeof filePath === 'string') {
+            if (filePath && typeof filePath !== 'undefined' && typeof filePath === 'string') {
                 const filename: string = getFilename({ filePath });
                 log({ message: `Reading file to encrypt ${filename}`, color: white });
                 fileData = await readBinaryFile({ filePath });
             } else {
                 log({ message: `Reading buffer to encrypt`, color: white });
-                if (buffer && typeof buffer !== undefined && Buffer.isBuffer(buffer) === true) {
+                if (buffer && typeof buffer !== 'undefined' && Buffer.isBuffer(buffer) === true) {
                     fileData = buffer;
                 } else {
                     fileData = createBuffer({ size: 0 });
@@ -138,13 +138,13 @@ export namespace Encryption {
         try {
             var fileData: Buffer;
 
-            if (filePath && filePath !== undefined && typeof filePath === 'string') {
+            if (filePath && typeof filePath !== 'undefined' && typeof filePath === 'string') {
                 const filename: string = getFilename({ filePath });
                 log({ message: `Reading file to decrypt ${filename}`, color: white });
                 fileData = await readBinaryFile({ filePath });
             } else {
                 log({ message: `Reading buffer to decrypt`, color: white });
-                if (buffer && typeof buffer !== undefined && Buffer.isBuffer(buffer) === true) {
+                if (buffer && typeof buffer !== 'undefined' && Buffer.isBuffer(buffer) === true) {
                     fileData = buffer;
                 } else {
                     fileData = createBuffer({ size: 0 });
