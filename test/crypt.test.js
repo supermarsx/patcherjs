@@ -33,4 +33,10 @@ describe('Encryption.encryptFile and decryptFile', () => {
     await Crypt.encryptFile({ filePath: 'a.bin', key });
     expect(File.default.readBinaryFile).toHaveBeenCalledWith({ filePath: 'a.bin' });
   });
+
+  test('uses file input when decrypting', async () => {
+    const key = 'pw';
+    await Crypt.decryptFile({ filePath: 'b.bin', key });
+    expect(File.default.readBinaryFile).toHaveBeenCalledWith({ filePath: 'b.bin' });
+  });
 });
