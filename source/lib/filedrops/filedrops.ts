@@ -40,7 +40,8 @@ export namespace Filedrops {
         }
         const { filedrops } = configuration;
         for (const filedrop of filedrops)
-            await runFiledrop({ configuration, filedrop });
+            if (filedrop.enabled)
+                await runFiledrop({ configuration, filedrop });
     }
 
     /**

@@ -154,4 +154,23 @@ describe('Patches.runPatches', () => {
     const data = fs.readFileSync(testBinPath);
     expect(Array.from(data)).toEqual([0x00, 0x01]);
   });
+
+  test('disabled patches are skipped', async () => {
+    const config = ConfigurationDefaults.getDefaultConfigurationObject();
+    fs.writeFileSync(testBinPath, Buffer.from([0x00]));
+    config.patches = [
+      { name: 'test', patchFilename: 'test.patch', fileNamePath: testBinPath, enabled: false }
+    ];
+    const pOpts = config.options.patches;
+    pOpts.backupFiles = false;
+    pOpts.fileSizeCheck = false;
+    pOpts.skipWritingBinary = false;
+    pOpts.warnOnUnexpectedPreviousValue = false;
+    pOpts.failOnUnexpectedPreviousValue = false;
+    pOpts.runPatches = true;
+
+    await Patches.runPatches({ configuration: config });
+    const data = fs.readFileSync(testBinPath);
+    expect(data[0]).toBe(0x00);
+  });
 });

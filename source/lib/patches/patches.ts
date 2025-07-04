@@ -54,7 +54,8 @@ export namespace Patches {
 
         const { patches } = configuration;
         for (const patch of patches)
-            await runPatch({ configuration, patch });
+            if (patch.enabled)
+                await runPatch({ configuration, patch });
     }
 
     /**

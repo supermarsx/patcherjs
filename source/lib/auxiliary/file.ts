@@ -44,7 +44,7 @@ export namespace File {
             const cantReadFile: boolean = !(await isFileReadable({ filePath }));
             if (cantReadFile)
                 throw new Error(`File is not readable, is missing or corrupted`);
-            fileHandle = await open(filePath);
+            fileHandle = await fs.open(filePath);
             const bufferSize: number = await getFileSize({ fileHandle });
             if (bufferSize === 0)
                 log({ message: 'File size is 0, file may be corrupted or invalid', color: yellow_bt });
@@ -89,7 +89,7 @@ export namespace File {
             log({ message: `Opening file path, ${filePath}, in read mode`, color: white });
             if (!(await isFileReadable({ filePath })))
                 throw new Error(`File is not readable, is missing or corrupted`);
-            fileHandle = await open(filePath);
+            fileHandle = await fs.open(filePath);
             log({ message: 'Getting file size', color: white });
             const bufferSize: number = await getFileSize({ fileHandle });
             if (bufferSize === 0)
