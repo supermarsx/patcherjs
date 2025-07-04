@@ -60,7 +60,7 @@ export namespace Encryption {
         try {
             var fileData: Buffer | string;
 
-            if (filePath && typeof filePath !== undefined && typeof filePath === 'string') {
+            if (filePath && filePath !== undefined && typeof filePath === 'string') {
                 const filename: string = getFilename({ filePath });
                 log({ message: `Reading file to encrypt ${filename}`, color: white });
                 fileData = await readBinaryFile({ filePath });
@@ -138,7 +138,7 @@ export namespace Encryption {
         try {
             var fileData: Buffer;
 
-            if (filePath && typeof filePath !== undefined && typeof filePath === 'string') {
+            if (filePath && filePath !== undefined && typeof filePath === 'string') {
                 const filename: string = getFilename({ filePath });
                 log({ message: `Reading file to decrypt ${filename}`, color: white });
                 fileData = await readBinaryFile({ filePath });
