@@ -33,19 +33,22 @@ export namespace Packer {
     export async function packFile({ archivePath, buffer, password, preserveSource = true }:
         { archivePath?: string, buffer?: Buffer, password: string, preserveSource?: boolean }): Promise<Buffer> {
         log({ message: `Packing file`, color: white });
-        var sourcePath: string;
+        let sourcePath: string;
+        let usedTemp = false;
         if (archivePath) {
             sourcePath = archivePath;
         } else {
-            if ((buffer && Buffer.isBuffer(buffer))) {
+            if (buffer && Buffer.isBuffer(buffer)) {
                 const tempFilePath = tmp.tmpNameSync();
                 await writeBinaryFile({ filePath: tempFilePath, buffer });
                 sourcePath = tempFilePath;
+                usedTemp = true;
             } else {
                 log({ message: `Failed to get buffer or path, packing will fail`, color: yellow_bt });
                 sourcePath = '';
             }
         }
+
         log({ message: `Pack source path is ${sourcePath}`, color: white });
         const destinationPath: string = getPackedPath({ filePath: sourcePath });
         log({ message: `Pack destination path is ${destinationPath}`, color: white });
@@ -54,13 +57,18 @@ export namespace Packer {
             $bin: SEVENZIPBIN_FILEPATH,
             password: password
         };
-        await packFileWrapper({ destinationPath, sourcePath, options });
-        log({ message: `Packed file successfully`, color: white });
-        const packedBuffer: Buffer = await readBinaryFile({ filePath: destinationPath });
-        await deleteFile({ filePath: destinationPath });
-        if (preserveSource === false)
-            await deleteFile({ filePath: sourcePath });
-        return packedBuffer;
+
+        try {
+            await packFileWrapper({ destinationPath, sourcePath, options });
+            log({ message: `Packed file successfully`, color: white });
+            const packedBuffer: Buffer = await readBinaryFile({ filePath: destinationPath });
+            return packedBuffer;
+        } finally {
+            await deleteFile({ filePath: destinationPath });
+            if (!preserveSource || usedTemp) {
+                await deleteFile({ filePath: sourcePath });
+            }
+        }
     }
 
     /**

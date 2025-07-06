@@ -54,6 +54,14 @@ describe('Packer.packFile', () => {
     expect(File.default.deleteFile).toHaveBeenCalledWith({ filePath: '/tmp/temp' });
     expect(result).toEqual(Buffer.from('packed'));
   });
+
+  test('removes temporary file even when preserveSource is true', async () => {
+    const buf = Buffer.from('data');
+    await Packer.packFile({ buffer: buf, password: 'pw' });
+    expect(File.default.writeBinaryFile).toHaveBeenCalledWith({ filePath: '/tmp/temp', buffer: buf });
+    expect(File.default.deleteFile).toHaveBeenCalledWith({ filePath: '/tmp/temp.pack' });
+    expect(File.default.deleteFile).toHaveBeenCalledWith({ filePath: '/tmp/temp' });
+  });
 });
 
 describe('Packer.unpackFile', () => {
