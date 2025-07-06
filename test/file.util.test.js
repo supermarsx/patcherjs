@@ -62,6 +62,12 @@ describe('File utilities', () => {
     fs.rmSync(dir, { recursive: true, force: true });
   });
 
+  test('firstFilenameInFolder rejects when directory is empty', async () => {
+    const dir = fs.mkdtempSync(join(os.tmpdir(), 'fileutil-'));
+    await expect(File.firstFilenameInFolder({ folderPath: dir })).rejects.toThrow();
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+
   test('firstFilenameInFolder rejects on failure', async () => {
     await expect(File.firstFilenameInFolder({ folderPath: '/missing' })).rejects.toThrow();
   });
