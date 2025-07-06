@@ -30,4 +30,12 @@ describe('Parser.parsePatchFile', () => {
       { offset: 0x6n, previousValue: 0x0000000000000005n, newValue: 0x0000000000000006n, byteLength: 8 }
     ]);
   });
+
+  test('trailing newline does not produce extra patch', async () => {
+    const data = '00000000: 00 01\n';
+    const patches = await Parser.parsePatchFile({ fileData: data });
+    expect(patches).toEqual([
+      { offset: 0x00000000n, previousValue: 0x00, newValue: 0x01, byteLength: 1 }
+    ]);
+  });
 });
