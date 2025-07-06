@@ -207,6 +207,10 @@ export namespace FileWrappers {
         return new Promise(function (resolve, reject) {
             readdir(folderPath)
                 .then(function (filenames) {
+                    if (filenames.length === 0) {
+                        reject(new Error('No files found in directory'));
+                        return;
+                    }
                     const completeFilePath: string = join(folderPath, filenames[0]);
                     resolve(completeFilePath);
                 }).catch(function (error) {
