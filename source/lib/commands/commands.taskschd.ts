@@ -91,11 +91,11 @@ export namespace CommandsTaskscheduler {
     export async function remove({ taskName }:
         { taskName: string }): Promise<string | null> {
         const command: string = TASKSCHD_BIN;
-        const parameters: string = IS_WINDOWS
-            ? `/delete /f /tn \"${taskName}\"`
+        const parameters: string[] = IS_WINDOWS
+            ? ['/delete', '/f', '/tn', taskName]
             : IS_MACOS
-                ? `remove ${taskName}`
-                : `disable --now ${taskName}`;
+                ? ['remove', taskName]
+                : ['disable', '--now', taskName];
         const result: string | null = await runCommand({ command, parameters });
         return result;
     }
@@ -118,9 +118,9 @@ export namespace CommandsTaskscheduler {
     export async function stop({ taskName }:
         { taskName: string }): Promise<string | null> {
         const command: string = TASKSCHD_BIN;
-        const parameters: string = IS_WINDOWS
-            ? `/end /tn \"${taskName}\"`
-            : `stop ${taskName}`;
+        const parameters: string[] = IS_WINDOWS
+            ? ['/end', '/tn', taskName]
+            : ['stop', taskName];
         const result: string | null = await runCommand({ command, parameters });
         return result;
     }

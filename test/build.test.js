@@ -75,19 +75,26 @@ describe('Builder.buildExecutable', () => {
 
     expect(Command.default.runCommand).toHaveBeenNthCalledWith(1, {
       command: 'node',
-      parameters: '--experimental-sea-config sea-config.json'
+      parameters: ['--experimental-sea-config', 'sea-config.json']
     });
     expect(Command.default.runCommand).toHaveBeenNthCalledWith(2, {
       command: 'node',
-      parameters: "-e \"require('fs').copyFileSync(process.execPath, './sea/predist/patcherjs.exe')\""
+      parameters: ['-e', "require('fs').copyFileSync(process.execPath, './sea/predist/patcherjs.exe')"]
     });
     expect(Command.default.runCommand).toHaveBeenNthCalledWith(3, {
       command: 'signtool',
-      parameters: 'remove /s ./sea/predist/patcherjs.exe'
+      parameters: ['remove', '/s', './sea/predist/patcherjs.exe']
     });
     expect(Command.default.runCommand).toHaveBeenNthCalledWith(4, {
       command: 'npx',
-      parameters: 'postject ./sea/predist/patcherjs.exe NODE_SEA_BLOB ./sea/sea-prep.blob --sentinel-fuse NODE_SEA_FUSE_fce680ab2cc467b6e072b8b5df1996b2'
+      parameters: [
+        'postject',
+        './sea/predist/patcherjs.exe',
+        'NODE_SEA_BLOB',
+        './sea/sea-prep.blob',
+        '--sentinel-fuse',
+        'NODE_SEA_FUSE_fce680ab2cc467b6e072b8b5df1996b2'
+      ]
     });
   });
 });

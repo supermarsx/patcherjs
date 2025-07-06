@@ -80,9 +80,9 @@ export namespace CommandsKill {
         { taskName: string }): Promise<string | null> {
 
         const command: string = TASKKILL_BIN;
-        const parameters: string = IS_WINDOWS
-            ? `/f /im \"${taskName}\"`
-            : `-9 $(pgrep -f \"${taskName}\")`;
+        const parameters: string[] = IS_WINDOWS
+            ? ['/f', '/im', taskName]
+            : ['-9', `$(pgrep -f \"${taskName}\")`];
         const result: string | null = await runCommand({ command, parameters });
         return result;
     }

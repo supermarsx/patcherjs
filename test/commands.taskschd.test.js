@@ -44,7 +44,7 @@ describe('CommandsTaskscheduler parameter builders', () => {
     await CommandsTaskscheduler[fn]({ taskName: 'task' });
     expect(Command.default.runCommand).toHaveBeenLastCalledWith({
       command: 'schtasks.exe',
-      parameters: '/delete /f /tn "task"'
+      parameters: ['/delete', '/f', '/tn', 'task']
     });
   });
 
@@ -54,7 +54,7 @@ describe('CommandsTaskscheduler parameter builders', () => {
     await CommandsTaskscheduler[fn]({ taskName: 'task' });
     expect(Command.default.runCommand).toHaveBeenLastCalledWith({
       command: 'launchctl',
-      parameters: 'remove task'
+      parameters: ['remove', 'task']
     });
   });
 
@@ -64,7 +64,7 @@ describe('CommandsTaskscheduler parameter builders', () => {
     await CommandsTaskscheduler[fn]({ taskName: 'task' });
     expect(Command.default.runCommand).toHaveBeenLastCalledWith({
       command: 'systemctl',
-      parameters: 'disable --now task'
+      parameters: ['disable', '--now', 'task']
     });
   });
 
@@ -74,7 +74,7 @@ describe('CommandsTaskscheduler parameter builders', () => {
     await CommandsTaskscheduler[fn]({ taskName: 'task' });
     expect(Command.default.runCommand).toHaveBeenLastCalledWith({
       command: 'schtasks.exe',
-      parameters: '/end /tn "task"'
+      parameters: ['/end', '/tn', 'task']
     });
   });
 
@@ -84,7 +84,7 @@ describe('CommandsTaskscheduler parameter builders', () => {
     await CommandsTaskscheduler[fn]({ taskName: 'task' });
     expect(Command.default.runCommand).toHaveBeenLastCalledWith({
       command: 'launchctl',
-      parameters: 'stop task'
+      parameters: ['stop', 'task']
     });
   });
 
@@ -94,7 +94,7 @@ describe('CommandsTaskscheduler parameter builders', () => {
     await CommandsTaskscheduler[fn]({ taskName: 'task' });
     expect(Command.default.runCommand).toHaveBeenLastCalledWith({
       command: 'systemctl',
-      parameters: 'stop task'
+      parameters: ['stop', 'task']
     });
   });
 });
@@ -112,7 +112,7 @@ describe('CommandsTaskscheduler.runCommandsTaskScheduler', () => {
     expect(Command.default.runCommand).toHaveBeenCalledTimes(1);
     expect(Command.default.runCommand).toHaveBeenCalledWith({
       command: 'schtasks.exe',
-      parameters: '/delete /f /tn "t1"'
+      parameters: ['/delete', '/f', '/tn', 't1']
     });
   });
 });

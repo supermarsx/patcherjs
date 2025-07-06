@@ -113,7 +113,7 @@ export namespace Commands {
         for (const command of commands)
             if (command.enabled === true) {
                 log({ message: `Running general command ${command.name}: ${command.command}`, color: white });
-                await runCommand({ command: command.command, parameters: '' });
+                await runCommand({ command: command.command, parameters: [] });
             }
     }
 }

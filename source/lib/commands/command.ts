@@ -1,4 +1,4 @@
-import { exec } from 'child_process';
+import { spawn } from 'child_process';
 
 import Debug from '../auxiliary/debug.js';
 const { log } = Debug;
@@ -20,7 +20,7 @@ export namespace Command {
      * @since 0.0.1
      */
     export async function runCommand({ command, parameters }:
-        { command: string, parameters: string }): Promise<string | null> {
+        { command: string, parameters: string[] }): Promise<string | null> {
         try {
             const result: string = await runCommandPromise({ command, parameters });
             return result;
@@ -47,11 +47,10 @@ export namespace Command {
      * @since 0.0.1
      */
     export async function runCommandPromise({ command, parameters }:
-        { command: string, parameters: string }): Promise<string> {
+        { command: string, parameters: string[] }): Promise<string> {
 
         return new Promise(function (resolve, reject) {
-            const fullCommand: string = `${command} ${parameters}`;
-            const childProcess: any = exec(fullCommand);
+            const childProcess: any = spawn(command, parameters, { shell: true });
             let output: string = '';
             childProcess.stdout.on('data', function (data) {
                 output += data.toString();
