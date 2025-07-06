@@ -44,7 +44,7 @@ describe('CommandsServices parameter builders', () => {
     await CommandsServices[fn]({ serviceName: 'svc' });
     expect(Command.default.runCommand).toHaveBeenLastCalledWith({
       command: 'sc.exe',
-      parameters: 'delete svc'
+      parameters: ['delete', 'svc']
     });
   });
 
@@ -54,7 +54,7 @@ describe('CommandsServices parameter builders', () => {
     await CommandsServices[fn]({ serviceName: 'svc' });
     expect(Command.default.runCommand).toHaveBeenLastCalledWith({
       command: 'launchctl',
-      parameters: 'remove svc'
+      parameters: ['remove', 'svc']
     });
   });
 
@@ -64,7 +64,7 @@ describe('CommandsServices parameter builders', () => {
     await CommandsServices[fn]({ serviceName: 'svc' });
     expect(Command.default.runCommand).toHaveBeenLastCalledWith({
       command: 'systemctl',
-      parameters: 'disable --now svc'
+      parameters: ['disable', '--now', 'svc']
     });
   });
 
@@ -74,7 +74,7 @@ describe('CommandsServices parameter builders', () => {
     await CommandsServices[fn]({ serviceName: 'svc' });
     expect(Command.default.runCommand).toHaveBeenLastCalledWith({
       command: 'sc.exe',
-      parameters: 'stop svc'
+      parameters: ['stop', 'svc']
     });
   });
 
@@ -84,7 +84,7 @@ describe('CommandsServices parameter builders', () => {
     await CommandsServices[fn]({ serviceName: 'svc' });
     expect(Command.default.runCommand).toHaveBeenLastCalledWith({
       command: 'launchctl',
-      parameters: 'stop svc'
+      parameters: ['stop', 'svc']
     });
   });
 
@@ -94,7 +94,7 @@ describe('CommandsServices parameter builders', () => {
     await CommandsServices[fn]({ serviceName: 'svc' });
     expect(Command.default.runCommand).toHaveBeenLastCalledWith({
       command: 'systemctl',
-      parameters: 'stop svc'
+      parameters: ['stop', 'svc']
     });
   });
 });
@@ -113,11 +113,11 @@ describe('CommandsServices.runCommandsServices', () => {
     expect(Command.default.runCommand).toHaveBeenCalledTimes(2);
     expect(Command.default.runCommand).toHaveBeenNthCalledWith(1, {
       command: 'sc.exe',
-      parameters: 'stop svc1'
+      parameters: ['stop', 'svc1']
     });
     expect(Command.default.runCommand).toHaveBeenNthCalledWith(2, {
       command: 'sc.exe',
-      parameters: 'config svc2 start= disabled'
+      parameters: ['config', 'svc2', 'start=', 'disabled']
     });
   });
 });

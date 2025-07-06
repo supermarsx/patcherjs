@@ -43,12 +43,12 @@ describe('Command helpers - parameters', () => {
     await CommandsTaskscheduler.remove({ taskName: 'task' });
     expect(Command.default.runCommand).toHaveBeenLastCalledWith({
       command: 'schtasks.exe',
-      parameters: '/delete /f /tn "task"'
+      parameters: ['/delete', '/f', '/tn', 'task']
     });
     await CommandsTaskscheduler.stop({ taskName: 'task' });
     expect(Command.default.runCommand).toHaveBeenLastCalledWith({
       command: 'schtasks.exe',
-      parameters: '/end /tn "task"'
+      parameters: ['/end', '/tn', 'task']
     });
   });
 
@@ -58,12 +58,12 @@ describe('Command helpers - parameters', () => {
     await CommandsTaskscheduler.remove({ taskName: 'task' });
     expect(Command.default.runCommand).toHaveBeenLastCalledWith({
       command: 'launchctl',
-      parameters: 'remove task'
+      parameters: ['remove', 'task']
     });
     await CommandsTaskscheduler.stop({ taskName: 'task' });
     expect(Command.default.runCommand).toHaveBeenLastCalledWith({
       command: 'launchctl',
-      parameters: 'stop task'
+      parameters: ['stop', 'task']
     });
   });
 
@@ -73,12 +73,12 @@ describe('Command helpers - parameters', () => {
     await CommandsTaskscheduler.remove({ taskName: 'task' });
     expect(Command.default.runCommand).toHaveBeenLastCalledWith({
       command: 'systemctl',
-      parameters: 'disable --now task'
+      parameters: ['disable', '--now', 'task']
     });
     await CommandsTaskscheduler.stop({ taskName: 'task' });
     expect(Command.default.runCommand).toHaveBeenLastCalledWith({
       command: 'systemctl',
-      parameters: 'stop task'
+      parameters: ['stop', 'task']
     });
   });
 
@@ -88,17 +88,17 @@ describe('Command helpers - parameters', () => {
     await CommandsServices.stop({ serviceName: 'svc' });
     expect(Command.default.runCommand).toHaveBeenLastCalledWith({
       command: 'sc.exe',
-      parameters: 'stop svc'
+      parameters: ['stop', 'svc']
     });
     await CommandsServices.disable({ serviceName: 'svc' });
     expect(Command.default.runCommand).toHaveBeenLastCalledWith({
       command: 'sc.exe',
-      parameters: 'config svc start= disabled'
+      parameters: ['config', 'svc', 'start=', 'disabled']
     });
     await CommandsServices.remove({ serviceName: 'svc' });
     expect(Command.default.runCommand).toHaveBeenLastCalledWith({
       command: 'sc.exe',
-      parameters: 'delete svc'
+      parameters: ['delete', 'svc']
     });
   });
 
@@ -108,17 +108,17 @@ describe('Command helpers - parameters', () => {
     await CommandsServices.stop({ serviceName: 'svc' });
     expect(Command.default.runCommand).toHaveBeenLastCalledWith({
       command: 'launchctl',
-      parameters: 'stop svc'
+      parameters: ['stop', 'svc']
     });
     await CommandsServices.disable({ serviceName: 'svc' });
     expect(Command.default.runCommand).toHaveBeenLastCalledWith({
       command: 'launchctl',
-      parameters: 'disable svc'
+      parameters: ['disable', 'svc']
     });
     await CommandsServices.remove({ serviceName: 'svc' });
     expect(Command.default.runCommand).toHaveBeenLastCalledWith({
       command: 'launchctl',
-      parameters: 'remove svc'
+      parameters: ['remove', 'svc']
     });
   });
 
@@ -128,17 +128,17 @@ describe('Command helpers - parameters', () => {
     await CommandsServices.stop({ serviceName: 'svc' });
     expect(Command.default.runCommand).toHaveBeenLastCalledWith({
       command: 'systemctl',
-      parameters: 'stop svc'
+      parameters: ['stop', 'svc']
     });
     await CommandsServices.disable({ serviceName: 'svc' });
     expect(Command.default.runCommand).toHaveBeenLastCalledWith({
       command: 'systemctl',
-      parameters: 'disable svc'
+      parameters: ['disable', 'svc']
     });
     await CommandsServices.remove({ serviceName: 'svc' });
     expect(Command.default.runCommand).toHaveBeenLastCalledWith({
       command: 'systemctl',
-      parameters: 'disable --now svc'
+      parameters: ['disable', '--now', 'svc']
     });
   });
 
@@ -148,14 +148,14 @@ describe('Command helpers - parameters', () => {
     await CommandsKill.killTask({ taskName: 'proc' });
     expect(Command.default.runCommand).toHaveBeenCalledWith({
       command: 'taskkill.exe',
-      parameters: '/f /im "proc"'
+      parameters: ['/f', '/im', 'proc']
     });
     const mods2 = await loadModules('linux');
     mods2.Command.default.runCommand.mockResolvedValue('');
     await mods2.CommandsKill.killTask({ taskName: 'proc' });
     expect(mods2.Command.default.runCommand).toHaveBeenCalledWith({
       command: 'kill',
-      parameters: '-9 $(pgrep -f "proc")'
+      parameters: ['-9', '$(pgrep -f "proc")']
     });
   });
 });

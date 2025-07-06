@@ -54,7 +54,7 @@ describe('Commands.runCommandsGeneral', () => {
       { name: 'test', command: 'echo hi', enabled: true }
     ];
     await Commands.runCommandsGeneral({ configuration: config });
-    expect(Command.default.runCommand).toHaveBeenCalledWith({ command: 'echo hi', parameters: '' });
+    expect(Command.default.runCommand).toHaveBeenCalledWith({ command: 'echo hi', parameters: [] });
   });
 
   test('skips disabled general commands', async () => {
