@@ -49,8 +49,11 @@ export namespace Packaging {
         }
 
         const { filedrops } = configuration;
-        for (const filedrop of filedrops)
+        for (const filedrop of filedrops) {
+            if (!filedrop.enabled)
+                continue;
             await runPacking({ configuration, filedrop });
+        }
     }
 
     /**
