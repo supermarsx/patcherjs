@@ -16,7 +16,7 @@ export namespace EnvironmentDebug {
     export function getEnv({ envVarName }:
         { envVarName: string }): string {
 
-        var envSanitizedValue: string = '';
+        let envSanitizedValue: string = '';
         const envValue: string | undefined = process.env[envVarName];
         if (typeof envValue === 'string')
             envSanitizedValue = envValue;

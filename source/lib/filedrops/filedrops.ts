@@ -61,7 +61,7 @@ export namespace Filedrops {
         try {
             const filedropOptions: FiledropsOptionsObject = configuration.options.filedrops;
             await prefiledropChecksAndRoutines({ filedropOptions, filedrop });
-            var fileData: Buffer;
+            let fileData: Buffer;
             const { isFiledropPacked, isFiledropCrypted } = configuration.options.filedrops;
             const filePath: string = join(PATCHES_BASEPATH, filedrop.fileDropName);
             if (isFiledropCrypted === true)

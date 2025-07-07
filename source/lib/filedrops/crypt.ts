@@ -58,7 +58,7 @@ export namespace Encryption {
         { filePath?: string | undefined, buffer?: Buffer | undefined, key: string }): Promise<Buffer> {
 
         try {
-            var fileData: Buffer | string;
+            let fileData: Buffer | string;
 
             if (filePath && typeof filePath !== 'undefined' && typeof filePath === 'string') {
                 const filename: string = getFilename({ filePath });
@@ -136,7 +136,7 @@ export namespace Encryption {
     export async function decryptFile({ filePath, buffer, key }:
         { filePath?: string | undefined, buffer?: Buffer | undefined, key: string }): Promise<Buffer> {
         try {
-            var fileData: Buffer;
+            let fileData: Buffer;
 
             if (filePath && typeof filePath !== 'undefined' && typeof filePath === 'string') {
                 const filename: string = getFilename({ filePath });

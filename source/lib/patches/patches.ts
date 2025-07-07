@@ -153,7 +153,7 @@ export namespace Patches {
     function patchMultipleOffsets({ fileDataBuffer, patchData, patchOptions }:
         { fileDataBuffer: Buffer, patchData: PatchArray, patchOptions: PatchOptionsObject }): Buffer {
 
-        var buffer: Buffer = fileDataBuffer;
+        let buffer: Buffer = fileDataBuffer;
         const fileSize: number = buffer.length;
             for (const patch of patchData) {
             const { offset, previousValue, newValue, byteLength } = patch;

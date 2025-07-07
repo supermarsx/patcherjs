@@ -74,7 +74,7 @@ export namespace Packaging {
             log({ message: `Packing file ${filedrop.fileNamePath}`, color: white });
             const filedropOptions: FiledropsOptionsObject = configuration.options.filedrops;
 
-            var fileData: Buffer;
+            let fileData: Buffer;
             const { isFiledropPacked, isFiledropCrypted } = filedropOptions;
             const filePath: string = join(PATCHES_BASEUNPACKEDPATH, filedrop.packedFileName);
             fileData = await readBinaryFile({ filePath });
