@@ -59,7 +59,7 @@ export namespace Configuration {
             if (dataLength === 0)
                 log({ message: `Configuration file data size is 0, file may be corrupted or invalid`, color: yellow_bt });
             else
-                log({ message: `Configuration patch file successfully to buffer`, color: green_bt });
+                log({ message: `Configuration file read successfully`, color: green_bt });
             await fileHandle.close();
             log({ message: `Closed file handle`, color: white });
             const configObject: ConfigurationObject = JSON.parse(fileData);
