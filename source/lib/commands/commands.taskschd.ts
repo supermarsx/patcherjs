@@ -99,10 +99,6 @@ export namespace CommandsTaskscheduler {
         const result: string | null = await runCommand({ command, parameters });
         return result;
     }
-    export const removeTask = remove;
-    export const rmTask = remove;
-    export const taskRemove = remove;
-    export const taskRm = remove;
 
     /**
      * Stop a task using schtasks
@@ -124,8 +120,6 @@ export namespace CommandsTaskscheduler {
         const result: string | null = await runCommand({ command, parameters });
         return result;
     }
-    export const stopTask = stop;
-    export const taskStop = stop;
 }
 
 export default CommandsTaskscheduler;

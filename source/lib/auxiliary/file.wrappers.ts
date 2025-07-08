@@ -54,7 +54,6 @@ export namespace FileWrappers {
             return 0;
         }
     }
-    export const getFileSizeUsingHandle = getFileSize;
 
     /**
      * Check if file is readable
@@ -162,7 +161,6 @@ export namespace FileWrappers {
             log({ message: `Failed to delete file: ${error}`, color: red_bt });
         }
     }
-    export const delFile = deleteFile;
 
 
     /**
@@ -187,8 +185,6 @@ export namespace FileWrappers {
         }
 
     }
-    export const delFolder = deleteFolder;
-    export const delFol = deleteFolder;
 
     /**
      * Get first file within folder and return path of first file

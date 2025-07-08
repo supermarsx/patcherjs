@@ -85,7 +85,6 @@ export namespace DebugLogging {
         debug(color(message));
         return;
     }
-    export const logMessage = log;
 
     /**
      * Log a message to a file

@@ -34,8 +34,8 @@ async function loadModules(platform) {
   return { CommandsTaskscheduler: mod.CommandsTaskscheduler, Command };
 }
 
-const removeAliases = ['remove', 'removeTask', 'rmTask', 'taskRemove', 'taskRm'];
-const stopAliases = ['stop', 'stopTask', 'taskStop'];
+const removeAliases = ['remove'];
+const stopAliases = ['stop'];
 
 describe('CommandsTaskscheduler parameter builders', () => {
   test.each(removeAliases)('remove alias %s on Windows', async (fn) => {

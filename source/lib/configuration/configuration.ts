@@ -70,9 +70,6 @@ export namespace Configuration {
             return emptyConfig;
         }
     }
-    export const readConfiguration = readConfigurationFile;
-    export const readConfig = readConfigurationFile;
-    export const readConf = readConfigurationFile;
 }
 
  export default Configuration;
