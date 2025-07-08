@@ -34,11 +34,11 @@ export namespace Parser {
             if (dataLength === 0)
                 throw new Error(`Patch file data is empty or corrupted`);
             log({ message: `Splitting file lines`, color: white });
-            let patchData: Array<any> = splitLines({ fileData });
+            let patchData: string[] = splitLines({ fileData });
             // remove empty lines that may appear due to trailing newlines
             patchData = patchData.filter((line) => line.trim().length > 0);
             log({ message: `Building patch objects array`, color: white });
-            const patches: Array<any> = buildPatchesArray({ patchData });
+            const patches: PatchArray = buildPatchesArray({ patchData });
             const patchesCount: number = patches.length;
             log({ message: `Patch objects array built with ${patchesCount}`, color: green_bt });
             return patches;
@@ -60,7 +60,7 @@ export namespace Parser {
      * @since 0.0.1
      */
     function buildPatchesArray({ patchData }:
-        { patchData: Array<any> }): PatchArray {
+        { patchData: string[] }): PatchArray {
         try {
             const lines: number = patchData.length;
             log({ message: `Found ${lines} patch(es) inside patch data`, color: white });
