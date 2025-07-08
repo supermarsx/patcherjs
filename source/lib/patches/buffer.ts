@@ -80,23 +80,7 @@ export namespace BufferUtils {
                 log({ message: `Offset ${offset} with length ${byteLength} exceeds buffer size ${buffer.length}, skipping patch`, color: yellow_bt });
                 return buffer;
             }
-            let currentValue: number | bigint;
-            switch (byteLength) {
-                case 1:
-                    currentValue = buffer.readUInt8(offset);
-                    break;
-                case 2:
-                    currentValue = bigEndian ? buffer.readUInt16BE(offset) : buffer.readUInt16LE(offset);
-                    break;
-                case 4:
-                    currentValue = bigEndian ? buffer.readUInt32BE(offset) : buffer.readUInt32LE(offset);
-                    break;
-                case 8:
-                    currentValue = bigEndian ? buffer.readBigUInt64BE(offset) : buffer.readBigUInt64LE(offset);
-                    break;
-                default:
-                    throw new Error(`Unsupported byte length ${byteLength}`);
-            }
+            const currentValue = readValue({ buffer, offset, byteLength, bigEndian });
 
             if ((failOnUnexpectedPreviousValue === true && currentValue !== previousValue && unpatchMode === false) ||
                 (failOnUnexpectedPreviousValue === true && currentValue !== newValue && unpatchMode === true)) {
@@ -199,23 +183,7 @@ export namespace BufferUtils {
                 }
                 const buf = Buffer.alloc(byteLength);
                 await handle.read(buf, 0, byteLength, position);
-                let currentValue: number | bigint;
-                switch (byteLength) {
-                    case 1:
-                        currentValue = buf.readUInt8(0);
-                        break;
-                    case 2:
-                        currentValue = bigEndian ? buf.readUInt16BE(0) : buf.readUInt16LE(0);
-                        break;
-                    case 4:
-                        currentValue = bigEndian ? buf.readUInt32BE(0) : buf.readUInt32LE(0);
-                        break;
-                    case 8:
-                        currentValue = bigEndian ? buf.readBigUInt64BE(0) : buf.readBigUInt64LE(0);
-                        break;
-                    default:
-                        throw new Error(`Unsupported byte length ${byteLength}`);
-                }
+                const currentValue = readValue({ buffer: buf, offset: 0, byteLength, bigEndian });
 
                 if ((failOnUnexpectedPreviousValue === true && currentValue !== previousValue && unpatchMode === false) ||
                     (failOnUnexpectedPreviousValue === true && currentValue !== newValue && unpatchMode === true)) {
@@ -270,52 +238,12 @@ export namespace BufferUtils {
                 }
 
                 if (valueToWrite !== null && skipWritePatch === false) {
-                    switch (byteLength) {
-                        case 1:
-                            buf.writeUInt8(Number(valueToWrite), 0);
-                            break;
-                        case 2:
-                            if (bigEndian)
-                                buf.writeUInt16BE(Number(valueToWrite), 0);
-                            else
-                                buf.writeUInt16LE(Number(valueToWrite), 0);
-                            break;
-                        case 4:
-                            if (bigEndian)
-                                buf.writeUInt32BE(Number(valueToWrite), 0);
-                            else
-                                buf.writeUInt32LE(Number(valueToWrite), 0);
-                            break;
-                        case 8:
-                            if (bigEndian)
-                                buf.writeBigUInt64BE(BigInt(valueToWrite), 0);
-                            else
-                                buf.writeBigUInt64LE(BigInt(valueToWrite), 0);
-                            break;
-                    }
+                    writeValue({ buffer: buf, value: valueToWrite, offset: 0, byteLength, bigEndian });
                     await handle.write(buf, 0, byteLength, position);
                     if (verifyPatch === true) {
                         const verifyBuf = Buffer.alloc(byteLength);
                         await handle.read(verifyBuf, 0, byteLength, position);
-                        let verifyValue: number | bigint;
-                        switch (byteLength) {
-                            case 1:
-                                verifyValue = verifyBuf.readUInt8(0);
-                                break;
-                            case 2:
-                                verifyValue = bigEndian ? verifyBuf.readUInt16BE(0) : verifyBuf.readUInt16LE(0);
-                                break;
-                            case 4:
-                                verifyValue = bigEndian ? verifyBuf.readUInt32BE(0) : verifyBuf.readUInt32LE(0);
-                                break;
-                            case 8:
-                                verifyValue = bigEndian ? verifyBuf.readBigUInt64BE(0) : verifyBuf.readBigUInt64LE(0);
-                                break;
-                            default:
-                                throw new Error(`Unsupported byte length ${byteLength}`);
-                        }
-                        if (verifyValue !== valueToWrite)
-                            throw new Error(`Failed to verify patch at offset ${offset}: ${verifyValue}, expected ${valueToWrite}`);
+                        verifyValue({ buffer: verifyBuf, value: valueToWrite, offset: 0, byteLength, bigEndian });
                     }
                 } else if (valueToWrite !== null) {
                     log({ message: `Skipping buffer write`, color: white });
@@ -324,6 +252,58 @@ export namespace BufferUtils {
         } finally {
             await handle.close();
         }
+    }
+
+    function readValue({ buffer, offset, byteLength, bigEndian }:
+        { buffer: Buffer, offset: number, byteLength: 1 | 2 | 4 | 8, bigEndian: boolean }): number | bigint {
+        switch (byteLength) {
+            case 1:
+                return buffer.readUInt8(offset);
+            case 2:
+                return bigEndian ? buffer.readUInt16BE(offset) : buffer.readUInt16LE(offset);
+            case 4:
+                return bigEndian ? buffer.readUInt32BE(offset) : buffer.readUInt32LE(offset);
+            case 8:
+                return bigEndian ? buffer.readBigUInt64BE(offset) : buffer.readBigUInt64LE(offset);
+            default:
+                throw new Error(`Unsupported byte length ${byteLength}`);
+        }
+    }
+
+    function writeValue({ buffer, value, offset, byteLength, bigEndian }:
+        { buffer: Buffer, value: number | bigint, offset: number, byteLength: 1 | 2 | 4 | 8, bigEndian: boolean }): void {
+        switch (byteLength) {
+            case 1:
+                buffer.writeUInt8(Number(value), offset);
+                break;
+            case 2:
+                if (bigEndian)
+                    buffer.writeUInt16BE(Number(value), offset);
+                else
+                    buffer.writeUInt16LE(Number(value), offset);
+                break;
+            case 4:
+                if (bigEndian)
+                    buffer.writeUInt32BE(Number(value), offset);
+                else
+                    buffer.writeUInt32LE(Number(value), offset);
+                break;
+            case 8:
+                if (bigEndian)
+                    buffer.writeBigUInt64BE(BigInt(value), offset);
+                else
+                    buffer.writeBigUInt64LE(BigInt(value), offset);
+                break;
+            default:
+                throw new Error(`Unsupported byte length ${byteLength}`);
+        }
+    }
+
+    function verifyValue({ buffer, value, offset, byteLength, bigEndian }:
+        { buffer: Buffer, value: number | bigint, offset: number, byteLength: 1 | 2 | 4 | 8, bigEndian: boolean }): void {
+        const verify = readValue({ buffer, offset, byteLength, bigEndian });
+        if (verify !== value)
+            throw new Error(`Failed to verify patch at offset ${offset}: ${verify}, expected ${value}`);
     }
 
     /**
@@ -362,52 +342,12 @@ export namespace BufferUtils {
     function writeBuffer({ buffer, value, offset, skipWritePatch, byteLength, bigEndian, verifyPatch }:
         { buffer: Buffer, value: number | bigint, offset: number, skipWritePatch: boolean, byteLength: 1 | 2 | 4 | 8, bigEndian: boolean, verifyPatch: boolean }): void {
         if (skipWritePatch === false)
-            switch (byteLength) {
-                case 1:
-                    buffer.writeUInt8(Number(value), offset);
-                    break;
-                case 2:
-                    if (bigEndian)
-                        buffer.writeUInt16BE(Number(value), offset);
-                    else
-                        buffer.writeUInt16LE(Number(value), offset);
-                    break;
-                case 4:
-                    if (bigEndian)
-                        buffer.writeUInt32BE(Number(value), offset);
-                    else
-                        buffer.writeUInt32LE(Number(value), offset);
-                    break;
-                case 8:
-                    if (bigEndian)
-                        buffer.writeBigUInt64BE(BigInt(value), offset);
-                    else
-                        buffer.writeBigUInt64LE(BigInt(value), offset);
-                    break;
-            }
+            writeValue({ buffer, value, offset, byteLength, bigEndian });
         else
             log({ message: `Skipping buffer write`, color: white });
 
         if (skipWritePatch === false && verifyPatch === true) {
-            let verifyValue: number | bigint;
-            switch (byteLength) {
-                case 1:
-                    verifyValue = buffer.readUInt8(offset);
-                    break;
-                case 2:
-                    verifyValue = bigEndian ? buffer.readUInt16BE(offset) : buffer.readUInt16LE(offset);
-                    break;
-                case 4:
-                    verifyValue = bigEndian ? buffer.readUInt32BE(offset) : buffer.readUInt32LE(offset);
-                    break;
-                case 8:
-                    verifyValue = bigEndian ? buffer.readBigUInt64BE(offset) : buffer.readBigUInt64LE(offset);
-                    break;
-                default:
-                    throw new Error(`Unsupported byte length ${byteLength}`);
-            }
-            if (verifyValue !== value)
-                throw new Error(`Failed to verify patch at offset ${offset}: ${verifyValue}, expected ${value}`);
+            verifyValue({ buffer, value, offset, byteLength, bigEndian });
         }
     }
 
