@@ -19,7 +19,6 @@ export * from './debug.wrappers.js';
 export namespace Debug {
 
     export const log = Logging.log;
-    export const logMessage = log;
 
     /**
      * Enable debug (and logging)
@@ -42,7 +41,6 @@ export namespace Debug {
             return false;
         }
     }
-    export const enableDebug = enable;
 
     /**
      * Disable debug (and logging)
@@ -63,7 +61,6 @@ export namespace Debug {
             return false;
         }
     }
-    export const disableDebug = disable;
 
     /**
      * Check if debugging is enabled
@@ -84,9 +81,7 @@ export namespace Debug {
         };
         return debugStatus;
     }
-    export const isDebuggingEnabled = isEnabled;
     export function isDisabled(): boolean { return !isEnabled(); }
-    export const isDebuggingDisabled = isDisabled;
 }
 
 export default Debug;

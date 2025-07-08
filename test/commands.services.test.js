@@ -34,8 +34,8 @@ async function loadModules(platform) {
   return { CommandsServices: mod.CommandsServices, Command };
 }
 
-const removeAliases = ['remove', 'serviceRemove', 'svRemove', 'removeService', 'removeSv'];
-const stopAliases = ['stop', 'serviceStop', 'svStop', 'stopService', 'stopSv'];
+const removeAliases = ['remove'];
+const stopAliases = ['stop'];
 
 describe('CommandsServices parameter builders', () => {
   test.each(removeAliases)('remove alias %s on Windows', async (fn) => {

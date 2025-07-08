@@ -39,8 +39,6 @@ export namespace CommandsKill {
                 await runCommandsKillSingle({ kill });
             }
     }
-    export const runAllKillCommands = runCommandsKill;
-    export const runAllKills = runCommandsKill;
 
     /**
      * Run a single kill command
@@ -62,8 +60,6 @@ export namespace CommandsKill {
             log({ message: `Failed to process kill command ${error}`, color: red_bt });
         }
     }
-    export const runSingleKillCommand = runCommandsKillSingle;
-    export const runSingleKill = runCommandsKillSingle;
 
     /**
      * Kill a specific task name
@@ -86,7 +82,6 @@ export namespace CommandsKill {
         const result: string | null = await runCommand({ command, parameters });
         return result;
     }
-    export const kill = killTask;
 }
 
 export default CommandsKill;

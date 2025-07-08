@@ -31,7 +31,7 @@ jest.unstable_mockModule('../source/lib/auxiliary/console.js', () => ({
 }));
 
 jest.unstable_mockModule('../source/lib/configuration/configuration.js', () => ({
-  default: { readConfiguration: jest.fn() }
+  default: { readConfigurationFile: jest.fn() }
 }));
 
 let Patcher;
@@ -83,9 +83,9 @@ describe('Patcher.runPatcher', () => {
     const config = ConfigurationDefaults.getDefaultConfigurationObject();
     config.options.general.onlyPackingMode = false;
     config.options.general.runningOrder = [Constants.COMP_COMMANDS, Constants.COMP_FILEDROPS, Constants.COMP_PATCHES];
-    Configuration.default.readConfiguration.mockResolvedValue(config);
+    Configuration.default.readConfigurationFile.mockResolvedValue(config);
     await Patcher.runPatcher({ configFilePath: 'cfg.json' });
-    expect(Configuration.default.readConfiguration).toHaveBeenCalledWith({ filePath: 'cfg.json' });
+    expect(Configuration.default.readConfigurationFile).toHaveBeenCalledWith({ filePath: 'cfg.json' });
     const order = [
       Commands.default.runCommands.mock.invocationCallOrder[0],
       Filedrops.default.runFiledrops.mock.invocationCallOrder[0],

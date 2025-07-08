@@ -1,5 +1,5 @@
 import Configuration from './configuration/configuration.js';
-const { readConfiguration } = Configuration;
+const { readConfigurationFile } = Configuration;
 
 import Commands from './commands/commands.js';
 const { runCommands } = Commands;
@@ -51,7 +51,7 @@ export namespace Patcher {
     export async function runPatcher({ configFilePath = CONFIG_FILEPATH }:
         { configFilePath?: string }): Promise<void> {
         try {
-            const configuration: ConfigurationObject = await readConfiguration({ filePath: configFilePath });
+            const configuration: ConfigurationObject = await readConfigurationFile({ filePath: configFilePath });
             await runGeneralChecksAndInit({ configuration });
             const { onlyPackingMode } = configuration.options.general;
             if (onlyPackingMode === true) {

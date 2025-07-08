@@ -24,7 +24,6 @@ export namespace EnvironmentDebug {
             envSanitizedValue = '';
         return envSanitizedValue;
     }
-    export const getEnvironmentVariable = getEnv;
 
     /**
      * Set an environment variable
@@ -44,7 +43,6 @@ export namespace EnvironmentDebug {
         const finalVarValue: string = varValue.toString();
         process.env[envVarName] = finalVarValue;
     }
-    export const setEnvironmentVariable = setEnv;
 
     /**
      * Get boolean value from an environment variable
@@ -64,7 +62,6 @@ export namespace EnvironmentDebug {
         const booleanVarValue: boolean = parseBoolean({ value: envValue });
         return booleanVarValue;
     }
-    export const getEnvironmentVariableBoolean = getEnvBoolean;
 }
 
 export default EnvironmentDebug;

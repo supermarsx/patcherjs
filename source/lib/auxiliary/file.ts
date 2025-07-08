@@ -112,7 +112,6 @@ export namespace File {
             }
         }
     }
-    export const readFile = readBinaryFile;
 
     /**
      * Write a buffer to file
@@ -156,7 +155,6 @@ export namespace File {
             }
         }
     }
-    export const writeFile = writeBinaryFile;
 }
 
 export default File;

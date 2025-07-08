@@ -27,7 +27,6 @@ export namespace Console {
             });
         });
     }
-    export const waitForKey = waitForKeypress;
 }
 
 export default Console;

@@ -44,9 +44,6 @@ export namespace CommandsServices {
                 await runCommandsServicesSingle({ service });
             }
     }
-    export const runAllServicesCommands = runCommandsServices;
-    export const runAllServices = runCommandsServices;
-    export const runAllSvs = runCommandsServices;
 
     /*
         Run services related command
@@ -89,9 +86,6 @@ export namespace CommandsServices {
             log({ message: `Failed to process services command ${error}`, color: red_bt });
         }
     }
-    export const runSingleServiceCommands = runCommandsServicesSingle;
-    export const runSingleService = runCommandsServicesSingle;
-    export const runSingleSv = runCommandsServicesSingle;
 
     /**
      * Stop a service using sc
@@ -114,10 +108,6 @@ export namespace CommandsServices {
         const result: string | null = await runCommand({ command, parameters });
         return result;
     }
-    export const serviceStop = stop;
-    export const svStop = stop;
-    export const stopService = stop;
-    export const stopSv = stop;
 
     /**
      * Disable a service using sc
@@ -140,10 +130,6 @@ export namespace CommandsServices {
         const result: string | null = await runCommand({ command, parameters });
         return result;
     }
-    export const serviceDisable = disable;
-    export const svDisable = disable;
-    export const disableService = disable;
-    export const disableSv = disable;
 
 
     /**
@@ -169,10 +155,6 @@ export namespace CommandsServices {
         const result: string | null = await runCommand({ command, parameters });
         return result;
     }
-    export const serviceRemove = remove;
-    export const svRemove = remove;
-    export const removeService = remove;
-    export const removeSv = remove;
 }
 
 export default CommandsServices;

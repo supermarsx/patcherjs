@@ -39,7 +39,6 @@ export namespace Predist {
             debug.log({ message: `An error has ocurred while predist packaging ${error}`, color: red_bt });
         }
     }
-    export const predistributionPackage = predistPackage;
 }
 
 export default Predist;
