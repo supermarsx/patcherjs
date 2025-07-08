@@ -30,5 +30,32 @@ describe('Configuration.readConfigurationFile', () => {
     const defaults = ConfigurationDefaults.getDefaultConfigurationObject();
     expect(result).toEqual(defaults);
   });
+
+  test('logs success message when file is read', async () => {
+    const dir = fs.mkdtempSync(join(os.tmpdir(), 'cfg-'));
+    const filePath = join(dir, 'config.json');
+    const configObj = ConfigurationDefaults.getDefaultConfigurationObject();
+    configObj.options.general.debug = false;
+    fs.writeFileSync(filePath, JSON.stringify(configObj), 'utf-8');
+
+    const logFn = jest.fn();
+    jest.resetModules();
+    jest.unstable_mockModule('../source/lib/auxiliary/debug.js', () => ({ default: { log: logFn } }));
+    jest.unstable_mockModule('../source/lib/auxiliary/file.wrappers.ts', () => ({ default: { isFileReadable: jest.fn(async () => true), getFileSize: jest.fn(async () => 42) } }));
+    jest.unstable_mockModule('fs/promises', () => ({
+      open: jest.fn(async () => ({
+        readFile: jest.fn(async () => JSON.stringify(configObj)),
+        close: jest.fn(async () => {})
+      }))
+    }));
+    const { Configuration } = await import('../source/lib/configuration/configuration.ts');
+    await Configuration.readConfigurationFile({ filePath });
+
+    expect(logFn).toHaveBeenCalledWith({
+      message: 'Configuration file read successfully',
+      color: expect.any(Function)
+    });
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
 });
 
