@@ -82,60 +82,28 @@ export namespace BufferUtils {
             }
             const currentValue = readValue({ buffer, offset, byteLength, bigEndian });
 
-            if ((failOnUnexpectedPreviousValue === true && currentValue !== previousValue && unpatchMode === false) ||
-                (failOnUnexpectedPreviousValue === true && currentValue !== newValue && unpatchMode === true)) {
-                let expectedValue: number | bigint = previousValue;
-                if (unpatchMode === true)
-                    expectedValue = newValue;
-                throw new Error(`Found unexpected previous value at offset ${offset}: ${currentValue}, expected ${expectedValue}`);
-            }
+            validatePatchValues({
+                offset,
+                currentValue,
+                previousValue,
+                newValue,
+                unpatchMode,
+                warnOnUnexpectedPreviousValue,
+                failOnUnexpectedPreviousValue
+            });
 
-            if ((warnOnUnexpectedPreviousValue === true && currentValue !== previousValue && unpatchMode === false) ||
-                (warnOnUnexpectedPreviousValue === true && currentValue !== newValue && unpatchMode === true)) {
-                let value: number | bigint = previousValue;
-                if (unpatchMode === true)
-                    value = newValue;
+            const valueToWrite = determineValueToWrite({
+                offset,
+                currentValue,
+                previousValue,
+                newValue,
+                forcePatch,
+                unpatchMode,
+                nullPatch
+            });
 
-                log({ message: `Found unexpected previous value at offset ${offset}: ${currentValue}, expected ${value}`, color: yellow_bt });
-            }
-
-            if (currentValue === newValue && unpatchMode === false) {
-                log({ message: `Offset is already patched ${offset}: ${currentValue}, new value ${newValue}`, color: yellow_bt });
-                return buffer;
-            }
-            if (currentValue === previousValue && unpatchMode === true) {
-                log({ message: `Offset is already unpatched ${offset}: ${currentValue}, previous value ${previousValue}`, color: yellow_bt });
-                return buffer;
-            }
-
-            if (forcePatch === true) {
-                if (nullPatch === true) {
-                    log({ message: `Force null patching offset ${offset}`, color: yellow_bt });
-                    writeBuffer({ buffer, value: 0, offset, skipWritePatch, byteLength, bigEndian, verifyPatch });
-                } else {
-                    if (unpatchMode === true) {
-                        log({ message: `Force unpatching offset ${offset}`, color: yellow_bt });
-                        writeBuffer({ buffer, value: previousValue, offset, skipWritePatch, byteLength, bigEndian, verifyPatch });
-                    } else {
-                        log({ message: `Force patching offset ${offset}`, color: yellow_bt });
-                        writeBuffer({ buffer, value: newValue, offset, skipWritePatch, byteLength, bigEndian, verifyPatch });
-                    }
-                }
-            } else {
-                if (previousValue === currentValue) {
-                    if (nullPatch === true) {
-                        log({ message: `Null patching offset ${offset}`, color: yellow_bt });
-                        writeBufferNull({ buffer, offset, skipWritePatch, byteLength, bigEndian, verifyPatch });
-                    } else {
-                        if (unpatchMode === true) {
-                            log({ message: `Unpatching offset ${offset}`, color: white });
-                                writeBuffer({ buffer, value: previousValue, offset, skipWritePatch, byteLength, bigEndian, verifyPatch });
-                        } else {
-                            log({ message: `Patching offset ${offset}`, color: white });
-                                writeBuffer({ buffer, value: newValue, offset, skipWritePatch, byteLength, bigEndian, verifyPatch });
-                        }
-                    }
-                }
+            if (valueToWrite !== null) {
+                writeBuffer({ buffer, value: valueToWrite, offset, skipWritePatch, byteLength, bigEndian, verifyPatch });
             }
             return buffer;
         } catch (error: any) {
@@ -185,57 +153,25 @@ export namespace BufferUtils {
                 await handle.read(buf, 0, byteLength, position);
                 const currentValue = readValue({ buffer: buf, offset: 0, byteLength, bigEndian });
 
-                if ((failOnUnexpectedPreviousValue === true && currentValue !== previousValue && unpatchMode === false) ||
-                    (failOnUnexpectedPreviousValue === true && currentValue !== newValue && unpatchMode === true)) {
-                    let expectedValue: number | bigint = previousValue;
-                    if (unpatchMode === true)
-                        expectedValue = newValue;
-                    throw new Error(`Found unexpected previous value at offset ${offset}: ${currentValue}, expected ${expectedValue}`);
-                }
+                validatePatchValues({
+                    offset,
+                    currentValue,
+                    previousValue,
+                    newValue,
+                    unpatchMode,
+                    warnOnUnexpectedPreviousValue,
+                    failOnUnexpectedPreviousValue
+                });
 
-                if ((warnOnUnexpectedPreviousValue === true && currentValue !== previousValue && unpatchMode === false) ||
-                    (warnOnUnexpectedPreviousValue === true && currentValue !== newValue && unpatchMode === true)) {
-                    let value: number | bigint = previousValue;
-                    if (unpatchMode === true)
-                        value = newValue;
-                    log({ message: `Found unexpected previous value at offset ${offset}: ${currentValue}, expected ${value}`, color: yellow_bt });
-                }
-
-                let valueToWrite: number | bigint | null = null;
-
-                if (currentValue === newValue && unpatchMode === false) {
-                    log({ message: `Offset is already patched ${offset}: ${currentValue}, new value ${newValue}`, color: yellow_bt });
-                } else if (currentValue === previousValue && unpatchMode === true) {
-                    log({ message: `Offset is already unpatched ${offset}: ${currentValue}, previous value ${previousValue}`, color: yellow_bt });
-                } else if (forcePatch === true) {
-                    if (nullPatch === true) {
-                        log({ message: `Force null patching offset ${offset}`, color: yellow_bt });
-                        valueToWrite = 0;
-                    } else {
-                        if (unpatchMode === true) {
-                            log({ message: `Force unpatching offset ${offset}`, color: yellow_bt });
-                            valueToWrite = previousValue;
-                        } else {
-                            log({ message: `Force patching offset ${offset}`, color: yellow_bt });
-                            valueToWrite = newValue;
-                        }
-                    }
-                } else {
-                    if (previousValue === currentValue) {
-                        if (nullPatch === true) {
-                            log({ message: `Null patching offset ${offset}`, color: yellow_bt });
-                            valueToWrite = 0;
-                        } else {
-                            if (unpatchMode === true) {
-                                log({ message: `Unpatching offset ${offset}`, color: white });
-                                valueToWrite = previousValue;
-                            } else {
-                                log({ message: `Patching offset ${offset}`, color: white });
-                                valueToWrite = newValue;
-                            }
-                        }
-                    }
-                }
+                const valueToWrite = determineValueToWrite({
+                    offset,
+                    currentValue,
+                    previousValue,
+                    newValue,
+                    forcePatch,
+                    unpatchMode,
+                    nullPatch
+                });
 
                 if (valueToWrite !== null && skipWritePatch === false) {
                     writeValue({ buffer: buf, value: valueToWrite, offset: 0, byteLength, bigEndian });
@@ -252,6 +188,95 @@ export namespace BufferUtils {
         } finally {
             await handle.close();
         }
+    }
+
+    function validatePatchValues({
+        offset,
+        currentValue,
+        previousValue,
+        newValue,
+        unpatchMode,
+        warnOnUnexpectedPreviousValue,
+        failOnUnexpectedPreviousValue
+    }:{
+        offset: number | bigint,
+        currentValue: number | bigint,
+        previousValue: number | bigint,
+        newValue: number | bigint,
+        unpatchMode: boolean,
+        warnOnUnexpectedPreviousValue: boolean,
+        failOnUnexpectedPreviousValue: boolean
+    }): void {
+        if ((failOnUnexpectedPreviousValue === true && currentValue !== previousValue && unpatchMode === false) ||
+            (failOnUnexpectedPreviousValue === true && currentValue !== newValue && unpatchMode === true)) {
+            let expectedValue: number | bigint = previousValue;
+            if (unpatchMode === true)
+                expectedValue = newValue;
+            throw new Error(`Found unexpected previous value at offset ${offset}: ${currentValue}, expected ${expectedValue}`);
+        }
+
+        if ((warnOnUnexpectedPreviousValue === true && currentValue !== previousValue && unpatchMode === false) ||
+            (warnOnUnexpectedPreviousValue === true && currentValue !== newValue && unpatchMode === true)) {
+            let value: number | bigint = previousValue;
+            if (unpatchMode === true)
+                value = newValue;
+            log({ message: `Found unexpected previous value at offset ${offset}: ${currentValue}, expected ${value}`, color: yellow_bt });
+        }
+    }
+
+    function determineValueToWrite({
+        offset,
+        currentValue,
+        previousValue,
+        newValue,
+        forcePatch,
+        unpatchMode,
+        nullPatch
+    }:{
+        offset: number | bigint,
+        currentValue: number | bigint,
+        previousValue: number | bigint,
+        newValue: number | bigint,
+        forcePatch: boolean,
+        unpatchMode: boolean,
+        nullPatch: boolean
+    }): number | bigint | null {
+        if (currentValue === newValue && unpatchMode === false) {
+            log({ message: `Offset is already patched ${offset}: ${currentValue}, new value ${newValue}`, color: yellow_bt });
+            return null;
+        }
+        if (currentValue === previousValue && unpatchMode === true) {
+            log({ message: `Offset is already unpatched ${offset}: ${currentValue}, previous value ${previousValue}`, color: yellow_bt });
+            return null;
+        }
+
+        if (forcePatch === true) {
+            if (nullPatch === true) {
+                log({ message: `Force null patching offset ${offset}`, color: yellow_bt });
+                return 0;
+            }
+            if (unpatchMode === true) {
+                log({ message: `Force unpatching offset ${offset}`, color: yellow_bt });
+                return previousValue;
+            }
+            log({ message: `Force patching offset ${offset}`, color: yellow_bt });
+            return newValue;
+        }
+
+        if (previousValue === currentValue) {
+            if (nullPatch === true) {
+                log({ message: `Null patching offset ${offset}`, color: yellow_bt });
+                return 0;
+            }
+            if (unpatchMode === true) {
+                log({ message: `Unpatching offset ${offset}`, color: white });
+                return previousValue;
+            }
+            log({ message: `Patching offset ${offset}`, color: white });
+            return newValue;
+        }
+
+        return null;
     }
 
     function readValue({ buffer, offset, byteLength, bigEndian }:
@@ -306,24 +331,6 @@ export namespace BufferUtils {
             throw new Error(`Failed to verify patch at offset ${offset}: ${verify}, expected ${value}`);
     }
 
-    /**
-     * Write a null value to a buffer
-     * 
-     * @param params.buffer Buffer to manipulate
-     * @param params.offset Decimal offset
-     * @param params.skipWritePatch Skip writing path to buffer?
-     * @example
-     * ```
-     * writeBufferNull({ buffer, offset, skipWritePatch });
-     * ```
-     * @returns
-     * @since 0.0.1
-     */
-    function writeBufferNull({ buffer, offset, skipWritePatch, byteLength, bigEndian, verifyPatch }:
-        { buffer: Buffer, offset: number, skipWritePatch: boolean, byteLength: 1 | 2 | 4 | 8, bigEndian: boolean, verifyPatch: boolean }): void {
-        const nullValue: number = 0;
-        writeBuffer({ buffer, value: nullValue, offset, skipWritePatch, byteLength, bigEndian, verifyPatch });
-    }
 
     /**
      * Write a value to a buffer 
