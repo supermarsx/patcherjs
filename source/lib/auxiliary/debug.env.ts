@@ -38,7 +38,7 @@ export namespace EnvironmentDebug {
      * @since 0.0.1
      */    
     export function setEnv({ envVarName, varValue }:
-        { envVarName: string, varValue: string | any }): void {
+        { envVarName: string, varValue: string | boolean | Buffer }): void {
 
         const finalVarValue: string = varValue.toString();
         process.env[envVarName] = finalVarValue;
