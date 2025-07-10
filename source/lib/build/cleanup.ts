@@ -2,9 +2,8 @@ import { rm, mkdir } from 'fs/promises';
 import { join } from 'path';
 
 import { Debug as debug } from '../auxiliary/debug.js';
-
-import colorsCli from 'colors-cli';
-const { white, green_bt } = colorsCli;
+import Logger from '../auxiliary/logger.js';
+const { logInfo, logSuccess } = Logger;
 
 export namespace Cleanup {
     /**
@@ -20,7 +19,7 @@ export namespace Cleanup {
     */
     export async function cleanupBuild(): Promise<void> {
         debug.enable({ logging: false });
-        debug.log({ message: `Cleaning up build space`, color: white });
+        logInfo(`Cleaning up build space`);
 
         const deletePath = async (path: string, recursive: boolean = false) => {
             try {
@@ -30,35 +29,35 @@ export namespace Cleanup {
             }
         };
 
-        debug.log({ message: `Deleting ./sea/sea-prep.blob`, color: white });
+        logInfo(`Deleting ./sea/sea-prep.blob`);
         await deletePath(join('sea', 'sea-prep.blob'));
 
-        debug.log({ message: `Deleting ./sea/sea-archive.7z`, color: white });
+        logInfo(`Deleting ./sea/sea-archive.7z`);
         await deletePath(join('sea', 'sea-archive.7z'));
 
-        debug.log({ message: `Deleting ./sea/executable.js`, color: white });
+        logInfo(`Deleting ./sea/executable.js`);
         await deletePath(join('sea', 'executable.js'));
 
-        debug.log({ message: `Deleting ./sea/predist/* files`, color: white });
+        logInfo(`Deleting ./sea/predist/* files`);
         await deletePath(join('sea', 'predist'), true);
         await mkdir(join('sea', 'predist'), { recursive: true });
 
-        debug.log({ message: `Deleting ./sea/dist/* files`, color: white });
+        logInfo(`Deleting ./sea/dist/* files`);
         await deletePath(join('sea', 'dist'), true);
         await mkdir(join('sea', 'dist'), { recursive: true });
 
-        debug.log({ message: `Deleting ./dist/* files`, color: white });
+        logInfo(`Deleting ./dist/* files`);
         await deletePath('dist', true);
         await mkdir('dist', { recursive: true });
 
-        debug.log({ message: `Deleting ./docs/* files`, color: white });
+        logInfo(`Deleting ./docs/* files`);
         await deletePath('docs', true);
         await mkdir('docs', { recursive: true });
 
-        debug.log({ message: `Deleting ./tsconfig.tsbuildinfo`, color: white });
+        logInfo(`Deleting ./tsconfig.tsbuildinfo`);
         await deletePath('tsconfig.tsbuildinfo');
 
-        debug.log({ message: `Finished deleting build files`, color: green_bt });
+        logSuccess(`Finished deleting build files`);
     }
 }
 

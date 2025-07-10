@@ -1,11 +1,8 @@
 import ParserWrappers from './parser.wrappers.js';
 const { hexParse, hexParseBig, splitLines } = ParserWrappers;
 
-import Debug from '../auxiliary/debug.js';
-const { log } = Debug;
-
-import colorsCli from 'colors-cli';
-const { green_bt, red_bt, white } = colorsCli;
+import Logger from '../auxiliary/logger.js';
+const { logInfo, logSuccess, logError } = Logger;
 
 import {
     PatchArray,
@@ -33,17 +30,17 @@ export namespace Parser {
             const dataLength: number = fileData.length;
             if (dataLength === 0)
                 throw new Error(`Patch file data is empty or corrupted`);
-            log({ message: `Splitting file lines`, color: white });
+            logInfo(`Splitting file lines`);
             let patchData: string[] = splitLines({ fileData });
             // remove empty lines that may appear due to trailing newlines
             patchData = patchData.filter((line) => line.trim().length > 0);
-            log({ message: `Building patch objects array`, color: white });
+            logInfo(`Building patch objects array`);
             const patches: PatchArray = buildPatchesArray({ patchData });
             const patchesCount: number = patches.length;
-            log({ message: `Patch objects array built with ${patchesCount}`, color: green_bt });
+            logSuccess(`Patch objects array built with ${patchesCount}`);
             return patches;
         } catch (error: any) {
-            log({ message: `An error has occurred: ${error}`, color: red_bt });
+            logError(`An error has occurred: ${error}`);
             return new Array();
         }
     }
@@ -63,9 +60,9 @@ export namespace Parser {
         { patchData: string[] }): PatchArray {
         try {
             const lines: number = patchData.length;
-            log({ message: `Found ${lines} patch(es) inside patch data`, color: white });
-            const patches: PatchArray = [];
-            log({ message: `Pushing patch objects into an array`, color: white });
+            logInfo(`Found ${lines} patch(es) inside patch data`);
+            let patches: PatchArray = [];
+            logInfo(`Pushing patch objects into an array`);
             for (const [index, patchLine] of patchData.entries()) {
                 const trimmed = patchLine.trim();
                 if (trimmed.length === 0)
@@ -76,10 +73,10 @@ export namespace Parser {
             const patchesPushed: number = patches.length;
             if (patchesPushed === 0)
                 throw new Error(`There were 0 patch objects pushed to the patches array`);
-            log({ message: `There were ${patchesPushed} patch objects pushed`, color: green_bt });
+            logSuccess(`There were ${patchesPushed} patch objects pushed`);
             return patches;
         } catch (error: any) {
-            log({ message: `An error has occurred: ${error}`, color: red_bt });
+            logError(`An error has occurred: ${error}`);
             const emptyPatchArray: PatchArray = [];
             return emptyPatchArray;
         }
@@ -138,7 +135,7 @@ export namespace Parser {
 
             return patchObject;
         } catch (error: any) {
-            log({ message: `An error has occurred: ${error}`, color: red_bt });
+            logError(`An error has occurred: ${error}`);
             const returnValue: PatchObject = {
                 offset: BigInt(0),
                 previousValue: 0,

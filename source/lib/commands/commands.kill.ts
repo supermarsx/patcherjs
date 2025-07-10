@@ -1,11 +1,8 @@
 import Command from './command.js';
 const { runCommand } = Command;
 
-import Debug from '../auxiliary/debug.js';
-const { log } = Debug;
-
-import colorsCli from 'colors-cli';
-const { red_bt, white } = colorsCli;
+import Logger from '../auxiliary/logger.js';
+const { logInfo, logError } = Logger;
 
 import {
     CommandKillObject,
@@ -35,7 +32,7 @@ export namespace CommandsKill {
         const killList = configuration.commands.kill;
         for (const kill of killList)
             if (kill.enabled === true) {
-                log({ message: `Killing process ${kill.name}`, color: white });
+                logInfo(`Killing process ${kill.name}`);
                 await runCommandsKillSingle({ kill });
             }
     }
@@ -57,7 +54,7 @@ export namespace CommandsKill {
             const taskName: string = kill.name;
             await killTask({ taskName });
         } catch (error) {
-            log({ message: `Failed to process kill command ${error}`, color: red_bt });
+            logError(`Failed to process kill command ${error}`);
         }
     }
 

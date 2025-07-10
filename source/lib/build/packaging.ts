@@ -7,11 +7,8 @@ const { packFile } = Packer;
 import Encryption from '../filedrops/crypt.js';
 const { encryptFile } = Encryption;
 
-import Debug from '../auxiliary/debug.js';
-const { log } = Debug;
-
-import colorsCli from "colors-cli";
-const { red_bt, white, green_bt } = colorsCli;
+import Logger from '../auxiliary/logger.js';
+const { logInfo, logSuccess, logError } = Logger;
 import { join } from 'path';
 
 import {
@@ -41,10 +38,10 @@ export namespace Packaging {
      */
     export async function runPackings({ configuration }:
         { configuration: ConfigurationObject }): Promise<void> {
-        log({ message: `Running packing mode`, color: white });
+        logInfo(`Running packing mode`);
         const { runFiledrops } = configuration.options.filedrops;
         if (runFiledrops === false) {
-            log({ message: `Skipping packing due to runFiledrops configuration`, color: white });
+            logInfo(`Skipping packing due to runFiledrops configuration`);
             return;
         }
 
@@ -71,7 +68,7 @@ export namespace Packaging {
     async function runPacking({ configuration, filedrop }:
         { configuration: ConfigurationObject, filedrop: FiledropsObject }): Promise<void> {
         try {
-            log({ message: `Packing file ${filedrop.fileNamePath}`, color: white });
+            logInfo(`Packing file ${filedrop.fileNamePath}`);
             const filedropOptions: FiledropsOptionsObject = configuration.options.filedrops;
 
             let fileData: Buffer;
@@ -86,9 +83,9 @@ export namespace Packaging {
             await writeBinaryFile({
                 filePath: join(PATCHES_BASEPATH, filedrop.fileDropName), buffer: fileData
             });
-            log({ message: `File was packed successfully`, color: green_bt });
+            logSuccess(`File was packed successfully`);
         } catch (error) {
-            log({ message: `There was an error packing a file: ${error}`, color: red_bt });
+            logError(`There was an error packing a file: ${error}`);
         }
     }
 }

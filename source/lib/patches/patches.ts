@@ -1,8 +1,5 @@
-import Debug from '../auxiliary/debug.js';
-const { log } = Debug;
-
-import colorsCli from 'colors-cli';
-const { red_bt, white, yellow_bt } = colorsCli;
+import Logger from '../auxiliary/logger.js';
+const { logInfo, logWarn, logError } = Logger;
 
 
 import { join } from 'path';
@@ -48,7 +45,7 @@ export namespace Patches {
 
         const { runPatches } = configuration.options.patches;
         if (runPatches === false) {
-            log({ message: `Skipping running patches due to configuration`, color: white });
+            logInfo(`Skipping running patches due to configuration`);
             return;
         }
 
@@ -88,7 +85,7 @@ export namespace Patches {
                 if (patchOptions.skipWritingBinary === false)
                     await patchLargeFile({ filePath, patchData, options: patchOptions });
                 else
-                    log({ message: `Skipping writing binary file due to options`, color: white });
+                    logInfo(`Skipping writing binary file due to options`);
                 return;
             }
 
@@ -100,9 +97,9 @@ export namespace Patches {
             if (patchOptions.skipWritingBinary === false)
                 await writeBinaryFile({ filePath, buffer });
             else
-                log({ message: `Skipping writing binary file due to options`, color: white });
+                logInfo(`Skipping writing binary file due to options`);
         } catch (error) {
-            log({ message: `An error has ocurred running the patch ${error}`, color: red_bt });
+            logError(`An error has ocurred running the patch ${error}`);
         }
     }
 
@@ -123,15 +120,15 @@ export namespace Patches {
         const filePath: string = patch.fileNamePath;
 
         if (backupFiles === true) {
-            log({ message: `Backing up files due to backup files option`, color: white });
+            logInfo(`Backing up files due to backup files option`);
             await backupFile({ filePath });
         }
 
         if (fileSizeCheck === true) {
-            log({ message: `Checking file size due to file size check option`, color: white });
+            logInfo(`Checking file size due to file size check option`);
             const fileSize: number = await getFileSizeUsingPath({ filePath });
             if (fileSize <= fileSizeThreshold) {
-                log({ message: `File size check failed, file size is at or below the defined threshold of ${fileSizeThreshold}`, color: red_bt });
+                logError(`File size check failed, file size is at or below the defined threshold of ${fileSizeThreshold}`);
                 throw new Error(`File size check failed`);
             }
         }
@@ -160,7 +157,7 @@ export namespace Patches {
             const offsetNumber: number = Number(offset);
             const { forcePatch, unpatchMode, nullPatch, failOnUnexpectedPreviousValue, warnOnUnexpectedPreviousValue, skipWritePatch, allowOffsetOverflow, verifyPatch } = patchOptions;
             if (offsetNumber >= fileSize && allowOffsetOverflow !== true) {
-                log({ message: `Offset ${offset} exceeds file size ${fileSize}, skipping patch`, color: yellow_bt });
+                logWarn(`Offset ${offset} exceeds file size ${fileSize}, skipping patch`);
                 continue;
             }
             buffer = patchBuffer({

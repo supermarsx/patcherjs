@@ -1,10 +1,7 @@
 import * as fs from 'fs/promises';
 
-import Debug from '../auxiliary/debug.js';
-const { log } = Debug;
-
-import colorsCli from 'colors-cli';
-const { white, yellow_bt, red_bt } = colorsCli;
+import Logger from '../auxiliary/logger.js';
+const { logInfo, logWarn, logError } = Logger;
 
 import { OptionsType } from '../patches/buffer.types.js';
 import { PatchArray } from './parser.types.js';
@@ -77,7 +74,7 @@ export namespace BufferUtils {
         } = options;
         try {
             if (allowOffsetOverflow !== true && offset + byteLength > buffer.length) {
-                log({ message: `Offset ${offset} with length ${byteLength} exceeds buffer size ${buffer.length}, skipping patch`, color: yellow_bt });
+                logWarn(`Offset ${offset} with length ${byteLength} exceeds buffer size ${buffer.length}, skipping patch`);
                 return buffer;
             }
             const currentValue = readValue({ buffer, offset, byteLength, bigEndian });
@@ -107,7 +104,7 @@ export namespace BufferUtils {
             }
             return buffer;
         } catch (error: any) {
-            log({ message: `An error has occurred: ${error}`, color: red_bt });
+            logError(`An error has occurred: ${error}`);
             throw error;
         }
     }
@@ -146,7 +143,7 @@ export namespace BufferUtils {
                     throw new Error(`Offset ${offset} exceeds Number.MAX_SAFE_INTEGER`);
                 const position = Number(offset);
                 if (position + byteLength > fileSize && allowOffsetOverflow !== true) {
-                    log({ message: `Offset ${offset} with length ${byteLength} exceeds file size ${fileSize}, skipping patch`, color: yellow_bt });
+                    logWarn(`Offset ${offset} with length ${byteLength} exceeds file size ${fileSize}, skipping patch`);
                     continue;
                 }
                 const buf = Buffer.alloc(byteLength);
@@ -182,7 +179,7 @@ export namespace BufferUtils {
                         verifyValue({ buffer: verifyBuf, value: valueToWrite, offset: 0, byteLength, bigEndian });
                     }
                 } else if (valueToWrite !== null) {
-                    log({ message: `Skipping buffer write`, color: white });
+                    logInfo(`Skipping buffer write`);
                 }
             }
         } finally {
@@ -220,7 +217,7 @@ export namespace BufferUtils {
             let value: number | bigint = previousValue;
             if (unpatchMode === true)
                 value = newValue;
-            log({ message: `Found unexpected previous value at offset ${offset}: ${currentValue}, expected ${value}`, color: yellow_bt });
+            logWarn(`Found unexpected previous value at offset ${offset}: ${currentValue}, expected ${value}`);
         }
     }
 
@@ -242,37 +239,37 @@ export namespace BufferUtils {
         nullPatch: boolean
     }): number | bigint | null {
         if (currentValue === newValue && unpatchMode === false) {
-            log({ message: `Offset is already patched ${offset}: ${currentValue}, new value ${newValue}`, color: yellow_bt });
+            logWarn(`Offset is already patched ${offset}: ${currentValue}, new value ${newValue}`);
             return null;
         }
         if (currentValue === previousValue && unpatchMode === true) {
-            log({ message: `Offset is already unpatched ${offset}: ${currentValue}, previous value ${previousValue}`, color: yellow_bt });
+            logWarn(`Offset is already unpatched ${offset}: ${currentValue}, previous value ${previousValue}`);
             return null;
         }
 
         if (forcePatch === true) {
             if (nullPatch === true) {
-                log({ message: `Force null patching offset ${offset}`, color: yellow_bt });
+                logWarn(`Force null patching offset ${offset}`);
                 return 0;
             }
             if (unpatchMode === true) {
-                log({ message: `Force unpatching offset ${offset}`, color: yellow_bt });
+                logWarn(`Force unpatching offset ${offset}`);
                 return previousValue;
             }
-            log({ message: `Force patching offset ${offset}`, color: yellow_bt });
+            logWarn(`Force patching offset ${offset}`);
             return newValue;
         }
 
         if (previousValue === currentValue) {
             if (nullPatch === true) {
-                log({ message: `Null patching offset ${offset}`, color: yellow_bt });
+                logWarn(`Null patching offset ${offset}`);
                 return 0;
             }
             if (unpatchMode === true) {
-                log({ message: `Unpatching offset ${offset}`, color: white });
+                logInfo(`Unpatching offset ${offset}`);
                 return previousValue;
             }
-            log({ message: `Patching offset ${offset}`, color: white });
+            logInfo(`Patching offset ${offset}`);
             return newValue;
         }
 
@@ -351,7 +348,7 @@ export namespace BufferUtils {
         if (skipWritePatch === false)
             writeValue({ buffer, value, offset, byteLength, bigEndian });
         else
-            log({ message: `Skipping buffer write`, color: white });
+            logInfo(`Skipping buffer write`);
 
         if (skipWritePatch === false && verifyPatch === true) {
             verifyValue({ buffer, value, offset, byteLength, bigEndian });

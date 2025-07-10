@@ -1,11 +1,8 @@
 import Command from './command.js';
 const { runCommand } = Command;
 
-import Debug from '../auxiliary/debug.js';
-const { log } = Debug;
-
-import colorsCli from 'colors-cli';
-const { red_bt, white } = colorsCli;
+import Logger from '../auxiliary/logger.js';
+const { logInfo, logError } = Logger;
 
 import {
     CommandTaskSchedulerObject,
@@ -38,7 +35,7 @@ export namespace CommandsTaskscheduler {
         const { tasks } = configuration.commands;
         for (const task of tasks)
             if (task.enabled === true) {
-                log({ message: `Running task scheduler function ${task.command} to ${task.name}`, color: white });
+                logInfo(`Running task scheduler function ${task.command} to ${task.name}`);
                 await runCommandsTaskSchedulerSingle({ task });
             }
     }
@@ -61,11 +58,11 @@ export namespace CommandsTaskscheduler {
             const taskName: string = task.name;
             switch (functionName) {
                 case COMM_TASKS_DELETE:
-                    log({ message: `Deleting scheduled task ${taskName}`, color: white });
+                    logInfo(`Deleting scheduled task ${taskName}`);
                     await remove({ taskName });
                     break;
                 case COMM_TASKS_STOP:
-                    log({ message: `Stopping scheduled task ${taskName}`, color: white });
+                    logInfo(`Stopping scheduled task ${taskName}`);
                     await stop({ taskName });
                     break;
                 default:
@@ -73,7 +70,7 @@ export namespace CommandsTaskscheduler {
             }
 
         } catch (error) {
-            log({ message: `Failed to process task scheduler command ${error}`, color: red_bt });
+            logError(`Failed to process task scheduler command ${error}`);
         }
     }
 

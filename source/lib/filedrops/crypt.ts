@@ -9,11 +9,8 @@ const { getFilename } = Packer;
 import BufferWrappers from '../patches/buffer.wrappers.js';
 const { createBuffer } = BufferWrappers;
 
-import Debug from '../auxiliary/debug.js';
-const { log } = Debug;
-
-import colorsCli from 'colors-cli';
-const { red_bt, white, yellow_bt } = colorsCli;
+import Logger from '../auxiliary/logger.js';
+const { logInfo, logWarn, logError } = Logger;
 
 import {
     CryptBufferSubsets,
@@ -62,15 +59,15 @@ export namespace Encryption {
 
             if (filePath && typeof filePath !== 'undefined' && typeof filePath === 'string') {
                 const filename: string = getFilename({ filePath });
-                log({ message: `Reading file to encrypt ${filename}`, color: white });
+                logInfo(`Reading file to encrypt ${filename}`);
                 fileData = await readBinaryFile({ filePath });
             } else {
-                log({ message: `Reading buffer to encrypt`, color: white });
+                logInfo(`Reading buffer to encrypt`);
                 if (buffer && typeof buffer !== 'undefined' && Buffer.isBuffer(buffer) === true) {
                     fileData = buffer;
                 } else {
                     fileData = createBuffer({ size: 0 });
-                    log({ message: `Encryption will probably fail because buffer is empty`, color: yellow_bt });
+                    logWarn(`Encryption will probably fail because buffer is empty`);
                 }
             }
 
@@ -84,7 +81,7 @@ export namespace Encryption {
 
             const cipher: CipherGCM = createCipheriv(algorithm, encryptionKey, iv);
 
-            log({ message: `Encrypting data`, color: white });
+            logInfo(`Encrypting data`);
 
             const encryptedData: Buffer = Buffer.concat([
                 Buffer.from(cipher.update(fileData, CRYPTO_ENCODING)),
@@ -95,13 +92,13 @@ export namespace Encryption {
             const authTag: Buffer = cipher.getAuthTag();
             const dataPrefix: Buffer = Buffer.from(getEncryptedPrefix());
 
-            log({ message: `Generated salt: (${salt.byteLength}) ${salt.toString(`hex`)}`, color: white });
-            log({ message: `Generated IV: (${iv.byteLength}) ${Buffer.from(iv).toString(`hex`)}`, color: white });
-            log({ message: `AuthTag: (${authTag.byteLength}) ${authTag.toString(`hex`)}`, color: white });
-            log({ message: `Detected iterations: ${iterations}`, color: white });
+            logInfo(`Generated salt: (${salt.byteLength}) ${salt.toString(`hex`)}`);
+            logInfo(`Generated IV: (${iv.byteLength}) ${Buffer.from(iv).toString(`hex`)}`);
+            logInfo(`AuthTag: (${authTag.byteLength}) ${authTag.toString(`hex`)}`);
+            logInfo(`Detected iterations: ${iterations}`);
 
-            log({ message: `Input key: ${key.slice(0, 4)}...${key.slice(-4)}`, color: white });
-            log({ message: `Computed encryption key: ${encryptionKey.toString(`hex`).slice(0, 6)}...${encryptionKey.toString(`hex`).slice(-6)}`, color: white });
+            logInfo(`Input key: ${key.slice(0, 4)}...${key.slice(-4)}`);
+            logInfo(`Computed encryption key: ${encryptionKey.toString(`hex`).slice(0, 6)}...${encryptionKey.toString(`hex`).slice(-6)}`);
 
             const outputDataBuffer: Buffer = Buffer.concat([
                 dataPrefix,
@@ -114,7 +111,7 @@ export namespace Encryption {
 
             return outputDataBuffer;
         } catch (error) {
-            log({ message: `There was an error encrypting: ${error}`, color: red_bt });
+            logError(`There was an error encrypting: ${error}`);
             return createBuffer({ size: 0 });
         }
     }
@@ -139,15 +136,15 @@ export namespace Encryption {
 
             if (filePath && typeof filePath !== 'undefined' && typeof filePath === 'string') {
                 const filename: string = getFilename({ filePath });
-                log({ message: `Reading file to decrypt ${filename}`, color: white });
+                logInfo(`Reading file to decrypt ${filename}`);
                 fileData = await readBinaryFile({ filePath });
             } else {
-                log({ message: `Reading buffer to decrypt`, color: white });
+                logInfo(`Reading buffer to decrypt`);
                 if (buffer && typeof buffer !== 'undefined' && Buffer.isBuffer(buffer) === true) {
                     fileData = buffer;
                 } else {
                     fileData = createBuffer({ size: 0 });
-                    log({ message: `Decryption will probably fail because buffer is empty`, color: yellow_bt });
+                    logWarn(`Decryption will probably fail because buffer is empty`);
                 }
             }
 
@@ -160,7 +157,7 @@ export namespace Encryption {
             // const fileDataHexConverted: Buffer = Buffer.from(fileData.toString('hex'));
 
             const packedPrefixString: string = (getSlicedData({ data: fileData, subsetOptions: bufferSubsets.prefix })).toString();
-            log({ message: `Detected pack prefix: ${packedPrefixString}`, color: white });
+            logInfo(`Detected pack prefix: ${packedPrefixString}`);
 
             if (dataPrefix !== packedPrefixString)
                 throw new Error(`May have not be encrypted using patcher`);
@@ -175,10 +172,10 @@ export namespace Encryption {
 
             const iterationsInt = parseInt(iterations.toString(), 10);
 
-            log({ message: `Detected salt: (${salt.byteLength}) ${salt.toString(`hex`)}`, color: white });
-            log({ message: `Detected IV: (${iv.byteLength}) ${iv.toString(`hex`)}`, color: white });
-            log({ message: `Detected authTag: (${authTag.byteLength}) ${authTag.toString(`hex`)}`, color: white });
-            log({ message: `Detected iterations: ${iterationsInt}`, color: white });
+            logInfo(`Detected salt: (${salt.byteLength}) ${salt.toString(`hex`)}`);
+            logInfo(`Detected IV: (${iv.byteLength}) ${iv.toString(`hex`)}`);
+            logInfo(`Detected authTag: (${authTag.byteLength}) ${authTag.toString(`hex`)}`);
+            logInfo(`Detected iterations: ${iterationsInt}`);
 
             /*
             const test: Buffer = getSlicedData({ data: fileData, subsetOptions: { offset: 0, bytes: 110 } });
@@ -194,15 +191,15 @@ export namespace Encryption {
 
             const decryptionKey: Buffer = deriveKeyFromPassword({ password: key, salt: salt, iterations: iterationsInt });
 
-            log({ message: `Input key: ${key.slice(0, 4)}...${key.slice(-4)}`, color: white });
-            log({ message: `Computed decryption key: ${decryptionKey.toString(`hex`).slice(0, 6)}...${decryptionKey.toString(`hex`).slice(-6)}`, color: white });
+            logInfo(`Input key: ${key.slice(0, 4)}...${key.slice(-4)}`);
+            logInfo(`Computed decryption key: ${decryptionKey.toString(`hex`).slice(0, 6)}...${decryptionKey.toString(`hex`).slice(-6)}`);
 
-            log({ message: `Inner encrypted data length: ${innerEncryptedData.byteLength}`, color: white });
+            logInfo(`Inner encrypted data length: ${innerEncryptedData.byteLength}`);
 
             const decipher: DecipherGCM = createDecipheriv(algorithm, decryptionKey, iv);
             decipher.setAuthTag(authTag);
 
-            log({ message: `Decrypting data`, color: white });
+            logInfo(`Decrypting data`);
             const decryptedData: Buffer = Buffer.concat([
                 decipher.update(innerEncryptedData),
                 decipher.final()
@@ -210,7 +207,7 @@ export namespace Encryption {
 
             return decryptedData;
         } catch (error) {
-            log({ message: `There was an error decrypting: ${error}`, color: red_bt });
+            logError(`There was an error decrypting: ${error}`);
             return createBuffer({ size: 0 });
         }
     }
@@ -232,7 +229,7 @@ export namespace Encryption {
         const { offset, bytes } = subsetOptions;
         const sanitizedBytes: number = parseInt(bytes ? bytes.toString() : data.byteLength.toString());
         const limit: number = Math.min(offset + sanitizedBytes, data.length);
-        log({ message: `reading offset at ${offset}, ${limit} bytes`, color: white });
+        logInfo(`reading offset at ${offset}, ${limit} bytes`);
         if (offset >= data.length)
             throw new Error(`Offset sliced data out of range, it can happen if file is invalid or corrupted`);
         return data.subarray(offset, limit);

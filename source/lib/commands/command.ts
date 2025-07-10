@@ -1,10 +1,7 @@
 import { spawn, ChildProcessWithoutNullStreams } from 'child_process';
 
-import Debug from '../auxiliary/debug.js';
-const { log } = Debug;
-
-import colorsCli from 'colors-cli';
-const { red_bt } = colorsCli;
+import Logger from '../auxiliary/logger.js';
+const { logError } = Logger;
 
 export namespace Command { 
     /**
@@ -28,7 +25,7 @@ export namespace Command {
             if (error && typeof error === 'object')
                 if (String(error).length > 2) {
                     const errorMessage: string = String(error).replaceAll('\r\n', '')
-                    log({ message: `There was an error running a command: ${errorMessage}`, color: red_bt });
+                    logError(`There was an error running a command: ${errorMessage}`);
                 }
             return null;
         }
