@@ -7,11 +7,8 @@ const { decryptFile } = Crypt;
 import File from '../auxiliary/file.js';
 const { backupFile, readBinaryFile, writeBinaryFile } = File;
 
-import Debug from '../auxiliary/debug.js';
-const { log } = Debug;
-
-import colorsCli from 'colors-cli';
-const { red_bt, white, green_bt } = colorsCli;
+import Logger from '../auxiliary/logger.js';
+const { logInfo, logError, logSuccess } = Logger;
 import { join } from 'path';
 
 import { ConfigurationObject, FiledropsObject, FiledropsOptionsObject } from '../configuration/configuration.types.js';
@@ -35,7 +32,7 @@ export namespace Filedrops {
         { configuration: ConfigurationObject }): Promise<void> {
         const { runFiledrops } = configuration.options.filedrops;
         if (runFiledrops === false) {
-            log({ message: `Skipping filedrops due to configuration`, color: white });
+            logInfo(`Skipping filedrops due to configuration`);
             return;
         }
         const { filedrops } = configuration;
@@ -71,9 +68,9 @@ export namespace Filedrops {
             if (isFiledropPacked === true)
                 fileData = await unpackFile({ buffer: fileData, password: filedrop.decryptKey });
             await writeBinaryFile({ filePath: filedrop.fileNamePath, buffer: fileData });
-            log({ message: `File was dropped successfully`, color: green_bt });
+            logSuccess(`File was dropped successfully`);
         } catch (error) {
-            log({ message: `There was an error while dropping a file: ${error}`, color: red_bt });
+            logError(`There was an error while dropping a file: ${error}`);
         }
     }
 
@@ -94,7 +91,7 @@ export namespace Filedrops {
         const { backupFiles } = filedropOptions;
         const filePath: string = filedrop.fileNamePath;
         if (backupFiles === true) {
-            log({ message: `Backing up files due to backup files option`, color: white });
+            logInfo(`Backing up files due to backup files option`);
             await backupFile({ filePath });
         }
     }

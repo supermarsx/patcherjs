@@ -1,11 +1,8 @@
 import Command from './command.js';
 const { runCommand } = Command;
 
-import Debug from '../auxiliary/debug.js';
-const { log } = Debug;
-
-import colorsCli from 'colors-cli';
-const { red_bt, white } = colorsCli;
+import Logger from '../auxiliary/logger.js';
+const { logInfo, logError } = Logger;
 
 import {
     CommandServicesObject,
@@ -40,7 +37,7 @@ export namespace CommandsServices {
         const { services } = configuration.commands;
         for (const service of services)
             if (service.enabled === true) {
-                log({ message: `Running services function ${service.command} to ${service.name}`, color: white });
+                logInfo(`Running services function ${service.command} to ${service.name}`);
                 await runCommandsServicesSingle({ service });
             }
     }
@@ -67,15 +64,15 @@ export namespace CommandsServices {
             const serviceName: string = service.name;
             switch (functionName) {
                 case COMM_SERVICES_STOP:
-                    log({ message: `Stopping service ${serviceName}`, color: white });
+                    logInfo(`Stopping service ${serviceName}`);
                     await stop({ serviceName });
                     break;
                 case COMM_SERVICES_DISABLE:
-                    log({ message: `Disabling service ${serviceName}`, color: white });
+                    logInfo(`Disabling service ${serviceName}`);
                     await disable({ serviceName });
                     break;
                 case COMM_SERVICES_REMOVE:
-                    log({ message: `Removing service ${serviceName}`, color: white });
+                    logInfo(`Removing service ${serviceName}`);
                     await remove({ serviceName });
                     break;
                 default:
@@ -83,7 +80,7 @@ export namespace CommandsServices {
             }
 
         } catch (error) {
-            log({ message: `Failed to process services command ${error}`, color: red_bt });
+            logError(`Failed to process services command ${error}`);
         }
     }
 

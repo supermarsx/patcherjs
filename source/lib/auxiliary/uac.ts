@@ -2,11 +2,8 @@ import { exit } from 'process';
 
 import * as isElevated from 'elevated';
 
-import Debug from './debug.js';
-const { log } = Debug;
-
-import colorsCli from 'colors-cli';
-const { white, red_bt } = colorsCli;
+import Logger from './logger.js';
+const { logInfo, logError } = Logger;
 
 export namespace Uac {
     /**
@@ -23,7 +20,7 @@ export namespace Uac {
     export async function isAdmin(): Promise<boolean> {
         try {
             const isAdministrator: boolean = await isElevated.check();
-            log({ message: `Is current user admin: ${isAdministrator}`, color: white });
+            logInfo(`Is current user admin: ${isAdministrator}`);
             return isAdministrator;
         } catch {
             return false;
@@ -45,7 +42,7 @@ export namespace Uac {
         const isAdministrator: boolean = await isAdmin();
         const exitCode: number = 1;
         if (!isAdministrator) {
-            log({ message: `Exiting because user doesn't have administrator privileges'`, color: red_bt });
+            logError(`Exiting because user doesn't have administrator privileges'`);
             exit(exitCode);
         }
     }

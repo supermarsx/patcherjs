@@ -1,8 +1,5 @@
-import Debug from '../auxiliary/debug.js';
-const { log } = Debug;
-
-import colorsCli from 'colors-cli';
-const { white } = colorsCli;
+import Logger from '../auxiliary/logger.js';
+const { logInfo } = Logger;
 
 export namespace BufferWrappers {
     /**
@@ -21,7 +18,7 @@ export namespace BufferWrappers {
 
         const newBuffer: Buffer = Buffer.alloc(size);
         const newBufferSize: number = newBuffer.byteLength;
-        log({ message: `Created buffer with size: ${newBufferSize}`, color: white });
+        logInfo(`Created buffer with size: ${newBufferSize}`);
         return newBuffer;
     }
 }

@@ -5,10 +5,8 @@ import { basename, extname } from 'path';
 import File from '../auxiliary/file.js';
 const { deleteFile, deleteFolder, firstFilenameInFolder, readBinaryFile, writeBinaryFile } = File;
 
-import Debug from '../auxiliary/debug.js';
-const { log } = Debug;
-import colorsCli from 'colors-cli';
-const { white, yellow_bt } = colorsCli;
+import Logger from '../auxiliary/logger.js';
+const { logInfo, logWarn } = Logger;
 
 import Constants from '../configuration/constants.js';
 const { SEVENZIPBIN_FILEPATH, PACKFILEEXTENSION, PACKMETHOD } = Constants;
@@ -32,7 +30,7 @@ export namespace Packer {
      */
     export async function packFile({ archivePath, buffer, password, preserveSource = true }:
         { archivePath?: string, buffer?: Buffer, password: string, preserveSource?: boolean }): Promise<Buffer> {
-        log({ message: `Packing file`, color: white });
+        logInfo(`Packing file`);
         let sourcePath: string;
         let usedTemp = false;
         if (archivePath) {
@@ -44,14 +42,14 @@ export namespace Packer {
                 sourcePath = tempFilePath;
                 usedTemp = true;
             } else {
-                log({ message: `Failed to get buffer or path, packing will fail`, color: yellow_bt });
+                logWarn(`Failed to get buffer or path, packing will fail`);
                 sourcePath = '';
             }
         }
 
-        log({ message: `Pack source path is ${sourcePath}`, color: white });
+        logInfo(`Pack source path is ${sourcePath}`);
         const destinationPath: string = getPackedPath({ filePath: sourcePath });
-        log({ message: `Pack destination path is ${destinationPath}`, color: white });
+        logInfo(`Pack destination path is ${destinationPath}`);
         const options: {} = {
             method: PACKMETHOD,
             $bin: SEVENZIPBIN_FILEPATH,
@@ -60,7 +58,7 @@ export namespace Packer {
 
         try {
             await packFileWrapper({ destinationPath, sourcePath, options });
-            log({ message: `Packed file successfully`, color: white });
+            logInfo(`Packed file successfully`);
             const packedBuffer: Buffer = await readBinaryFile({ filePath: destinationPath });
             return packedBuffer;
         } finally {
@@ -87,7 +85,7 @@ export namespace Packer {
     export async function packFileWrapper({ destinationPath, sourcePath, options }:
         { destinationPath: string, sourcePath: string | string[], options: {} }): Promise<void> {
         return new Promise(function (resolve, reject) {
-            log({ message: `Running pack file wrapper`, color: white });
+            logInfo(`Running pack file wrapper`);
             const extractor: ZipStream = Seven.add(
                 destinationPath,
                 sourcePath,
@@ -129,7 +127,7 @@ export namespace Packer {
 
         const extractionPath: string = `${archivePath}-extracted`;
 
-        log({ message: `Unpacking file: ${archivePath}`, color: white });
+        logInfo(`Unpacking file: ${archivePath}`);
 
         const options: {} = {
             $bin: SEVENZIPBIN_FILEPATH,

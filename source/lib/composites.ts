@@ -16,10 +16,9 @@ const { runPackings } = Packaging;
 import Uac from './auxiliary/uac.js';
 const { adminCheck } = Uac;
 
+import Logger from './auxiliary/logger.js';
+const { logInfo, logSuccess, logError } = Logger;
 import Debug from './auxiliary/debug.js';
-
-import colorsCli from 'colors-cli';
-const { green_bt, red_bt, white } = colorsCli;
 
 import Console from './auxiliary/console.js';
 const { waitForKeypress } = Console;
@@ -62,10 +61,10 @@ export namespace Patcher {
                     await runFunction({ configuration, functionName: nextFunction });
             }
         } catch (error) {
-            Debug.log({ message: `There was an error running patcher: ${error}`, color: red_bt });
+            logError(`There was an error running patcher: ${error}`);
         } finally {
-            Debug.log({ message: `Patcher finished running`, color: green_bt });
-            Debug.log({ message: `Press any key to close application...`, color: white });
+            logSuccess(`Patcher finished running`);
+            logInfo(`Press any key to close application...`);
             await waitForKeypress();
         }
     }
@@ -86,7 +85,7 @@ export namespace Patcher {
         try {
             await runPackings({ configuration });
         } catch (error) {
-            Debug.log({ message: `Failed to run pack and encrypt file function`, color: red_bt });
+            logError(`Failed to run pack and encrypt file function`);
         }
     }
 
@@ -119,7 +118,7 @@ export namespace Patcher {
                     throw new Error(`Unknown function: ${functionName}`);
             }
         } catch (error) {
-            Debug.log({ message: `Failed to process function ${error}`, color: red_bt });
+            logError(`Failed to process function ${error}`);
             return;
         }
     }

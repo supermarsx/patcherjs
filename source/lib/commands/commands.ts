@@ -10,11 +10,8 @@ const { runCommandsKill } = CommandsKill;
 import Command from './command.js';
 const { runCommand } = Command;
 
-import Debug from '../auxiliary/debug.js';
-const { log } = Debug;
-
-import colorsCli from 'colors-cli';
-const { red_bt, white } = colorsCli;
+import Logger from '../auxiliary/logger.js';
+const { logInfo, logError } = Logger;
 
 import {
     ConfigurationObject
@@ -50,7 +47,7 @@ export namespace Commands {
         { configuration: ConfigurationObject }): Promise<void> {
         const { runCommands } = configuration.options.commands;
         if (runCommands === false) {
-            log({ message: `Skipping running commands due to configuration`, color: white });
+            logInfo(`Skipping running commands due to configuration`);
             return;
         }
 
@@ -92,7 +89,7 @@ export namespace Commands {
                     throw new Error(`Unknown command type: ${functionName}`);
             }
         } catch (error) {
-            log({ message: `Failed to process command type ${error}`, color: red_bt });
+            logError(`Failed to process command type ${error}`);
         }
     }
 
@@ -112,7 +109,7 @@ export namespace Commands {
         const commands = configuration.commands.general;
         for (const command of commands)
             if (command.enabled === true) {
-                log({ message: `Running general command ${command.name}: ${command.command}`, color: white });
+                logInfo(`Running general command ${command.name}: ${command.command}`);
                 await runCommand({ command: command.command, parameters: [] });
             }
     }

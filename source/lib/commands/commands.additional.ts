@@ -1,10 +1,7 @@
 import * as path from 'path';
 
-import Debug from '../auxiliary/debug.js';
-const { log } = Debug;
-
-import colorsCli from 'colors-cli';
-const { white } = colorsCli;
+import Logger from '../auxiliary/logger.js';
+const { logInfo } = Logger;
 
 export namespace CommandsAdditional {
     /**
@@ -35,7 +32,7 @@ export namespace CommandsAdditional {
             }
 
             const resolvedPath: string = path.resolve(alias);
-            log({ message: `Resolved ${alias} to ${resolvedPath}`, color: white });
+            logInfo(`Resolved ${alias} to ${resolvedPath}`);
             return resolvedPath;
         } catch {
             return '';

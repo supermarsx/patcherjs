@@ -4,11 +4,8 @@ import { basename, join } from 'path';
 
 import { FileHandle } from 'fs/promises';
 
-import Debug from './debug.js';
-const { log } = Debug;
-
-import colorsCli from 'colors-cli';
-const { red_bt, white } = colorsCli;
+import Logger from './logger.js';
+const { logInfo, logError } = Logger;
 
 import Constants from '../configuration/constants.js';
 const { PATCHES_BACKUPEXT } = Constants;
@@ -156,9 +153,9 @@ export namespace FileWrappers {
         { filePath: string }): Promise<void> {
         try {
             await unlink(filePath);
-            log({ message: `Deleted file: ${filePath}`, color: white });
+            logInfo(`Deleted file: ${filePath}`);
         } catch (error) {
-            log({ message: `Failed to delete file: ${error}`, color: red_bt });
+            logError(`Failed to delete file: ${error}`);
         }
     }
 
@@ -179,9 +176,9 @@ export namespace FileWrappers {
 
         try {
             await rm(folderPath, { recursive: true });
-            log({ message: `Deleted folder: ${folderPath}`, color: white });
+            logInfo(`Deleted folder: ${folderPath}`);
         } catch (error) {
-            log({ message: `Failed to delete folder: ${error}`, color: red_bt });
+            logError(`Failed to delete folder: ${error}`);
         }
 
     }

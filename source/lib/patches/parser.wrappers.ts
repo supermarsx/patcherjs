@@ -1,8 +1,5 @@
-import Debug from '../auxiliary/debug.js';
-const { log } = Debug;
-
-import colorsCli from 'colors-cli';
-const { red_bt } = colorsCli;
+import Logger from '../auxiliary/logger.js';
+const { logError } = Logger;
 
 export namespace ParserWrappers {
     /**
@@ -24,7 +21,7 @@ export namespace ParserWrappers {
             const decimalString: number = parseInt(hexString, radix);
             return decimalString;
         } catch (error: any) {
-            log({ message: `An error has occurred: ${error}`, color: red_bt });
+            logError(`An error has occurred: ${error}`);
             return 0;
         }
     }
@@ -47,7 +44,7 @@ export namespace ParserWrappers {
             const value: bigint = BigInt('0x' + hexString);
             return value;
         } catch (error: any) {
-            log({ message: `An error has occurred: ${error}`, color: red_bt });
+            logError(`An error has occurred: ${error}`);
             return BigInt(0);
         }
     }
@@ -69,7 +66,7 @@ export namespace ParserWrappers {
             const patchData: Array<string> = fileData.split(/\r?\n/);
             return patchData;
         } catch (error: any) {
-            log({ message: `An error has occurred ${error}`, color: red_bt });
+            logError(`An error has occurred ${error}`);
             return new Array();
         }
     }

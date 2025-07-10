@@ -6,11 +6,8 @@ const { getFileSize, isFileReadable } = FileWrappers;
 import Defaults from './configuration.defaults.js';
 const { getDefaultConfigurationObject } = Defaults;
 
-import Debug from '../auxiliary/debug.js';
-const { log } = Debug;
-
-import colorsCli from 'colors-cli';
-const { green_bt, red_bt, white, yellow_bt } = colorsCli;
+import Logger from '../auxiliary/logger.js';
+const { logInfo, logSuccess, logWarn, logError } = Logger;
 
 import {
     ConfigurationObject
@@ -48,24 +45,24 @@ export namespace Configuration {
             const fileHandle: fs.FileHandle = await fs.open(filePath);
             const bufferSize: number = await getFileSize({ fileHandle });
             if (bufferSize === 0)
-                log({ message: 'Configuration file size is 0, file may be corrupted or invalid', color: yellow_bt });
+                logWarn('Configuration file size is 0, file may be corrupted or invalid');
             else
-                log({ message: `Configuration file size, ${bufferSize}`, color: green_bt });
-            log({ message: `Reading configuration file handle with ${encoding} encoding`, color: white });
+                logSuccess(`Configuration file size, ${bufferSize}`);
+            logInfo(`Reading configuration file handle with ${encoding} encoding`);
             const fileData: string = await fileHandle.readFile({
                 encoding: encoding
             });
             const dataLength: number = fileData.length;
             if (dataLength === 0)
-                log({ message: `Configuration file data size is 0, file may be corrupted or invalid`, color: yellow_bt });
+                logWarn(`Configuration file data size is 0, file may be corrupted or invalid`);
             else
-                log({ message: `Configuration file read successfully`, color: green_bt });
+                logSuccess(`Configuration file read successfully`);
             await fileHandle.close();
-            log({ message: `Closed file handle`, color: white });
+            logInfo(`Closed file handle`);
             const configObject: ConfigurationObject = JSON.parse(fileData);
             return configObject;
         } catch (error: any) {
-            log({ message: `An error has occurred: ${error}`, color: red_bt });
+            logError(`An error has occurred: ${error}`);
             const emptyConfig: ConfigurationObject = getDefaultConfigurationObject();
             return emptyConfig;
         }

@@ -8,11 +8,8 @@ const { isFileReadable, isFileWritable, getFileSize } = FileWrappers;
 
 import { FileHandle } from 'fs/promises';
 
-import Debug from './debug.js';
-const { log } = Debug;
-
-import colorsCli from 'colors-cli';
-const { green_bt, red_bt, white, yellow_bt } = colorsCli;
+import Logger from './logger.js';
+const { logInfo, logSuccess, logWarn, logError } = Logger;
 
 export * from './file.wrappers.js';
 
@@ -40,33 +37,33 @@ export namespace File {
         let fileHandle: FileHandle | undefined;
         try {
             const encoding: BufferEncoding = 'utf-8';
-            log({ message: `Opening file path, ${filePath}, in read mode`, color: white });
+            logInfo(`Opening file path, ${filePath}, in read mode`);
             const cantReadFile: boolean = !(await isFileReadable({ filePath }));
             if (cantReadFile)
                 throw new Error(`File is not readable, is missing or corrupted`);
             fileHandle = await fs.open(filePath);
             const bufferSize: number = await getFileSize({ fileHandle });
             if (bufferSize === 0)
-                log({ message: 'File size is 0, file may be corrupted or invalid', color: yellow_bt });
+                logWarn('File size is 0, file may be corrupted or invalid');
             else
-                log({ message: `Patch file size, ${bufferSize}`, color: green_bt });
-            log({ message: `Reading file handle with ${encoding} encoding`, color: white });
+                logSuccess(`Patch file size, ${bufferSize}`);
+            logInfo(`Reading file handle with ${encoding} encoding`);
             const fileData: string = await fileHandle.readFile({
                 encoding: encoding
             });
             const dataLength: number = fileData.length;
             if (dataLength === 0)
-                log({ message: `Patch file data size is 0, file may be corrupted or invalid`, color: yellow_bt });
+                logWarn(`Patch file data size is 0, file may be corrupted or invalid`);
             else
-                log({ message: `Read patch file successfully to buffer`, color: green_bt });
+                logSuccess(`Read patch file successfully to buffer`);
             return fileData;
         } catch (error: any) {
-            log({ message: `An error has occurred: ${error}`, color: red_bt });
+            logError(`An error has occurred: ${error}`);
             return '';
         } finally {
             if (fileHandle) {
                 await fileHandle.close();
-                log({ message: `Closed file handle`, color: white });
+                logInfo(`Closed file handle`);
             }
         }
     }
@@ -86,29 +83,29 @@ export namespace File {
         { filePath: string; }): Promise<Buffer> {
         let fileHandle: FileHandle | undefined;
         try {
-            log({ message: `Opening file path, ${filePath}, in read mode`, color: white });
+            logInfo(`Opening file path, ${filePath}, in read mode`);
             if (!(await isFileReadable({ filePath })))
                 throw new Error(`File is not readable, is missing or corrupted`);
             fileHandle = await fs.open(filePath);
-            log({ message: 'Getting file size', color: white });
+            logInfo('Getting file size');
             const bufferSize: number = await getFileSize({ fileHandle });
             if (bufferSize === 0)
-                log({ message: 'File size is 0, file may be corrupted or invalid', color: yellow_bt });
+                logWarn('File size is 0, file may be corrupted or invalid');
             else
-                log({ message: `Binary file size, ${bufferSize}`, color: green_bt });
-            log({ message: 'Creating buffer', color: white });
+                logSuccess(`Binary file size, ${bufferSize}`);
+            logInfo('Creating buffer');
             const buffer: Buffer = createBuffer({ size: bufferSize });
-            log({ message: 'Reading file handle to buffer', color: white });
+            logInfo('Reading file handle to buffer');
             await fileHandle.read(buffer, 0, bufferSize);
-            log({ message: 'Read binary file successfully to buffer', color: green_bt });
+            logSuccess('Read binary file successfully to buffer');
             return buffer;
         } catch (error: any) {
-            log({ message: `An error has occurred: ${error}`, color: red_bt });
+            logError(`An error has occurred: ${error}`);
             return createBuffer({ size: 0 });
         } finally {
             if (fileHandle) {
                 await fileHandle.close();
-                log({ message: 'Closed file handle', color: white });
+                logInfo('Closed file handle');
             }
         }
     }
@@ -130,28 +127,28 @@ export namespace File {
     }): Promise<number> {
         let fileHandle: fs.FileHandle | undefined;
         try {
-            log({ message: `Opening file path, ${filePath}, in write mode`, color: white });
+            logInfo(`Opening file path, ${filePath}, in write mode`);
             if (!(await isFileWritable({ filePath })))
                 throw new Error(`File is not writable, is missing or corrupted`);
             const flags: string = 'w';
             fileHandle = await fs.open(filePath, flags);
             const bufferSize: number = await getFileSize({ fileHandle });
             if (bufferSize === 0)
-                log({ message: 'File size is 0, file may be corrupted, invalid or is a new file/buffer', color: yellow_bt });
+                logWarn('File size is 0, file may be corrupted, invalid or is a new file/buffer');
             else
-                log({ message: `Binary file size, ${bufferSize}`, color: green_bt });
-            log({ message: 'Writing buffer to file handle', color: white });
+                logSuccess(`Binary file size, ${bufferSize}`);
+            logInfo('Writing buffer to file handle');
             const writeResult: { bytesWritten: number } = await fileHandle.write(buffer);
             const { bytesWritten } = writeResult;
-            log({ message: `Written ${bytesWritten} bytes to file`, color: green_bt });
+            logSuccess(`Written ${bytesWritten} bytes to file`);
             return bytesWritten;
         } catch (error: any) {
-            log({ message: `An error has occurred: ${error}`, color: red_bt });
+            logError(`An error has occurred: ${error}`);
             return 0;
         } finally {
             if (fileHandle) {
                 await fileHandle.close();
-                log({ message: 'Closed file handle', color: white });
+                logInfo('Closed file handle');
             }
         }
     }
