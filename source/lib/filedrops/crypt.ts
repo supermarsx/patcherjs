@@ -1,4 +1,4 @@
-import { BinaryLike, createCipheriv, createDecipheriv, randomBytes, pbkdf2Sync, CipherGCM } from 'crypto';
+import { BinaryLike, createCipheriv, createDecipheriv, randomBytes, pbkdf2Sync, CipherGCM, DecipherGCM, CipherGCMTypes } from 'crypto';
 
 import File from '../auxiliary/file.js';
 const { readBinaryFile } = File;
@@ -75,11 +75,10 @@ export namespace Encryption {
 
             const salt: Buffer = randomBytes(CRYPTO_SALT_RANDOMBYTES);
             const iv: BinaryLike = randomBytes(CRYPTO_IV_RANDOMBYTES);
-            const algorithm: string = CRYPTO_ALG;
+            const algorithm: CipherGCMTypes = CRYPTO_ALG;
             const iterations: number = CRYPTO_ITERATIONS;
             const encryptionKey: Buffer = deriveKeyFromPassword({ password: key, salt: salt, iterations: iterations });
 
-            // @ts-ignore
             const cipher: CipherGCM = createCipheriv(algorithm, encryptionKey, iv);
 
             logInfo(`Encrypting data`);
@@ -168,7 +167,7 @@ export namespace Encryption {
             const salt: Buffer = getSlicedData({ data: fileData, subsetOptions: bufferSubsets.salt });
             const iv: Buffer = getSlicedData({ data: fileData, subsetOptions: bufferSubsets.iv });
             const authTag: Buffer = getSlicedData({ data: fileData, subsetOptions: bufferSubsets.authTag });
-            const algorithm: string = CRYPTO_ALG;
+            const algorithm: CipherGCMTypes = CRYPTO_ALG;
             const iterations: Buffer = getSlicedData({ data: fileData, subsetOptions: bufferSubsets.iterations });
 
             const iterationsInt = parseInt(iterations.toString(), 10);
@@ -197,9 +196,7 @@ export namespace Encryption {
 
             logInfo(`Inner encrypted data length: ${innerEncryptedData.byteLength}`);
 
-            // @ts-ignore
-            const decipher: CipherGCM = createDecipheriv(algorithm, decryptionKey, iv);
-            // @ts-ignore
+            const decipher: DecipherGCM = createDecipheriv(algorithm, decryptionKey, iv);
             decipher.setAuthTag(authTag);
 
             logInfo(`Decrypting data`);

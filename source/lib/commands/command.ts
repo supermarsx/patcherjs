@@ -1,4 +1,4 @@
-import { spawn } from 'child_process';
+import { spawn, ChildProcessWithoutNullStreams } from 'child_process';
 
 import Logger from '../auxiliary/logger.js';
 const { logError } = Logger;
@@ -47,7 +47,7 @@ export namespace Command {
         { command: string, parameters: string[] }): Promise<string> {
 
         return new Promise(function (resolve, reject) {
-            const childProcess: any = spawn(command, parameters, { shell: true });
+            const childProcess: ChildProcessWithoutNullStreams = spawn(command, parameters, { shell: true });
             let output: string = '';
             childProcess.stdout.on('data', function (data) {
                 output += data.toString();
