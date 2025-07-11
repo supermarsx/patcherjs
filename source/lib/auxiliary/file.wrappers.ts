@@ -197,19 +197,16 @@ export namespace FileWrappers {
     export async function firstFilenameInFolder({ folderPath }:
         { folderPath: string }): Promise<string> {
 
-        return new Promise(function (resolve, reject) {
-            readdir(folderPath)
-                .then(function (filenames) {
-                    if (filenames.length === 0) {
-                        reject(new Error('No files found in directory'));
-                        return;
-                    }
-                    const completeFilePath: string = join(folderPath, filenames[0]);
-                    resolve(completeFilePath);
-                }).catch(function (error) {
-                    reject(error);
-                });
-        });
+        try {
+            const filenames: string[] = await readdir(folderPath);
+            if (filenames.length === 0) {
+                throw new Error('No files found in directory');
+            }
+            const completeFilePath: string = join(folderPath, filenames[0]);
+            return completeFilePath;
+        } catch (error) {
+            throw error;
+        }
     }
 }
 

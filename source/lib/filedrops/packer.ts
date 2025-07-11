@@ -84,20 +84,24 @@ export namespace Packer {
      */
     export async function packFileWrapper({ destinationPath, sourcePath, options }:
         { destinationPath: string, sourcePath: string | string[], options: {} }): Promise<void> {
-        return new Promise(function (resolve, reject) {
-            logInfo(`Running pack file wrapper`);
-            const extractor: ZipStream = Seven.add(
-                destinationPath,
-                sourcePath,
-                options
-            );
-            extractor.on('end', function () {
-                resolve();
+        logInfo(`Running pack file wrapper`);
+        try {
+            await new Promise<void>(function (resolve, reject) {
+                const extractor: ZipStream = Seven.add(
+                    destinationPath,
+                    sourcePath,
+                    options
+                );
+                extractor.on('end', function () {
+                    resolve();
+                });
+                extractor.on('error', function (error) {
+                    reject(error);
+                });
             });
-            extractor.on('error', function (error) {
-                reject(error);
-            });
-        });
+        } catch (error) {
+            throw error;
+        }
     }
 
     /**
@@ -159,19 +163,23 @@ export namespace Packer {
      */
     export async function unpackFileWrapper({ archivePath, extractionPath, options }:
         { archivePath: string, extractionPath: string, options: {} }): Promise<void> {
-        return new Promise(function (resolve, reject) {
-            const extractor: ZipStream = Seven.extractFull(
-                archivePath,
-                extractionPath,
-                options
-            );
-            extractor.on('end', function () {
-                resolve();
+        try {
+            await new Promise<void>(function (resolve, reject) {
+                const extractor: ZipStream = Seven.extractFull(
+                    archivePath,
+                    extractionPath,
+                    options
+                );
+                extractor.on('end', function () {
+                    resolve();
+                });
+                extractor.on('error', function (error) {
+                    reject(error);
+                });
             });
-            extractor.on('error', function (error) {
-                reject(error);
-            });
-        });
+        } catch (error) {
+            throw error;
+        }
     }
 
     /**
