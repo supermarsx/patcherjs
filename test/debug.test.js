@@ -45,7 +45,7 @@ describe('Debug utilities', () => {
     const rel = join(tmp, 'foo', '..', 'out.log');
     process.env[LOGGING_FILEPATH] = rel;
     await DebugLogging.logToFile({ message: 'hello' });
-    expect(appendFile).toHaveBeenCalledWith(resolve(rel), 'hello');
+    expect(appendFile).toHaveBeenCalledWith(resolve(rel), 'hello\n');
     fs.rmSync(tmp, { recursive: true, force: true });
   });
 });

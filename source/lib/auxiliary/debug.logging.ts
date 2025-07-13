@@ -102,7 +102,7 @@ export namespace DebugLogging {
         try {
             const fileLogPath: string = getEnv({ envVarName: LOGGING_FILEPATH });
             const resolvedFileLogPath: string = getResolvedPath({ filePath: fileLogPath });
-            await appendFile(resolvedFileLogPath, message);
+            await appendFile(resolvedFileLogPath, message + '\n');
             return true;
         } catch {
             return false;
