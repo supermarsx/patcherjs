@@ -73,9 +73,10 @@ export namespace CommandsKill {
         { taskName: string }): Promise<string | null> {
 
         const command: string = TASKKILL_BIN;
+        const sanitizedTaskName: string = taskName.replace(/'/g, "'\\''");
         const parameters: string[] = IS_WINDOWS
             ? ['/f', '/im', taskName]
-            : ['-9', `$(pgrep -f \"${taskName}\")`];
+            : ['-9', `$(pgrep -f '${sanitizedTaskName}')`];
         const result: string | null = await runCommand({ command, parameters });
         return result;
     }

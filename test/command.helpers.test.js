@@ -155,7 +155,17 @@ describe('Command helpers - parameters', () => {
     await mods2.CommandsKill.killTask({ taskName: 'proc' });
     expect(mods2.Command.default.runCommand).toHaveBeenCalledWith({
       command: 'kill',
-      parameters: ['-9', '$(pgrep -f "proc")']
+      parameters: ['-9', '$(pgrep -f \'proc\')']
+    });
+  });
+
+  test('Kill command handles spaces', async () => {
+    const { CommandsKill, Command } = await loadModules('linux');
+    Command.default.runCommand.mockResolvedValue('');
+    await CommandsKill.killTask({ taskName: 'my proc' });
+    expect(Command.default.runCommand).toHaveBeenCalledWith({
+      command: 'kill',
+      parameters: ['-9', '$(pgrep -f \'my proc\')']
     });
   });
 });
