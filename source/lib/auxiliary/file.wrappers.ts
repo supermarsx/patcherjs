@@ -1,6 +1,7 @@
 import { Stats } from 'fs';
 import { access, constants, copyFile, unlink, rm, readdir, open } from 'fs/promises';
 import { basename, join } from 'path';
+import { fileURLToPath } from 'url';
 
 import { FileHandle } from 'fs/promises';
 
@@ -107,12 +108,36 @@ export namespace FileWrappers {
      * @since 0.0.1
      */
     export function getCallingFilename(): string {
-        const callingModule: string | undefined = module.parent?.filename;
-        if (callingModule) {
-            const convertedCallingModule: string = callingModule.toString();
-            const filename: string = basename(convertedCallingModule);
-            return filename;
-        } else {
+        try {
+            const stack: string | undefined = new Error().stack;
+            if (stack) {
+                const stackLines: string[] = stack.split('\n');
+                const thisFile: string = fileURLToPath(import.meta.url);
+                const thisIndex: number = stackLines.findIndex(function (line) {
+                    return line.includes(thisFile);
+                });
+                if (thisIndex !== -1) {
+                    let callerLine: string | undefined;
+                    for (let i = thisIndex + 1; i < stackLines.length; i++) {
+                        const line: string = stackLines[i];
+                        if (!line.includes(thisFile)) {
+                            callerLine = line;
+                            break;
+                        }
+                    }
+                    if (callerLine) {
+                        const matchingRegExp: RegExp = /\((.*):\d+:\d+\)|at (.*):\d+:\d+$/;
+                        const filenameMatch: RegExpMatchArray | null = callerLine.match(matchingRegExp);
+                        if (filenameMatch !== null) {
+                            const filename: string | undefined = filenameMatch[1] ?? filenameMatch[2];
+                            if (filename)
+                                return basename(fileURLToPath(filename));
+                        }
+                    }
+                }
+            }
+            return '';
+        } catch {
             return '';
         }
     }
