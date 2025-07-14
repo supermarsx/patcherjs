@@ -6,7 +6,7 @@ import File from '../auxiliary/file.js';
 const { deleteFile, deleteFolder, firstFilenameInFolder, readBinaryFile, writeBinaryFile } = File;
 
 import Logger from '../auxiliary/logger.js';
-const { logInfo, logWarn } = Logger;
+const { logInfo } = Logger;
 
 import Constants from '../configuration/constants.js';
 const { SEVENZIPBIN_FILEPATH, PACKFILEEXTENSION, PACKMETHOD } = Constants;
@@ -31,20 +31,19 @@ export namespace Packer {
     export async function packFile({ archivePath, buffer, password, preserveSource = true }:
         { archivePath?: string, buffer?: Buffer, password: string, preserveSource?: boolean }): Promise<Buffer> {
         logInfo(`Packing file`);
+        if (!archivePath && !(buffer && Buffer.isBuffer(buffer))) {
+            throw new Error('Either archivePath or buffer must be provided');
+        }
+
         let sourcePath: string;
         let usedTemp = false;
         if (archivePath) {
             sourcePath = archivePath;
         } else {
-            if (buffer && Buffer.isBuffer(buffer)) {
-                const tempFilePath = tmp.tmpNameSync();
-                await writeBinaryFile({ filePath: tempFilePath, buffer });
-                sourcePath = tempFilePath;
-                usedTemp = true;
-            } else {
-                logWarn(`Failed to get buffer or path, packing will fail`);
-                sourcePath = '';
-            }
+            const tempFilePath = tmp.tmpNameSync();
+            await writeBinaryFile({ filePath: tempFilePath, buffer: buffer as Buffer });
+            sourcePath = tempFilePath;
+            usedTemp = true;
         }
 
         logInfo(`Pack source path is ${sourcePath}`);
