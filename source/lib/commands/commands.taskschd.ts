@@ -66,7 +66,7 @@ export namespace CommandsTaskscheduler {
                     await stop({ taskName });
                     break;
                 default:
-                    throw new Error(`Unknown task scheduler function: ${taskName}`);
+                    throw new Error(`Unknown task scheduler function: ${functionName}`);
             }
 
         } catch (error) {
