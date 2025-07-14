@@ -57,5 +57,28 @@ describe('Configuration.readConfigurationFile', () => {
     });
     fs.rmSync(dir, { recursive: true, force: true });
   });
+
+  test('returns defaults and closes handle when read fails', async () => {
+    const mockClose = jest.fn(async () => {});
+    jest.resetModules();
+    jest.unstable_mockModule('../source/lib/auxiliary/file.wrappers.ts', () => ({
+      default: {
+        isFileReadable: jest.fn(async () => true),
+        getFileSize: jest.fn(async () => 5)
+      }
+    }));
+    jest.unstable_mockModule('fs/promises', () => ({
+      open: jest.fn(async () => ({
+        readFile: jest.fn(async () => { throw new Error('fail'); }),
+        close: mockClose,
+        stat: jest.fn(async () => ({ size: 5 }))
+      }))
+    }));
+    const { Configuration } = await import('../source/lib/configuration/configuration.ts');
+    const result = await Configuration.readConfigurationFile({ filePath: 'any' });
+    const defaults = ConfigurationDefaults.getDefaultConfigurationObject();
+    expect(result).toEqual(defaults);
+    expect(mockClose).toHaveBeenCalled();
+  });
 });
 

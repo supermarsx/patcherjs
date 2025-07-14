@@ -65,7 +65,7 @@ export namespace Configuration {
             const emptyConfig: ConfigurationObject = getDefaultConfigurationObject();
             return emptyConfig;
         } finally {
-            if (fileHandle !== undefined) {
+            if (fileHandle) {
                 await fileHandle.close();
                 logInfo(`Closed file handle`);
             }
