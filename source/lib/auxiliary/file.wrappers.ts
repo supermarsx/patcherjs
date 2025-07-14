@@ -25,10 +25,17 @@ export namespace FileWrappers {
      */
     export async function getFileSizeUsingPath({ filePath }:
         { filePath: string }): Promise<number> {
-        const fileHandle: FileHandle = await open(filePath);
-        const fileSize: number = await getFileSize({ fileHandle });
-        await fileHandle.close();
-        return fileSize;
+        let fileHandle: FileHandle | undefined;
+        try {
+            fileHandle = await open(filePath);
+            const fileSize: number = await getFileSize({ fileHandle });
+            return fileSize;
+        } catch {
+            return 0;
+        } finally {
+            if (fileHandle)
+                await fileHandle.close();
+        }
     }
 
     /**

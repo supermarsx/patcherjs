@@ -71,6 +71,11 @@ describe('File utilities', () => {
   test('firstFilenameInFolder rejects on failure', async () => {
     await expect(File.firstFilenameInFolder({ folderPath: '/missing' })).rejects.toThrow();
   });
+
+  test('getFileSizeUsingPath returns 0 for missing file', async () => {
+    const size = await File.getFileSizeUsingPath({ filePath: '/no/such/file' });
+    expect(size).toBe(0);
+  });
 });
 
 describe('File utilities failure mocks', () => {
