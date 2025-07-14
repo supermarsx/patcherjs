@@ -73,6 +73,10 @@ export namespace BufferUtils {
             bigEndian = false
         } = options;
         try {
+            if (offset < 0) {
+                logWarn(`Offset ${offset} is negative, skipping patch`);
+                return buffer;
+            }
             if (allowOffsetOverflow !== true && offset + byteLength > buffer.length) {
                 logWarn(`Offset ${offset} with length ${byteLength} exceeds buffer size ${buffer.length}, skipping patch`);
                 return buffer;
@@ -139,6 +143,10 @@ export namespace BufferUtils {
             const maxSafe = BigInt(Number.MAX_SAFE_INTEGER);
             for (const patch of patchData) {
                 const { offset, previousValue, newValue, byteLength } = patch;
+                if (offset < 0n) {
+                    logWarn(`Offset ${offset} is negative, skipping patch`);
+                    continue;
+                }
                 if (offset > maxSafe)
                     throw new Error(`Offset ${offset} exceeds Number.MAX_SAFE_INTEGER`);
                 const position = Number(offset);
