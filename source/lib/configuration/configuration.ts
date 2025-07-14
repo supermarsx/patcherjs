@@ -37,12 +37,13 @@ export namespace Configuration {
      */
     export async function readConfigurationFile({ filePath = CONFIG_FILEPATH }:
         { filePath?: string }): Promise<ConfigurationObject> {
+        let fileHandle: fs.FileHandle | undefined;
         try {
             const encoding: BufferEncoding = CONFIG_ENCODING;
             const cantReadFile: boolean = !(await isFileReadable({ filePath }));
             if (cantReadFile)
                 throw new Error(`Configuration file is not readable, is missing or corrupted`);
-            const fileHandle: fs.FileHandle = await fs.open(filePath);
+            fileHandle = await fs.open(filePath);
             const bufferSize: number = await getFileSize({ fileHandle });
             if (bufferSize === 0)
                 logWarn('Configuration file size is 0, file may be corrupted or invalid');
@@ -57,14 +58,17 @@ export namespace Configuration {
                 logWarn(`Configuration file data size is 0, file may be corrupted or invalid`);
             else
                 logSuccess(`Configuration file read successfully`);
-            await fileHandle.close();
-            logInfo(`Closed file handle`);
             const configObject: ConfigurationObject = JSON.parse(fileData);
             return configObject;
         } catch (error: any) {
             logError(`An error has occurred: ${error}`);
             const emptyConfig: ConfigurationObject = getDefaultConfigurationObject();
             return emptyConfig;
+        } finally {
+            if (fileHandle !== undefined) {
+                await fileHandle.close();
+                logInfo(`Closed file handle`);
+            }
         }
     }
 }
