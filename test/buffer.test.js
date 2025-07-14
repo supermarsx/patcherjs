@@ -224,6 +224,26 @@ describe('BufferUtils.patchBuffer', () => {
     });
     expect(Array.from(buf)).toEqual([0x00, 0x01]);
   });
+
+  test('skips patch when offset is negative', () => {
+    const buf = Buffer.from([0x00]);
+    BufferUtils.patchBuffer({
+      buffer: buf,
+      offset: -1,
+      previousValue: 0x00,
+      newValue: 0xff,
+      byteLength: 1,
+      options: {
+        forcePatch: false,
+        unpatchMode: false,
+        nullPatch: false,
+        failOnUnexpectedPreviousValue: false,
+        warnOnUnexpectedPreviousValue: false,
+        skipWritePatch: false
+      }
+    });
+    expect(Array.from(buf)).toEqual([0x00]);
+  });
 });
 
 describe('BufferUtils.patchLargeFile', () => {
@@ -289,6 +309,28 @@ describe('BufferUtils.patchLargeFile', () => {
     await BufferUtils.patchLargeFile({ filePath, patchData, options: opts });
     const result = await fsPromises.readFile(filePath);
     expect(Array.from(result)).toEqual([0x00, 0x01, 0x02, 0x03]);
+    await fsPromises.rm(dir, { recursive: true, force: true });
+  });
+
+  test('skips patches with negative offsets', async () => {
+    const dir = await fsPromises.mkdtemp(join(os.tmpdir(), 'large-'));
+    const filePath = join(dir, 'tmp.bin');
+    await fsPromises.writeFile(filePath, Buffer.from([0x00]));
+    const patchData = [
+      { offset: -1n, previousValue: 0x00, newValue: 0xff, byteLength: 1 }
+    ];
+    const opts = {
+      forcePatch: false,
+      unpatchMode: false,
+      nullPatch: false,
+      failOnUnexpectedPreviousValue: false,
+      warnOnUnexpectedPreviousValue: false,
+      skipWritePatch: false,
+      allowOffsetOverflow: false
+    };
+    await BufferUtils.patchLargeFile({ filePath, patchData, options: opts });
+    const result = await fsPromises.readFile(filePath);
+    expect(Array.from(result)).toEqual([0x00]);
     await fsPromises.rm(dir, { recursive: true, force: true });
   });
 
