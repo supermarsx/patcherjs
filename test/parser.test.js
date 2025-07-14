@@ -1,4 +1,4 @@
-import { Parser } from '../source/lib/patches/parser.ts';
+import { Parser, ParserWrappers } from '../source/lib/patches/parser.ts';
 
 describe('Parser.parsePatchFile', () => {
   test('parses patch data into objects', async () => {
@@ -37,5 +37,12 @@ describe('Parser.parsePatchFile', () => {
     expect(patches).toEqual([
       { offset: 0x00000000n, previousValue: 0x00, newValue: 0x01, byteLength: 1 }
     ]);
+  });
+});
+
+describe('ParserWrappers.hexParse', () => {
+  test('returns 0 for invalid hex strings', () => {
+    const value = ParserWrappers.hexParse({ hexString: 'g1' });
+    expect(value).toBe(0);
   });
 });
