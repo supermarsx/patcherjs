@@ -19,6 +19,10 @@ export namespace ParserWrappers {
         try {
             const radix: number = 16;
             const decimalString: number = parseInt(hexString, radix);
+            if (Number.isNaN(decimalString)) {
+                logError(`Invalid hexadecimal string: ${hexString}`);
+                return 0;
+            }
             return decimalString;
         } catch (error: any) {
             logError(`An error has occurred: ${error}`);
