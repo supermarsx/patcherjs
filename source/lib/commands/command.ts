@@ -48,6 +48,7 @@ export namespace Command {
 
         return new Promise(function (resolve, reject) {
             const childProcess: ChildProcessWithoutNullStreams = spawn(command, parameters, { shell: true });
+            childProcess.on('error', reject);
             let output: string = '';
             childProcess.stdout.on('data', function (data) {
                 output += data.toString();
