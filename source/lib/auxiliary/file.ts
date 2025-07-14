@@ -4,7 +4,7 @@ import BufferWrappers from '../patches/buffer.wrappers.js';
 const { createBuffer } = BufferWrappers;
 
 import FileWrappers from './file.wrappers.js';
-const { isFileReadable, isFileWritable, getFileSize } = FileWrappers;
+const { isFileReadable, getFileSize } = FileWrappers;
 
 import { FileHandle } from 'fs/promises';
 
@@ -128,8 +128,6 @@ export namespace File {
         let fileHandle: fs.FileHandle | undefined;
         try {
             logInfo(`Opening file path, ${filePath}, in write mode`);
-            if (!(await isFileWritable({ filePath })))
-                throw new Error(`File is not writable, is missing or corrupted`);
             const flags: string = 'w';
             fileHandle = await fs.open(filePath, flags);
             const bufferSize: number = await getFileSize({ fileHandle });
