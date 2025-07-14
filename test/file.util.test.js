@@ -23,12 +23,12 @@ describe('File utilities', () => {
   test('writeBinaryFile writes buffers and returns byte count', async () => {
     const dir = fs.mkdtempSync(join(os.tmpdir(), 'fileutil-'));
     const p = join(dir, 'out.bin');
-    fs.writeFileSync(p, '');
     const buf = Buffer.from([1, 2, 3]);
     const bytes = await File.writeBinaryFile({ filePath: p, buffer: buf });
     expect(bytes).toBe(3);
     const data = fs.readFileSync(p);
     expect(data.equals(buf)).toBe(true);
+    expect(fs.existsSync(p)).toBe(true);
     fs.rmSync(dir, { recursive: true, force: true });
   });
 

@@ -40,6 +40,13 @@ describe('Debug utilities', () => {
     expect(Debug.isEnabled()).toEqual({ DEBUGGING: true, LOGGING: true });
   });
 
+  test('isDisabled reflects DEBUGGING state', () => {
+    Debug.disable();
+    expect(Debug.isDisabled()).toBe(true);
+    Debug.enable({});
+    expect(Debug.isDisabled()).toBe(false);
+  });
+
   test('logToFile resolves path and writes via appendFile', async () => {
     const tmp = fs.mkdtempSync(join(os.tmpdir(), 'debug-'));
     const rel = join(tmp, 'foo', '..', 'out.log');

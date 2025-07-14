@@ -61,7 +61,7 @@ export namespace Parser {
         try {
             const lines: number = patchData.length;
             logInfo(`Found ${lines} patch(es) inside patch data`);
-            let patches: PatchArray = [];
+            const patches: PatchArray = [];
             logInfo(`Pushing patch objects into an array`);
             for (const [index, patchLine] of patchData.entries()) {
                 const trimmed = patchLine.trim();

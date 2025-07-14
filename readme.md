@@ -48,8 +48,9 @@ $ npm install
 $ npm run ts-build
 $ node dist/standalone/executable.js
 $ node dist/standalone/executable.js --config ./my-config.json
+$ node dist/standalone/executable.js -c ./my-config.json
 ```
-The `--config` option allows you to specify a custom configuration file instead of the default `config.json`.
+The `--config` (or `-c`) option allows you to specify a custom configuration file instead of the default `config.json`. You can also use the form `--config=<path>`.
 
 #### Running on Linux/macOS
 
@@ -58,6 +59,7 @@ Once the project adds support for these platforms the steps are the same:
 ```bash
 npm run ts-build
 node dist/standalone/executable.js --config ./my-config.json
+node dist/standalone/executable.js --config=./my-config.json
 ```
 The build pipeline will skip the signing step on non-Windows systems.
 #### npm scripts

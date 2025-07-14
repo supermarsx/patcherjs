@@ -81,7 +81,9 @@ export namespace Debug {
         };
         return debugStatus;
     }
-    export function isDisabled(): boolean { return !isEnabled(); }
+    export function isDisabled(): boolean {
+        return !isEnabled().DEBUGGING;
+    }
 }
 
 export default Debug;
