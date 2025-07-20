@@ -116,6 +116,28 @@ describe('Patches.runPatches', () => {
     expect(data.readBigUInt64LE(6)).toBe(0x1122334455667788n);
   });
 
+  test('patches big-endian multi-byte values', async () => {
+    const config = ConfigurationDefaults.getDefaultConfigurationObject();
+    fs.writeFileSync(testBinPath, Buffer.alloc(14));
+    config.patches = [
+      { name: 'multi', patchFilename: 'multi.patch', fileNamePath: testBinPath, enabled: true }
+    ];
+    const pOpts = config.options.patches;
+    pOpts.backupFiles = false;
+    pOpts.fileSizeCheck = false;
+    pOpts.skipWritingBinary = false;
+    pOpts.warnOnUnexpectedPreviousValue = false;
+    pOpts.failOnUnexpectedPreviousValue = false;
+    pOpts.bigEndian = true;
+    pOpts.runPatches = true;
+
+    await Patches.runPatches({ configuration: config });
+    const data = fs.readFileSync(testBinPath);
+    expect(data.readUInt16BE(0)).toBe(0x1234);
+    expect(data.readUInt32BE(2)).toBe(0x89abcdef);
+    expect(data.readBigUInt64BE(6)).toBe(0x1122334455667788n);
+  });
+
   test('patches offset at end of file', async () => {
     const config = ConfigurationDefaults.getDefaultConfigurationObject();
     fs.writeFileSync(testBinPath, Buffer.from([0x00, 0x01]));
