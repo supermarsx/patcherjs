@@ -77,9 +77,14 @@ export namespace BufferUtils {
                 logWarn(`Offset ${offset} is negative, skipping patch`);
                 return buffer;
             }
-            if (allowOffsetOverflow !== true && offset + byteLength > buffer.length) {
-                logWarn(`Offset ${offset} with length ${byteLength} exceeds buffer size ${buffer.length}, skipping patch`);
-                return buffer;
+            if (offset + byteLength > buffer.length) {
+                if (allowOffsetOverflow !== true) {
+                    logWarn(`Offset ${offset} with length ${byteLength} exceeds buffer size ${buffer.length}, skipping patch`);
+                    return buffer;
+                }
+                const newBuffer = Buffer.alloc(offset + byteLength);
+                buffer.copy(newBuffer, 0, 0, buffer.length);
+                buffer = newBuffer;
             }
             const currentValue = readValue({ buffer, offset, byteLength, bigEndian });
 
