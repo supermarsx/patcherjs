@@ -72,13 +72,17 @@ export namespace CommandsKill {
     export async function killTask({ taskName }:
         { taskName: string }): Promise<string | null> {
 
-        const command: string = TASKKILL_BIN;
-        const sanitizedTaskName: string = taskName.replace(/'/g, "'\\''");
-        const parameters: string[] = IS_WINDOWS
-            ? ['/f', '/im', taskName]
-            : ['-9', `$(pgrep -f '${sanitizedTaskName}')`];
-        const result: string | null = await runCommand({ command, parameters });
-        return result;
+        if (IS_WINDOWS) {
+            const command: string = TASKKILL_BIN;
+            const parameters: string[] = ['/f', '/im', taskName];
+            const result: string | null = await runCommand({ command, parameters });
+            return result;
+        } else {
+            const command: string = 'pkill';
+            const parameters: string[] = ['-9', '-f', taskName];
+            const result: string | null = await runCommand({ command, parameters, shell: false });
+            return result;
+        }
     }
 }
 
