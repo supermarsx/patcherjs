@@ -22,7 +22,7 @@
     "colors-cli": "^1.0.32",
     "debug": "^4.3.4",
     "elevated": "^1.1.5",
-    "esbuild": "^0.18.17",
+    "esbuild": "^0.25.8",
     "node-7z": "^3.0.0",
     "supports-color": "^9.4.0",
     "tmp": "^0.2.1"
@@ -83,5 +83,9 @@
     "sea-copy-patch_files": "Copies 'patch_files' folder contents to 'predist' folder",
     "sea-copy-7z": "Copies 7-zip binaries from 'node_modules' to 'predist folder' (needs npm install to be ran first)",
     "generate-docs": "Generates documentation using typedoc to 'docs' folder"
+  },
+  "overrides": {
+    "brace-expansion@1": "1.1.12",
+    "brace-expansion@2": "2.0.2"
   }
 }

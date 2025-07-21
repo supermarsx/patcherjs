@@ -84,8 +84,7 @@ export namespace Packer {
     export async function packFileWrapper({ destinationPath, sourcePath, options }:
         { destinationPath: string, sourcePath: string | string[], options: {} }): Promise<void> {
         logInfo(`Running pack file wrapper`);
-        try {
-            await new Promise<void>(function (resolve, reject) {
+        await new Promise<void>(function (resolve, reject) {
                 const extractor: ZipStream = Seven.add(
                     destinationPath,
                     sourcePath,
@@ -98,9 +97,6 @@ export namespace Packer {
                     reject(error);
                 });
             });
-        } catch (error) {
-            throw error;
-        }
     }
 
     /**
@@ -162,8 +158,7 @@ export namespace Packer {
      */
     export async function unpackFileWrapper({ archivePath, extractionPath, options }:
         { archivePath: string, extractionPath: string, options: {} }): Promise<void> {
-        try {
-            await new Promise<void>(function (resolve, reject) {
+        await new Promise<void>(function (resolve, reject) {
                 const extractor: ZipStream = Seven.extractFull(
                     archivePath,
                     extractionPath,
@@ -176,9 +171,6 @@ export namespace Packer {
                     reject(error);
                 });
             });
-        } catch (error) {
-            throw error;
-        }
     }
 
     /**
