@@ -154,8 +154,9 @@ describe('Command helpers - parameters', () => {
     mods2.Command.default.runCommand.mockResolvedValue('');
     await mods2.CommandsKill.killTask({ taskName: 'proc' });
     expect(mods2.Command.default.runCommand).toHaveBeenCalledWith({
-      command: 'kill',
-      parameters: ['-9', '$(pgrep -f \'proc\')']
+      command: 'pkill',
+      parameters: ['-9', '-f', 'proc'],
+      shell: false
     });
   });
 
@@ -164,8 +165,9 @@ describe('Command helpers - parameters', () => {
     Command.default.runCommand.mockResolvedValue('');
     await CommandsKill.killTask({ taskName: 'my proc' });
     expect(Command.default.runCommand).toHaveBeenCalledWith({
-      command: 'kill',
-      parameters: ['-9', '$(pgrep -f \'my proc\')']
+      command: 'pkill',
+      parameters: ['-9', '-f', 'my proc'],
+      shell: false
     });
   });
 });

@@ -16,10 +16,10 @@ export namespace Command {
      * @returns Command output or null on failure
      * @since 0.0.1
      */
-    export async function runCommand({ command, parameters }:
-        { command: string, parameters: string[] }): Promise<string | null> {
+    export async function runCommand({ command, parameters, shell = true }:
+        { command: string, parameters: string[], shell?: boolean }): Promise<string | null> {
         try {
-            const result: string = await runCommandPromise({ command, parameters });
+            const result: string = await runCommandPromise({ command, parameters, shell });
             return result;
         } catch (error) {
             if (error && typeof error === 'object')
@@ -43,11 +43,11 @@ export namespace Command {
      * @returns Command output 
      * @since 0.0.1
      */
-    export async function runCommandPromise({ command, parameters }:
-        { command: string, parameters: string[] }): Promise<string> {
+    export async function runCommandPromise({ command, parameters, shell = true }:
+        { command: string, parameters: string[], shell?: boolean }): Promise<string> {
 
         return new Promise(function (resolve, reject) {
-            const childProcess: ChildProcessWithoutNullStreams = spawn(command, parameters, { shell: true });
+            const childProcess: ChildProcessWithoutNullStreams = spawn(command, parameters, { shell });
             childProcess.on('error', reject);
             let output: string = '';
             childProcess.stdout.on('data', function (data) {
