@@ -73,20 +73,21 @@ export namespace BufferUtils {
             bigEndian = false
         } = options;
         try {
+            let workingBuffer: Buffer = buffer;
             if (offset < 0) {
                 logWarn(`Offset ${offset} is negative, skipping patch`);
-                return buffer;
+                return workingBuffer;
             }
-            if (offset + byteLength > buffer.length) {
+            if (offset + byteLength > workingBuffer.length) {
                 if (allowOffsetOverflow !== true) {
-                    logWarn(`Offset ${offset} with length ${byteLength} exceeds buffer size ${buffer.length}, skipping patch`);
-                    return buffer;
+                    logWarn(`Offset ${offset} with length ${byteLength} exceeds buffer size ${workingBuffer.length}, skipping patch`);
+                    return workingBuffer;
                 }
-                const newBuffer = Buffer.alloc(offset + byteLength);
-                buffer.copy(newBuffer, 0, 0, buffer.length);
-                buffer = newBuffer;
+                const expanded = Buffer.alloc(offset + byteLength);
+                workingBuffer.copy(expanded, 0, 0, workingBuffer.length);
+                workingBuffer = expanded;
             }
-            const currentValue = readValue({ buffer, offset, byteLength, bigEndian });
+            const currentValue = readValue({ buffer: workingBuffer, offset, byteLength, bigEndian });
 
             validatePatchValues({
                 offset,
@@ -109,9 +110,9 @@ export namespace BufferUtils {
             });
 
             if (valueToWrite !== null) {
-                writeBuffer({ buffer, value: valueToWrite, offset, skipWritePatch, byteLength, bigEndian, verifyPatch });
+                writeBuffer({ buffer: workingBuffer, value: valueToWrite, offset, skipWritePatch, byteLength, bigEndian, verifyPatch });
             }
-            return buffer;
+            return workingBuffer;
         } catch (error: any) {
             logError(`An error has occurred: ${error}`);
             throw error;
