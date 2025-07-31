@@ -20,23 +20,31 @@ export namespace Predist {
      * @since 0.0.1
      */
     export async function predistPackage(): Promise<void> {
-        try {
-            const seaArchiveName: string = `sea-archive.7z`;
+        return await new Promise<void>((resolve, reject) => {
+            try {
+                const seaArchiveName: string = `sea-archive.7z`;
 
-            debug.enable({ logging: false });
-            logInfo(`Packaging ${seaArchiveName}`);
-            const options: {} = {
-                method: PACKMETHOD,
-                $bin: SEVENZIPBIN_FILEPATH
-            };
-            const packageStream: ZipStream = Seven.add(`./sea/${seaArchiveName}`, `./sea/predist/*`, options);
-            packageStream.on('end', function () {
-                logSuccess(`Packaged ${seaArchiveName} successfully`);
-            });
+                debug.enable({ logging: false });
+                logInfo(`Packaging ${seaArchiveName}`);
+                const options: {} = {
+                    method: PACKMETHOD,
+                    $bin: SEVENZIPBIN_FILEPATH
+                };
+                const packageStream: ZipStream = Seven.add(`./sea/${seaArchiveName}`, `./sea/predist/*`, options);
+                packageStream.on('end', function () {
+                    logSuccess(`Packaged ${seaArchiveName} successfully`);
+                    resolve();
+                });
+                packageStream.on('error', function (error) {
+                    logError(`An error has ocurred while predist packaging ${error}`);
+                    reject(error);
+                });
 
-        } catch (error) {
-            logError(`An error has ocurred while predist packaging ${error}`);
-        }
+            } catch (error) {
+                logError(`An error has ocurred while predist packaging ${error}`);
+                reject(error);
+            }
+        });
     }
 }
 

@@ -17,10 +17,16 @@ jest.unstable_mockModule('fs/promises', () => {
   };
 });
 
-jest.unstable_mockModule('node-7z', () => {
-  const mockEmitter = () => { const e = new EventEmitter(); process.nextTick(() => e.emit('end')); return e; };
-  return { default: { add: jest.fn(() => mockEmitter()) }, ZipStream: EventEmitter };
-});
+let sevenEmitter;
+jest.unstable_mockModule('node-7z', () => ({
+  default: {
+    add: jest.fn(() => {
+      sevenEmitter = new EventEmitter();
+      return sevenEmitter;
+    })
+  },
+  ZipStream: EventEmitter
+}));
 
 jest.unstable_mockModule('../source/lib/auxiliary/file.js', () => ({
   default: {
@@ -119,12 +125,20 @@ describe('Cleanup.cleanupBuild', () => {
 
 describe('Predist.predistPackage', () => {
   test('calls Seven.add with archive and options', async () => {
-    await Predist.predistPackage();
+    const promise = Predist.predistPackage();
+    process.nextTick(() => sevenEmitter.emit('end'));
+    await promise;
     expect(Seven.default.add).toHaveBeenCalledWith(
       './sea/sea-archive.7z',
       './sea/predist/*',
       { method: Constants.PACKMETHOD, $bin: Constants.SEVENZIPBIN_FILEPATH }
     );
+  });
+
+  test('rejects when packaging fails', async () => {
+    const promise = Predist.predistPackage();
+    process.nextTick(() => sevenEmitter.emit('error', new Error('fail')));
+    await expect(promise).rejects.toEqual(new Error('fail'));
   });
 });
 
