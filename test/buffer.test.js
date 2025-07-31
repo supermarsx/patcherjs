@@ -248,6 +248,29 @@ describe('BufferUtils.patchBuffer', () => {
     expect(patched).not.toBe(buf);
   });
 
+  test('expands buffer for multi-byte overflow patch', () => {
+    const buf = Buffer.from([0x00, 0x01]);
+    const patched = BufferUtils.patchBuffer({
+      buffer: buf,
+      offset: 1,
+      previousValue: 0x0001,
+      newValue: 0xaabb,
+      byteLength: 2,
+      options: {
+        forcePatch: false,
+        unpatchMode: false,
+        nullPatch: false,
+        failOnUnexpectedPreviousValue: false,
+        warnOnUnexpectedPreviousValue: false,
+        skipWritePatch: false,
+        allowOffsetOverflow: true
+      }
+    });
+    expect(Array.from(patched)).toEqual([0x00, 0xbb, 0xaa]);
+    expect(patched.length).toBe(3);
+    expect(patched).not.toBe(buf);
+  });
+
   test('skips patch when offset is negative', () => {
     const buf = Buffer.from([0x00]);
     BufferUtils.patchBuffer({
