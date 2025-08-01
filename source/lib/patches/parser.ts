@@ -101,8 +101,8 @@ export namespace Parser {
             const defaultPatchLength: number = 15;
             if (patchLineLength < defaultPatchLength)
                 throw new Error(`Patch at line ${index + 1} is invalid`);
-            const offsetValuesDelimiter: string = `: `;
-            const previousNewValueDelimiter: string = ' ';
+            const offsetValuesDelimiter = /:\s+/;
+            const previousNewValueDelimiter = ' ';
 
             const [offsetString, valuesString] = patchLine.split(offsetValuesDelimiter);
             const [previousValueString, newValueString] = valuesString.split(previousNewValueDelimiter);

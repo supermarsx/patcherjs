@@ -38,6 +38,22 @@ describe('Parser.parsePatchFile', () => {
       { offset: 0x00000000n, previousValue: 0x00, newValue: 0x01, byteLength: 1 }
     ]);
   });
+
+  test('handles multiple spaces after colon', async () => {
+    const data = '00000000:   00 01';
+    const patches = await Parser.parsePatchFile({ fileData: data });
+    expect(patches).toEqual([
+      { offset: 0x00000000n, previousValue: 0x00, newValue: 0x01, byteLength: 1 }
+    ]);
+  });
+
+  test('handles tab after colon', async () => {
+    const data = '00000001:\t02 03';
+    const patches = await Parser.parsePatchFile({ fileData: data });
+    expect(patches).toEqual([
+      { offset: 0x00000001n, previousValue: 0x02, newValue: 0x03, byteLength: 1 }
+    ]);
+  });
 });
 
 describe('ParserWrappers.hexParse', () => {
