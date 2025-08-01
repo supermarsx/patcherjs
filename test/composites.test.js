@@ -79,7 +79,7 @@ describe('Patcher.runFunction', () => {
 });
 
 describe('Patcher.runPatcher', () => {
-  test('runs functions in order and waits for keypress', async () => {
+  test('runs functions in order and waits for keypress by default', async () => {
     const config = ConfigurationDefaults.getDefaultConfigurationObject();
     config.options.general.onlyPackingMode = false;
     config.options.general.runningOrder = [Constants.COMP_COMMANDS, Constants.COMP_FILEDROPS, Constants.COMP_PATCHES];
@@ -93,6 +93,15 @@ describe('Patcher.runPatcher', () => {
     ];
     expect(order).toEqual(order.slice().sort((a, b) => a - b));
     expect(Console.default.waitForKeypress).toHaveBeenCalled();
+  });
+
+  test('skips waiting when waitForExit is false', async () => {
+    const config = ConfigurationDefaults.getDefaultConfigurationObject();
+    config.options.general.onlyPackingMode = false;
+    config.options.general.runningOrder = [Constants.COMP_COMMANDS];
+    Configuration.default.readConfigurationFile.mockResolvedValue(config);
+    await Patcher.runPatcher({ configFilePath: 'cfg.json', waitForExit: false });
+    expect(Console.default.waitForKeypress).not.toHaveBeenCalled();
   });
 });
 

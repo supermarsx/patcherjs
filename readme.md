@@ -19,7 +19,7 @@ Simple running example
 import { Patcher } from 'patcherjs';
 
 Patcher.runPatcher({});
-Patcher.runPatcher({ configFilePath: './my-config.json' });
+Patcher.runPatcher({ configFilePath: './my-config.json', waitForExit: false });
 ```
 
 ### Use as standalone application or development
