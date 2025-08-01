@@ -12,7 +12,8 @@ namespace Constants {
     /** Operating system checks */
     export const IS_WINDOWS: boolean = process.platform === 'win32';
     export const IS_MACOS: boolean = process.platform === 'darwin';
-    export const IS_UBUNTU: boolean = process.platform === 'linux';
+    export const IS_LINUX: boolean = process.platform === 'linux';
+    export const IS_UBUNTU: boolean = IS_LINUX; // alias for backward compatibility
 
     /** Task scheduler application binary name */
     export const TASKSCHD_BIN: string = IS_WINDOWS
