@@ -40,15 +40,21 @@ export namespace Patcher {
      * Autonomously run the patcher based on config file
      * 
      * @param params.configFilePath Configuration file path
+     * @param params.waitForExit Wait for keypress before exiting (default true)
      * @example
      * ```
-     * runPatcher({ configFilePath });
+     * runPatcher({ configFilePath, waitForExit: false });
      * ```
      * @returns Nada
      * @since 0.0.1
      */
-    export async function runPatcher({ configFilePath = CONFIG_FILEPATH }:
-        { configFilePath?: string }): Promise<void> {
+    export async function runPatcher({
+        configFilePath = CONFIG_FILEPATH,
+        waitForExit = true
+    }: {
+        configFilePath?: string,
+        waitForExit?: boolean
+    }): Promise<void> {
         try {
             const configuration: ConfigurationObject = await readConfigurationFile({ filePath: configFilePath });
             await runGeneralChecksAndInit({ configuration });
@@ -64,8 +70,10 @@ export namespace Patcher {
             logError(`There was an error running patcher: ${error}`);
         } finally {
             logSuccess(`Patcher finished running`);
-            logInfo(`Press any key to close application...`);
-            await waitForKeypress();
+            if (waitForExit) {
+                logInfo(`Press any key to close application...`);
+                await waitForKeypress();
+            }
         }
     }
 
