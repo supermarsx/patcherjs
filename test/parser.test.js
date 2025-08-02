@@ -54,6 +54,12 @@ describe('Parser.parsePatchFile', () => {
       { offset: 0x00000001n, previousValue: 0x02, newValue: 0x03, byteLength: 1 }
     ]);
   });
+
+  test('returns empty array for unsupported patch size', async () => {
+    const data = '00000000: 000 01';
+    const patches = await Parser.parsePatchFile({ fileData: data });
+    expect(patches).toEqual([]);
+  });
 });
 
 describe('ParserWrappers.hexParse', () => {
