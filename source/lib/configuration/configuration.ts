@@ -23,6 +23,18 @@ export * from './configuration.defaults.js';
 export * from './configuration.types.js';
 
 export namespace Configuration {
+    function mergeWithDefaults(defaultObj: any, providedObj: any): any {
+        const result: any = Array.isArray(defaultObj) ? [...defaultObj] : { ...defaultObj };
+        if (!providedObj)
+            return result;
+        for (const [key, value] of Object.entries(providedObj)) {
+            if (value && typeof value === 'object' && !Array.isArray(value))
+                result[key] = mergeWithDefaults(defaultObj[key], value);
+            else
+                result[key] = value;
+        }
+        return result;
+    }
 
     /**
      * Read configuration file from a path
@@ -59,7 +71,9 @@ export namespace Configuration {
             else
                 logSuccess(`Configuration file read successfully`);
             const configObject: ConfigurationObject = JSON.parse(fileData);
-            return configObject;
+            const defaultConfig: ConfigurationObject = getDefaultConfigurationObject();
+            const mergedConfig: ConfigurationObject = mergeWithDefaults(defaultConfig, configObject);
+            return mergedConfig;
         } catch (error: any) {
             logError(`An error has occurred: ${error}`);
             const emptyConfig: ConfigurationObject = getDefaultConfigurationObject();
