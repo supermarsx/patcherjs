@@ -20,6 +20,21 @@ describe('Configuration.readConfigurationFile', () => {
     fs.rmSync(dir, { recursive: true, force: true });
   });
 
+  test('merges configuration with defaults for missing keys', async () => {
+    const dir = fs.mkdtempSync(join(os.tmpdir(), 'cfg-'));
+    const filePath = join(dir, 'config.json');
+    const partialConfig = { options: { general: { debug: false } } };
+    fs.writeFileSync(filePath, JSON.stringify(partialConfig), 'utf-8');
+
+    const { Configuration } = await import('../source/lib/configuration/configuration.ts');
+    const result = await Configuration.readConfigurationFile({ filePath });
+
+    const expected = ConfigurationDefaults.getDefaultConfigurationObject();
+    expected.options.general.debug = false;
+    expect(result).toEqual(expected);
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+
   test('returns defaults when file not readable', async () => {
     jest.resetModules();
     jest.unstable_mockModule('../source/lib/auxiliary/file.wrappers.ts', () => ({
