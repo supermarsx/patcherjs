@@ -108,7 +108,10 @@ export namespace Parser {
             const [previousValueString, newValueString] = valuesString.split(previousNewValueDelimiter);
 
             const valueLength = Math.max(previousValueString.length, newValueString.length);
-            const byteLength = (valueLength / 2) as 1 | 2 | 4 | 8;
+            const byteLength = valueLength / 2;
+            if (![1, 2, 4, 8].includes(byteLength))
+                throw new Error(`Unsupported patch size ${byteLength}`);
+            const typedByteLength = byteLength as 1 | 2 | 4 | 8;
 
             let offset: bigint;
             if (offsetString.length > 8)
@@ -118,7 +121,7 @@ export namespace Parser {
 
             let previousValue: number | bigint;
             let newValue: number | bigint;
-            if (byteLength === 8) {
+            if (typedByteLength === 8) {
                 previousValue = hexParseBig({ hexString: previousValueString });
                 newValue = hexParseBig({ hexString: newValueString });
             } else {
@@ -130,19 +133,13 @@ export namespace Parser {
                 offset,
                 previousValue,
                 newValue,
-                byteLength
+                byteLength: typedByteLength
             };
 
             return patchObject;
         } catch (error: any) {
             logError(`An error has occurred: ${error}`);
-            const returnValue: PatchObject = {
-                offset: BigInt(0),
-                previousValue: 0,
-                newValue: 0,
-                byteLength: 1
-            };
-            return returnValue;
+            throw error;
         }
     }
 }
