@@ -177,16 +177,6 @@ export namespace Encryption {
             logInfo(`Detected authTag: (${authTag.byteLength}) ${authTag.toString(`hex`)}`);
             logInfo(`Detected iterations: ${iterationsInt}`);
 
-            /*
-            const test: Buffer = getSlicedData({ data: fileData, subsetOptions: { offset: 0, bytes: 110 } });
-            const based: Buffer = getSlicedData({ data: test, subsetOptions: { offset: 0, bytes: 18 } });
-            console.log(`test ${test}`);
-            console.log(`based ${based}`);
-            console.log(`salt length ` + salt.byteLength)
-            console.log(`iv length ` + iv.byteLength)
-            console.log(`iterations ` + iterationsInt);
-            */
-
             const innerEncryptedData: Buffer = getSlicedData({ data: fileData, subsetOptions: bufferSubsets.innerEncryptedData });
 
             const decryptionKey: Buffer = deriveKeyFromPassword({ password: key, salt: salt, iterations: iterationsInt });
@@ -265,34 +255,3 @@ export namespace Encryption {
 }
 
 export default Encryption;
-
-/*
-function hexToUtf8(hexString) {
-    // Convert hexadecimal string to Uint8Array
-    const byteArray = new Uint8Array(hexString.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
-
-    // Create a TextDecoder object with UTF-8 encoding
-    const textDecoder = new TextDecoder('utf-8');
-
-    // Decode Uint8Array to UTF-8 string
-    const utf8String = textDecoder.decode(byteArray);
-
-    return utf8String;
-}
-function binaryToHexPreserveLength(binaryString) {
-    // Pad the binary string with leading zeros to ensure each character has 8 bits (1 byte)
-    while (binaryString.length % 8 !== 0) {
-        binaryString = '0' + binaryString;
-    }
-
-    // Convert binary string to hexadecimal string without doubling the length
-    let hexString = '';
-    for (let i = 0; i < binaryString.length; i += 4) {
-        const nibble = binaryString.substr(i, 4);
-        const hex = parseInt(nibble, 2).toString(16);
-        hexString += hex;
-    }
-
-    return hexString;
-}
-*/
