@@ -152,7 +152,7 @@ export namespace Patches {
 
         let buffer: Buffer = fileDataBuffer;
         const fileSize: number = buffer.length;
-            for (const patch of patchData) {
+        for (const patch of patchData) {
             const { offset, previousValue, newValue, byteLength } = patch;
             const offsetNumber: number = Number(offset);
             const { forcePatch, unpatchMode, nullPatch, failOnUnexpectedPreviousValue, warnOnUnexpectedPreviousValue, skipWritePatch, allowOffsetOverflow, verifyPatch, bigEndian } = patchOptions;
