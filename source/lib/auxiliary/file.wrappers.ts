@@ -1,5 +1,5 @@
 import { Stats } from 'fs';
-import { access, constants, copyFile, unlink, rm, readdir, open } from 'fs/promises';
+import { access, constants, copyFile, unlink, rm, readdir, open, lstat } from 'fs/promises';
 import { basename, join } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -230,11 +230,17 @@ export namespace FileWrappers {
         { folderPath: string }): Promise<string> {
 
         const filenames: string[] = await readdir(folderPath);
-        if (filenames.length === 0) {
-            throw new Error('No files found in directory');
+        for (const name of filenames) {
+            const filePath: string = join(folderPath, name);
+            try {
+                const stats: Stats = await lstat(filePath);
+                if (stats.isFile())
+                    return filePath;
+            } catch {
+                // ignore errors and continue searching
+            }
         }
-        const completeFilePath: string = join(folderPath, filenames[0]);
-        return completeFilePath;
+        throw new Error(`No files found in directory: ${folderPath}`);
     }
 }
 
