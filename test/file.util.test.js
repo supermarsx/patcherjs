@@ -78,6 +78,47 @@ describe('File utilities', () => {
   });
 });
 
+describe('writeBinaryFile size logging', () => {
+  test('logs resulting size for new file', async () => {
+    const dir = fs.mkdtempSync(join(os.tmpdir(), 'fileutil-'));
+    const p = join(dir, 'out.bin');
+    const buf = Buffer.from([1, 2, 3, 4]);
+    jest.resetModules();
+    const logInfo = jest.fn();
+    const logSuccess = jest.fn();
+    const logWarn = jest.fn();
+    const logError = jest.fn();
+    jest.unstable_mockModule('../source/lib/auxiliary/logger.ts', () => ({
+      default: { logInfo, logSuccess, logWarn, logError }
+    }));
+    const { File: MockFile } = await import('../source/lib/auxiliary/file.ts');
+    await MockFile.writeBinaryFile({ filePath: p, buffer: buf });
+    expect(logSuccess).toHaveBeenCalledWith(`Resulting binary file size, ${buf.length}`);
+    expect(logSuccess).not.toHaveBeenCalledWith(expect.stringMatching(/^Original binary file size/));
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+
+  test('logs original and resulting size for existing file', async () => {
+    const dir = fs.mkdtempSync(join(os.tmpdir(), 'fileutil-'));
+    const p = join(dir, 'out.bin');
+    fs.writeFileSync(p, Buffer.alloc(5));
+    const buf = Buffer.from([1, 2, 3]);
+    jest.resetModules();
+    const logInfo = jest.fn();
+    const logSuccess = jest.fn();
+    const logWarn = jest.fn();
+    const logError = jest.fn();
+    jest.unstable_mockModule('../source/lib/auxiliary/logger.ts', () => ({
+      default: { logInfo, logSuccess, logWarn, logError }
+    }));
+    const { File: MockFile } = await import('../source/lib/auxiliary/file.ts');
+    await MockFile.writeBinaryFile({ filePath: p, buffer: buf });
+    expect(logSuccess).toHaveBeenCalledWith('Original binary file size, 5');
+    expect(logSuccess).toHaveBeenCalledWith(`Resulting binary file size, ${buf.length}`);
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+});
+
 describe('File utilities failure mocks', () => {
   test('readPatchFile returns empty string when open fails', async () => {
     jest.resetModules();

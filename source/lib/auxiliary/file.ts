@@ -127,18 +127,27 @@ export namespace File {
     }): Promise<number> {
         let fileHandle: fs.FileHandle | undefined;
         try {
-            logInfo(`Opening file path, ${filePath}, in write mode`);
-            const flags: string = 'w';
+            const fileExists: boolean = await isFileReadable({ filePath });
+            const flags: string = fileExists ? 'r+' : 'a';
+            logInfo(`Opening file path, ${filePath}, in ${fileExists ? 'read/write' : 'append'} mode`);
             fileHandle = await fs.open(filePath, flags);
-            const bufferSize: number = await getFileSize({ fileHandle });
-            if (bufferSize === 0)
-                logWarn('File size is 0, file may be corrupted, invalid or is a new file/buffer');
-            else
-                logSuccess(`Binary file size, ${bufferSize}`);
+            if (fileExists) {
+                const originalSize: number = await getFileSize({ fileHandle });
+                if (originalSize === 0)
+                    logWarn('Original binary file size is 0, file may be corrupted or invalid');
+                else
+                    logSuccess(`Original binary file size, ${originalSize}`);
+                await fileHandle.truncate(0);
+            }
             logInfo('Writing buffer to file handle');
             const writeResult: { bytesWritten: number } = await fileHandle.write(buffer);
             const { bytesWritten } = writeResult;
             logSuccess(`Written ${bytesWritten} bytes to file`);
+            const resultSize: number = await getFileSize({ fileHandle });
+            if (resultSize === 0)
+                logWarn('Resulting binary file size is 0, file may be corrupted or invalid');
+            else
+                logSuccess(`Resulting binary file size, ${resultSize}`);
             return bytesWritten;
         } catch (error: any) {
             logError(`An error has occurred: ${error}`);
