@@ -142,10 +142,11 @@ export namespace BufferUtils {
             verifyPatch = false
         } = options;
 
-        const handle = await fs.open(filePath, 'r+');
-        const stats = await handle.stat();
-        const fileSize: number = Number(stats.size);
+        let handle: fs.FileHandle | undefined;
         try {
+            handle = await fs.open(filePath, 'r+');
+            const stats = await handle!.stat();
+            const fileSize: number = Number(stats.size);
             const maxSafe = BigInt(Number.MAX_SAFE_INTEGER);
             for (const patch of patchData) {
                 const { offset, previousValue, newValue, byteLength } = patch;
@@ -161,7 +162,7 @@ export namespace BufferUtils {
                     continue;
                 }
                 const buf = Buffer.alloc(byteLength);
-                await handle.read(buf, 0, byteLength, position);
+                await handle!.read(buf, 0, byteLength, position);
                 const currentValue = readValue({ buffer: buf, offset: 0, byteLength, bigEndian });
 
                 validatePatchValues({
@@ -186,10 +187,10 @@ export namespace BufferUtils {
 
                 if (valueToWrite !== null && skipWritePatch === false) {
                     writeValue({ buffer: buf, value: valueToWrite, offset: 0, byteLength, bigEndian });
-                    await handle.write(buf, 0, byteLength, position);
+                    await handle!.write(buf, 0, byteLength, position);
                     if (verifyPatch === true) {
                         const verifyBuf = Buffer.alloc(byteLength);
-                        await handle.read(verifyBuf, 0, byteLength, position);
+                        await handle!.read(verifyBuf, 0, byteLength, position);
                         verifyValue({ buffer: verifyBuf, value: valueToWrite, offset: 0, byteLength, bigEndian });
                     }
                 } else if (valueToWrite !== null) {
@@ -197,7 +198,8 @@ export namespace BufferUtils {
                 }
             }
         } finally {
-            await handle.close();
+            if (handle)
+                await handle.close();
         }
     }
 
