@@ -6,6 +6,10 @@ import { ConfigurationDefaults } from '../source/lib/configuration/configuration
 
 
 describe('Configuration.readConfigurationFile', () => {
+  beforeEach(() => {
+    jest.unmock('../source/lib/configuration/configuration.defaults.ts');
+    jest.resetModules();
+  });
   test('parses valid configuration JSON', async () => {
     const dir = fs.mkdtempSync(join(os.tmpdir(), 'cfg-'));
     const filePath = join(dir, 'config.json');
@@ -33,6 +37,35 @@ describe('Configuration.readConfigurationFile', () => {
     expected.options.general.debug = false;
     expect(result).toEqual(expected);
     fs.rmSync(dir, { recursive: true, force: true });
+  });
+
+  test('includes nested keys absent from defaults', async () => {
+    const dir = fs.mkdtempSync(join(os.tmpdir(), 'cfg-'));
+    const filePath = join(dir, 'config.json');
+    const partialConfig = { options: { experimental: { feature: true } } };
+    fs.writeFileSync(filePath, JSON.stringify(partialConfig), 'utf-8');
+
+    const { Configuration } = await import('../source/lib/configuration/configuration.ts');
+    const result = await Configuration.readConfigurationFile({ filePath });
+
+    expect(result.options.experimental.feature).toBe(true);
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+
+  test('deep clones nested arrays and objects', async () => {
+    const defaultObj = { options: { general: { arr: [1, 2], obj: { a: 1 } } } };
+    const { Configuration } = await import('../source/lib/configuration/configuration.ts');
+    const result = Configuration.mergeWithDefaults(defaultObj, {});
+
+    expect(result.options.general.arr).toEqual([1, 2]);
+    expect(result.options.general.arr).not.toBe(defaultObj.options.general.arr);
+    result.options.general.arr.push(3);
+    expect(defaultObj.options.general.arr).toEqual([1, 2]);
+
+    expect(result.options.general.obj).toEqual({ a: 1 });
+    expect(result.options.general.obj).not.toBe(defaultObj.options.general.obj);
+    result.options.general.obj.a = 2;
+    expect(defaultObj.options.general.obj).toEqual({ a: 1 });
   });
 
   test('returns defaults when file not readable', async () => {

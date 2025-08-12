@@ -23,16 +23,40 @@ export * from './configuration.defaults.js';
 export * from './configuration.types.js';
 
 export namespace Configuration {
-    function mergeWithDefaults(defaultObj: any, providedObj: any): any {
-        const result: any = Array.isArray(defaultObj) ? [...defaultObj] : { ...defaultObj };
-        if (!providedObj)
-            return result;
-        for (const [key, value] of Object.entries(providedObj)) {
-            if (value && typeof value === 'object' && !Array.isArray(value))
-                result[key] = mergeWithDefaults(defaultObj[key], value);
-            else
-                result[key] = value;
+    export function mergeWithDefaults(defaultObj: any, providedObj: any): any {
+        const defaultIsArray: boolean = Array.isArray(defaultObj);
+        const providedIsArray: boolean = Array.isArray(providedObj);
+
+        if (defaultIsArray || providedIsArray) {
+            const dArr: any[] = defaultIsArray ? defaultObj : [];
+            const resultArr: any[] = dArr.map(item => mergeWithDefaults(item, undefined));
+            if (providedIsArray) {
+                providedObj.forEach((item: any, index: number) => {
+                    resultArr[index] = mergeWithDefaults(dArr[index], item);
+                });
+            }
+            return resultArr;
         }
+
+        const defaultIsObj: boolean = defaultObj && typeof defaultObj === 'object';
+        const providedIsObj: boolean = providedObj && typeof providedObj === 'object';
+
+        if (!defaultIsObj && !providedIsObj)
+            return providedObj !== undefined ? providedObj : defaultObj;
+
+        const result: any = defaultIsObj
+            ? Object.keys(defaultObj).reduce((acc: any, key: string) => {
+                acc[key] = mergeWithDefaults(defaultObj[key], undefined);
+                return acc;
+            }, {})
+            : {};
+
+        if (providedIsObj) {
+            for (const [key, value] of Object.entries(providedObj)) {
+                result[key] = mergeWithDefaults(defaultIsObj ? defaultObj[key] : undefined, value);
+            }
+        }
+
         return result;
     }
 
