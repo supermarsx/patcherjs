@@ -51,20 +51,41 @@ describe('File utilities', () => {
     await expect(File.backupFile({ filePath: '/bad/path/file.txt' })).rejects.toThrow();
   });
 
-  test('firstFilenameInFolder returns the first entry', async () => {
+  test('firstFilenameInFolder skips subdirectories and returns first file', async () => {
     const dir = fs.mkdtempSync(join(os.tmpdir(), 'fileutil-'));
+    const sub = join(dir, 'sub');
     const a = join(dir, 'a.txt');
     const b = join(dir, 'b.txt');
+    fs.mkdirSync(sub);
     fs.writeFileSync(a, '');
     fs.writeFileSync(b, '');
+    const entries = fs.readdirSync(dir);
+    let expected = '';
+    for (const entry of entries) {
+      const p = join(dir, entry);
+      if (fs.statSync(p).isFile()) {
+        expected = p;
+        break;
+      }
+    }
     const first = await File.firstFilenameInFolder({ folderPath: dir });
-    expect(first).toBe(a);
+    expect(first).toBe(expected);
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+
+  test('firstFilenameInFolder rejects when directory has only subfolders', async () => {
+    const dir = fs.mkdtempSync(join(os.tmpdir(), 'fileutil-'));
+    fs.mkdirSync(join(dir, 'a'));
+    fs.mkdirSync(join(dir, 'b'));
+    await expect(File.firstFilenameInFolder({ folderPath: dir }))
+      .rejects.toThrow('No files found in directory');
     fs.rmSync(dir, { recursive: true, force: true });
   });
 
   test('firstFilenameInFolder rejects when directory is empty', async () => {
     const dir = fs.mkdtempSync(join(os.tmpdir(), 'fileutil-'));
-    await expect(File.firstFilenameInFolder({ folderPath: dir })).rejects.toThrow();
+    await expect(File.firstFilenameInFolder({ folderPath: dir }))
+      .rejects.toThrow('No files found in directory');
     fs.rmSync(dir, { recursive: true, force: true });
   });
 
