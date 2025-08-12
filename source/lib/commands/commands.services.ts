@@ -76,7 +76,7 @@ export namespace CommandsServices {
                     await remove({ serviceName });
                     break;
                 default:
-                    throw new Error(`Unknown services command function: ${serviceName}`);
+                    throw new Error(`Unknown services command function: ${functionName}`);
             }
 
         } catch (error) {

@@ -28,10 +28,21 @@ async function loadModules(platform) {
     default: { runCommand: jest.fn() }
   }));
 
+  const logger = {
+    logInfo: jest.fn(),
+    logError: jest.fn(),
+    logSuccess: jest.fn(),
+    logWarn: jest.fn()
+  };
+  jest.unstable_mockModule('../source/lib/auxiliary/logger.js', () => ({
+    default: logger
+  }));
+
   const mod = await import('../source/lib/commands/commands.services.js');
   const Command = await import('../source/lib/commands/command.js');
+  const Logger = await import('../source/lib/auxiliary/logger.js');
 
-  return { CommandsServices: mod.CommandsServices, Command };
+  return { CommandsServices: mod.CommandsServices, Command, Logger };
 }
 
 const removeAliases = ['remove'];
@@ -119,5 +130,15 @@ describe('CommandsServices.runCommandsServices', () => {
       command: 'sc.exe',
       parameters: ['config', 'svc2', 'start=', 'disabled']
     });
+  });
+});
+
+describe('CommandsServices.runCommandsServicesSingle', () => {
+  test('logs error for unknown service command', async () => {
+    const { CommandsServices, Logger } = await loadModules('win');
+    await CommandsServices.runCommandsServicesSingle({ service: { name: 'svc', command: 'unknown' } });
+    expect(Logger.default.logError).toHaveBeenCalledWith(
+      expect.stringContaining('Unknown services command function: unknown')
+    );
   });
 });
