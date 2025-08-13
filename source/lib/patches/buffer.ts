@@ -127,8 +127,8 @@ export namespace BufferUtils {
      * @param params.options Patch options
      * @since 0.0.2
      */
-    export async function patchLargeFile({ filePath, patchData, options }:
-        { filePath: string, patchData: PatchArray, options: OptionsType }): Promise<void> {
+    export async function patchLargeFile({ filePath, patchData, options, progressInterval }:
+        { filePath: string, patchData: PatchArray, options: OptionsType, progressInterval?: number }): Promise<void> {
 
         const {
             forcePatch,
@@ -153,6 +153,8 @@ export namespace BufferUtils {
             // to take advantage of read/write locality which can have a significant
             // performance impact when patch data is provided out of order.
             patchData.sort((a, b) => a.offset === b.offset ? 0 : (a.offset < b.offset ? -1 : 1));
+            const total: number = patchData.length;
+            let processed = 0;
             for (const patch of patchData) {
                 const { offset, previousValue, newValue, byteLength } = patch;
                 if (offset < 0n) {
@@ -201,6 +203,9 @@ export namespace BufferUtils {
                 } else if (valueToWrite !== null) {
                     logInfo(`Skipping buffer write`);
                 }
+                processed++;
+                if (progressInterval && progressInterval > 0 && (processed % progressInterval === 0 || processed === total))
+                    logInfo(`Processed ${processed}/${total} patches`);
             }
         } finally {
             if (handle)

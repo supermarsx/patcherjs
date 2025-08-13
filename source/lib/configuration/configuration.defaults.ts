@@ -31,7 +31,8 @@ export namespace ConfigurationDefaults {
                         "kill",
                         "general"
                     ],
-                    onlyPackingMode: false
+                    onlyPackingMode: false,
+                    progressInterval: 0
                 },
                 patches: {
                     runPatches: true,
