@@ -1,4 +1,6 @@
 import * as fs from 'fs/promises';
+import File from '../auxiliary/file.js';
+const { streamBinaryFile } = File;
 
 import Logger from '../auxiliary/logger.js';
 const { logInfo, logWarn, logError } = Logger;
@@ -142,70 +144,71 @@ export namespace BufferUtils {
             verifyPatch = false
         } = options;
 
-        let handle: fs.FileHandle | undefined;
-        try {
-            handle = await fs.open(filePath, 'r+');
-            const stats = await handle!.stat();
-            const fileSize: number = Number(stats.size);
-            const maxSafe = BigInt(Number.MAX_SAFE_INTEGER);
-            // Sort patches by offset to reduce costly seek operations on large files.
-            // Processing patches sequentially allows the underlying fs implementation
-            // to take advantage of read/write locality which can have a significant
-            // performance impact when patch data is provided out of order.
-            patchData.sort((a, b) => a.offset === b.offset ? 0 : (a.offset < b.offset ? -1 : 1));
-            for (const patch of patchData) {
-                const { offset, previousValue, newValue, byteLength } = patch;
-                if (offset < 0n) {
-                    logWarn(`Offset ${offset} is negative, skipping patch`);
-                    continue;
-                }
-                if (offset > maxSafe)
-                    throw new Error(`Offset ${offset} exceeds Number.MAX_SAFE_INTEGER`);
-                const position = Number(offset);
-                if (position + byteLength > fileSize && allowOffsetOverflow !== true) {
-                    logWarn(`Offset ${offset} with length ${byteLength} exceeds file size ${fileSize}, skipping patch`);
-                    continue;
-                }
-                const buf = Buffer.alloc(byteLength);
-                await handle!.read(buf, 0, byteLength, position);
-                const currentValue = readValue({ buffer: buf, offset: 0, byteLength, bigEndian });
+        const stats = await fs.stat(filePath);
+        const fileSize: number = Number(stats.size);
+        const maxSafe = BigInt(Number.MAX_SAFE_INTEGER);
 
-                validatePatchValues({
-                    offset,
-                    currentValue,
-                    previousValue,
-                    newValue,
-                    unpatchMode,
-                    warnOnUnexpectedPreviousValue,
-                    failOnUnexpectedPreviousValue
-                });
+        // Sort patches to process sequentially
+        patchData.sort((a, b) => a.offset === b.offset ? 0 : (a.offset < b.offset ? -1 : 1));
 
-                const valueToWrite = determineValueToWrite({
-                    offset,
-                    currentValue,
-                    previousValue,
-                    newValue,
-                    forcePatch,
-                    unpatchMode,
-                    nullPatch
-                });
-
-                if (valueToWrite !== null && skipWritePatch === false) {
-                    writeValue({ buffer: buf, value: valueToWrite, offset: 0, byteLength, bigEndian });
-                    await handle!.write(buf, 0, byteLength, position);
-                    if (verifyPatch === true) {
-                        const verifyBuf = Buffer.alloc(byteLength);
-                        await handle!.read(verifyBuf, 0, byteLength, position);
-                        verifyValue({ buffer: verifyBuf, value: valueToWrite, offset: 0, byteLength, bigEndian });
-                    }
-                } else if (valueToWrite !== null) {
-                    logInfo(`Skipping buffer write`);
-                }
+        // Filter patches that are invalid before streaming
+        const validPatches = patchData.filter(p => {
+            if (p.offset < 0n) {
+                logWarn(`Offset ${p.offset} is negative, skipping patch`);
+                return false;
             }
-        } finally {
-            if (handle)
-                await handle.close();
-        }
+            if (p.offset > maxSafe)
+                throw new Error(`Offset ${p.offset} exceeds Number.MAX_SAFE_INTEGER`);
+            const position = Number(p.offset);
+            if (position + p.byteLength > fileSize && allowOffsetOverflow !== true) {
+                logWarn(`Offset ${p.offset} with length ${p.byteLength} exceeds file size ${fileSize}, skipping patch`);
+                return false;
+            }
+            return true;
+        });
+
+        let patchIndex = 0;
+        const tempPath = `${filePath}.tmp`;
+
+        await streamBinaryFile({
+            srcPath: filePath,
+            destPath: tempPath,
+            transform: (chunk, offset) => {
+                while (patchIndex < validPatches.length) {
+                    const patch = validPatches[patchIndex];
+                    const start = Number(patch.offset);
+                    if (start >= offset + chunk.length)
+                        break;
+                    if (start < offset) {
+                        patchIndex++;
+                        continue;
+                    }
+                    const relative = start - offset;
+                    chunk = patchBuffer({
+                        buffer: chunk,
+                        offset: relative,
+                        previousValue: patch.previousValue,
+                        newValue: patch.newValue,
+                        byteLength: patch.byteLength,
+                        options: {
+                            forcePatch,
+                            unpatchMode,
+                            nullPatch,
+                            failOnUnexpectedPreviousValue,
+                            warnOnUnexpectedPreviousValue,
+                            skipWritePatch,
+                            allowOffsetOverflow,
+                            bigEndian,
+                            verifyPatch
+                        }
+                    });
+                    patchIndex++;
+                }
+                return chunk;
+            }
+        });
+
+        await fs.rename(tempPath, filePath);
     }
 
     function validatePatchValues({

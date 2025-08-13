@@ -501,6 +501,37 @@ describe('BufferUtils.patchLargeFile', () => {
       await fsPromises.rm(dir, { recursive: true, force: true });
     }
   });
+
+  test('patches large files using streams with low memory usage', async () => {
+    const dir = await fsPromises.mkdtemp(join(os.tmpdir(), 'large-'));
+    const filePath = join(dir, 'big.bin');
+    const size = 10 * 1024 * 1024;
+    const ws = fs.createWriteStream(filePath);
+    for (let i = 0; i < size; i += 1024) {
+      ws.write(Buffer.alloc(Math.min(1024, size - i)));
+    }
+    await new Promise(resolve => ws.end(resolve));
+
+    const patchData = [
+      { offset: 5n * 1024n * 1024n, previousValue: 0x00, newValue: 0xff, byteLength: 1 }
+    ];
+    const opts = {
+      forcePatch: false,
+      unpatchMode: false,
+      nullPatch: false,
+      failOnUnexpectedPreviousValue: false,
+      warnOnUnexpectedPreviousValue: false,
+      skipWritePatch: false,
+      allowOffsetOverflow: false
+    };
+    const start = process.memoryUsage().heapUsed;
+    await BufferUtils.patchLargeFile({ filePath, patchData, options: opts });
+    const end = process.memoryUsage().heapUsed;
+    expect(end - start).toBeLessThan(5 * 1024 * 1024);
+    const result = await fsPromises.readFile(filePath);
+    expect(result[5 * 1024 * 1024]).toBe(0xff);
+    await fsPromises.rm(dir, { recursive: true, force: true });
+  });
 });
 
 describe('BufferUtils.truncateBuffer', () => {

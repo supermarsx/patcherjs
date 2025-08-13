@@ -1,4 +1,5 @@
 import * as fs from 'fs/promises';
+import { createReadStream, createWriteStream } from 'fs';
 
 import BufferWrappers from '../patches/buffer.wrappers.js';
 const { createBuffer } = BufferWrappers;
@@ -22,6 +23,58 @@ export namespace File {
     export const deleteFolder = FileWrappers.deleteFolder;
     export const firstFilenameInFolder = FileWrappers.firstFilenameInFolder;
     export const getFileSizeUsingPath = FileWrappers.getFileSizeUsingPath;
+
+    /**
+     * Stream a binary file from a source path to a destination path in chunks.
+     *
+     * @param params.srcPath Source file path
+     * @param params.destPath Destination file path
+     * @param params.chunkSize (optional) Size of each chunk
+     * @param params.transform (optional) Function to transform each chunk before writing
+     * @example
+     * ```
+     * streamBinaryFile({ srcPath, destPath });
+     * ```
+     * @returns Nada
+     * @since 0.0.2
+     */
+    export async function streamBinaryFile({ srcPath, destPath, chunkSize = 64 * 1024, transform }:{
+        srcPath: string,
+        destPath: string,
+        chunkSize?: number,
+        transform?: (chunk: Buffer, offset: number) => Promise<Buffer> | Buffer
+    }): Promise<void> {
+        return new Promise((resolve, reject) => {
+            const readStream = createReadStream(srcPath, { highWaterMark: chunkSize });
+            const writeStream = createWriteStream(destPath);
+            let offset = 0;
+
+            readStream.on('data', async (chunk: Buffer) => {
+                readStream.pause();
+                try {
+                    const outChunk = transform ? await transform(chunk, offset) : chunk;
+                    writeStream.write(outChunk);
+                    offset += chunk.length;
+                    readStream.resume();
+                } catch (err) {
+                    readStream.destroy(err as Error);
+                }
+            });
+
+            readStream.on('error', (err) => {
+                writeStream.destroy(err);
+                reject(err);
+            });
+            writeStream.on('error', (err) => {
+                readStream.destroy(err);
+                reject(err);
+            });
+            readStream.on('end', () => {
+                writeStream.end();
+            });
+            writeStream.on('finish', () => resolve());
+        });
+    }
 
     /**
      * Read a patch file to a string variable
