@@ -24,6 +24,18 @@ describe('Configuration.readConfigurationFile', () => {
     fs.rmSync(dir, { recursive: true, force: true });
   });
 
+  test('throws error on invalid configuration JSON', async () => {
+    const dir = fs.mkdtempSync(join(os.tmpdir(), 'cfg-'));
+    const filePath = join(dir, 'config.json');
+    const invalid = { options: { general: { debug: 'false' } } };
+    fs.writeFileSync(filePath, JSON.stringify(invalid), 'utf-8');
+
+    const { Configuration } = await import('../source/lib/configuration/configuration.ts');
+
+    await expect(Configuration.readConfigurationFile({ filePath })).rejects.toThrow('Configuration validation failed');
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+
   test('merges configuration with defaults for missing keys', async () => {
     const dir = fs.mkdtempSync(join(os.tmpdir(), 'cfg-'));
     const filePath = join(dir, 'config.json');
@@ -169,6 +181,19 @@ describe('Configuration.readConfigurationFile', () => {
     const defaults = ConfigurationDefaults.getDefaultConfigurationObject();
     expect(result).toEqual(defaults);
     expect(mockClose).toHaveBeenCalled();
+  });
+});
+
+describe('Configuration.validateConfiguration', () => {
+  test('accepts valid configuration', async () => {
+    const configObj = ConfigurationDefaults.getDefaultConfigurationObject();
+    const { Configuration } = await import('../source/lib/configuration/configuration.ts');
+    expect(Configuration.validateConfiguration(configObj)).toEqual(configObj);
+  });
+
+  test('throws on invalid configuration', async () => {
+    const { Configuration } = await import('../source/lib/configuration/configuration.ts');
+    expect(() => Configuration.validateConfiguration({ options: { general: { debug: 'yes' } } })).toThrow('Configuration validation failed');
   });
 });
 

@@ -19,6 +19,9 @@ const {
     CONFIG_FILEPATH
 } = Constants;
 
+import Ajv from 'ajv';
+import configurationSchema from './configuration.schema.js';
+
 export * from './configuration.defaults.js';
 export * from './configuration.types.js';
 
@@ -31,6 +34,17 @@ export namespace Configuration {
 
     function isObject(value: unknown): value is Record<string, unknown> {
         return typeof value === 'object' && value !== null && !Array.isArray(value);
+    }
+
+    const ajv = new Ajv({ allErrors: true });
+    const validateFn = ajv.compile(configurationSchema);
+
+    export function validateConfiguration(config: unknown): ConfigurationObject {
+        if (validateFn(config))
+            return config as ConfigurationObject;
+        const err = new Error(`Configuration validation failed: ${ajv.errorsText(validateFn.errors)}`);
+        err.name = 'ValidationError';
+        throw err;
     }
 
     export function mergeWithDefaults<T>(defaultObj: T, providedObj?: DeepPartial<T>): T {
@@ -103,12 +117,15 @@ export namespace Configuration {
                 logWarn(`Configuration file data size is 0, file may be corrupted or invalid`);
             else
                 logSuccess(`Configuration file read successfully`);
-            const configObject = JSON.parse(fileData) as unknown;
-            const defaultConfig = getDefaultConfigurationObject();
+            const configObject: unknown = JSON.parse(fileData);
+            const validatedConfig: ConfigurationObject = validateConfiguration(configObject);
+            const defaultConfig: ConfigurationObject = getDefaultConfigurationObject();
             const mergedConfig = mergeWithDefaults<ConfigurationObject>(defaultConfig, configObject as DeepPartial<ConfigurationObject>);
             return mergedConfig;
         } catch (error: any) {
             logError(`An error has occurred: ${error}`);
+            if (error instanceof Error && error.name === 'ValidationError')
+                throw error;
             const emptyConfig: ConfigurationObject = getDefaultConfigurationObject();
             return emptyConfig;
         } finally {
