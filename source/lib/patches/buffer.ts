@@ -392,16 +392,18 @@ export namespace BufferUtils {
      * @param params.buffer Buffer to truncate
      * @example
      * ```
-     * truncateBuffer({ buffer });
+     * truncateBuffer({ buffer, maxLength });
      * ```
+     * @param params.buffer Buffer to truncate
+     * @param params.maxLength Maximum length of buffer to return (default 200)
      * @returns Truncated buffer
      * @since 0.0.1
      */
-    export function truncateBuffer({ buffer }:
-        { buffer: Buffer }) {
-        if (buffer.length < 200)
+    export function truncateBuffer({ buffer, maxLength = 200 }:
+        { buffer: Buffer; maxLength?: number }) {
+        if (buffer.length <= maxLength)
             return buffer;
-        return buffer.subarray(0, 200);
+        return buffer.subarray(0, maxLength);
     }
 }
 
