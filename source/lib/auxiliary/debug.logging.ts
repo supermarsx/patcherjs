@@ -59,7 +59,7 @@ export namespace DebugLogging {
      * @since 0.0.1
      */   
     export function log({ message, color }:
-        { message: string, color: Function }): void {
+        { message: string, color: (text: string) => string }): void {
 
         const debugDisabled: boolean = !(getEnvBoolean({ envVarName: DEBUGGING }));
         if (debugDisabled === true) return;
