@@ -16,7 +16,7 @@ function createLargePatchFile(lines) {
   return new Promise(resolve => stream.end(resolve));
 }
 
-describe('Parser.parsePatchFileStream parsing', () => {
+describe('Parser.parsePatchFile streaming parsing', () => {
   test('handles comments and empty lines identically to parsePatchFile', async () => {
     const data = [
       '',
@@ -33,14 +33,14 @@ describe('Parser.parsePatchFileStream parsing', () => {
     fs.mkdirSync(patchDir, { recursive: true });
     const filePath = join(patchDir, 'stream-temp.patch');
     fs.writeFileSync(filePath, data);
-    const streamPatches = await Parser.parsePatchFileStream({ filePath });
+    const streamPatches = await Parser.parsePatchFile({ filePath, useStream: true });
     const filePatches = await Parser.parsePatchFile({ fileData: data });
     fs.unlinkSync(filePath);
     expect(streamPatches).toEqual(filePatches);
   });
 });
 
-describe('Parser.parsePatchFileStream memory usage', () => {
+describe('Parser.parsePatchFile streaming memory usage', () => {
   const lines = 500000; // ~10MB file
 
   beforeAll(async () => {
@@ -54,7 +54,7 @@ describe('Parser.parsePatchFileStream memory usage', () => {
 
   test('streaming parser uses less memory than non-streaming', async () => {
     const beforeStream = process.memoryUsage().heapUsed;
-    const streamPatches = await Parser.parsePatchFileStream({ filePath: largePatchPath });
+    const streamPatches = await Parser.parsePatchFile({ filePath: largePatchPath, useStream: true });
     expect(streamPatches.length).toBe(lines);
     const streamUsage = process.memoryUsage().heapUsed - beforeStream;
 
