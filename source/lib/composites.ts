@@ -35,6 +35,8 @@ const {
     CONFIG_FILEPATH
 } = Constants;
 
+import type { CompositeName } from './composites.types.js';
+
 export namespace Patcher {
     /**
      * Autonomously run the patcher based on config file
@@ -118,7 +120,7 @@ export namespace Patcher {
      * @since 0.0.1
      */
     export async function runFunction({ configuration, functionName }:
-        { configuration: ConfigurationObject, functionName: string }): Promise<void> {
+        { configuration: ConfigurationObject, functionName: CompositeName }): Promise<void> {
         try {
             switch (functionName) {
                 case COMP_COMMANDS:
