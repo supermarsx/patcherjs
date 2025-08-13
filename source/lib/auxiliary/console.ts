@@ -12,7 +12,10 @@ export namespace Console {
      * @returns Nada
      * @since 0.0.1
      */
-    export async function waitForKeypress(): Promise<void> {
+    export async function waitForKeypress({ force = false }: { force?: boolean } = {}): Promise<void> {
+
+        if (!force && !process.stdin.isTTY)
+            return;
 
         const consoleIface: Interface = readline.createInterface({
             input: process.stdin,
