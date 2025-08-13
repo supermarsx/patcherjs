@@ -14,10 +14,7 @@ const {
     COMM_SERVICES_DISABLE,
     COMM_SERVICES_REMOVE,
     COMM_SERVICES_STOP,
-    SERVICE_BIN,
-    IS_WINDOWS,
-    IS_MACOS,
-    IS_LINUX
+    SERVICE_BIN
 } = Constants;
 
 export namespace CommandsServices {
@@ -100,13 +97,15 @@ export namespace CommandsServices {
         { serviceName: string }): Promise<string | null> {
 
         const command: string = SERVICE_BIN;
-        const parameters: string[] = IS_WINDOWS
-            ? ['stop', serviceName]
-            : IS_MACOS
-                ? ['stop', serviceName]
-                : IS_LINUX
-                    ? ['stop', serviceName]
-                    : ['stop', serviceName];
+        const parametersMap: { [key: string]: string[] } = {
+            win32: ['stop', serviceName],
+            darwin: ['stop', serviceName],
+            linux: ['stop', serviceName]
+        };
+        const parameters = parametersMap[process.platform];
+        if (!parameters) {
+            throw new Error(`Unsupported platform for stop: ${process.platform}`);
+        }
         const result: string | null = await runCommand({ command, parameters });
         return result;
     }
@@ -126,13 +125,15 @@ export namespace CommandsServices {
         { serviceName: string }): Promise<string | null> {
 
         const command: string = SERVICE_BIN;
-        const parameters: string[] = IS_WINDOWS
-            ? ['config', serviceName, 'start=', 'disabled']
-            : IS_MACOS
-                ? ['disable', serviceName]
-                : IS_LINUX
-                    ? ['disable', serviceName]
-                    : ['disable', serviceName];
+        const parametersMap: { [key: string]: string[] } = {
+            win32: ['config', serviceName, 'start=', 'disabled'],
+            darwin: ['disable', serviceName],
+            linux: ['disable', serviceName]
+        };
+        const parameters = parametersMap[process.platform];
+        if (!parameters) {
+            throw new Error(`Unsupported platform for disable: ${process.platform}`);
+        }
         const result: string | null = await runCommand({ command, parameters });
         return result;
     }
@@ -153,13 +154,15 @@ export namespace CommandsServices {
         { serviceName: string }): Promise<string | null> {
 
         const command: string = SERVICE_BIN;
-        const parameters: string[] = IS_WINDOWS
-            ? ['delete', serviceName]
-            : IS_MACOS
-                ? ['remove', serviceName]
-                : IS_LINUX
-                    ? ['disable', '--now', serviceName]
-                    : ['disable', '--now', serviceName];
+        const parametersMap: { [key: string]: string[] } = {
+            win32: ['delete', serviceName],
+            darwin: ['remove', serviceName],
+            linux: ['disable', '--now', serviceName]
+        };
+        const parameters = parametersMap[process.platform];
+        if (!parameters) {
+            throw new Error(`Unsupported platform for remove: ${process.platform}`);
+        }
         const result: string | null = await runCommand({ command, parameters });
         return result;
     }

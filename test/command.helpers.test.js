@@ -1,11 +1,18 @@
 import { jest } from '@jest/globals';
 
+const originalPlatform = process.platform;
+afterEach(() => {
+  Object.defineProperty(process, 'platform', { value: originalPlatform, configurable: true });
+});
+
 async function loadModules(platform) {
   jest.resetModules();
   jest.clearAllMocks();
 
-  const windows = platform === 'win';
-  const mac = platform === 'mac';
+  Object.defineProperty(process, 'platform', { value: platform, configurable: true });
+
+  const windows = platform === 'win32';
+  const mac = platform === 'darwin';
   const constants = {
     COMM_TASKS_DELETE: 'delete',
     COMM_TASKS_STOP: 'stop',
@@ -38,7 +45,7 @@ async function loadModules(platform) {
 
 describe('Command helpers - parameters', () => {
   test('Taskscheduler remove/stop on Windows', async () => {
-    const { CommandsTaskscheduler, Command } = await loadModules('win');
+    const { CommandsTaskscheduler, Command } = await loadModules('win32');
     Command.default.runCommand.mockResolvedValue('');
     await CommandsTaskscheduler.remove({ taskName: 'task' });
     expect(Command.default.runCommand).toHaveBeenLastCalledWith({
@@ -53,7 +60,7 @@ describe('Command helpers - parameters', () => {
   });
 
   test('Taskscheduler remove/stop on macOS', async () => {
-    const { CommandsTaskscheduler, Command } = await loadModules('mac');
+    const { CommandsTaskscheduler, Command } = await loadModules('darwin');
     Command.default.runCommand.mockResolvedValue('');
     await CommandsTaskscheduler.remove({ taskName: 'task' });
     expect(Command.default.runCommand).toHaveBeenLastCalledWith({
@@ -83,7 +90,7 @@ describe('Command helpers - parameters', () => {
   });
 
   test('Services commands on Windows', async () => {
-    const { CommandsServices, Command } = await loadModules('win');
+    const { CommandsServices, Command } = await loadModules('win32');
     Command.default.runCommand.mockResolvedValue('');
     await CommandsServices.stop({ serviceName: 'svc' });
     expect(Command.default.runCommand).toHaveBeenLastCalledWith({
@@ -103,7 +110,7 @@ describe('Command helpers - parameters', () => {
   });
 
   test('Services commands on macOS', async () => {
-    const { CommandsServices, Command } = await loadModules('mac');
+    const { CommandsServices, Command } = await loadModules('darwin');
     Command.default.runCommand.mockResolvedValue('');
     await CommandsServices.stop({ serviceName: 'svc' });
     expect(Command.default.runCommand).toHaveBeenLastCalledWith({
@@ -143,7 +150,7 @@ describe('Command helpers - parameters', () => {
   });
 
   test('Kill command lines', async () => {
-    const { CommandsKill, Command } = await loadModules('win');
+    const { CommandsKill, Command } = await loadModules('win32');
     Command.default.runCommand.mockResolvedValue('');
     await CommandsKill.killTask({ taskName: 'proc' });
     expect(Command.default.runCommand).toHaveBeenCalledWith({
@@ -174,11 +181,11 @@ describe('Command helpers - parameters', () => {
 
 describe('Command helpers - error handling', () => {
   test('propagates runCommand rejections', async () => {
-    const { CommandsServices, Command } = await loadModules('win');
+    const { CommandsServices, Command } = await loadModules('win32');
     Command.default.runCommand.mockRejectedValue(new Error('fail'));
     await expect(CommandsServices.stop({ serviceName: 'svc' })).rejects.toThrow('fail');
 
-    const { CommandsTaskscheduler, Command: Cmd2 } = await loadModules('win');
+    const { CommandsTaskscheduler, Command: Cmd2 } = await loadModules('win32');
     Cmd2.default.runCommand.mockRejectedValue(new Error('nope'));
     await expect(CommandsTaskscheduler.remove({ taskName: 't' })).rejects.toThrow('nope');
 
