@@ -24,3 +24,18 @@ describe('Command.runCommand error handling', () => {
     );
   });
 });
+
+describe('Command.runCommandPromise timeout handling', () => {
+  test('rejects when process exceeds timeout', async () => {
+    const Command = (await import('../source/lib/commands/command.js')).default;
+
+    await expect(
+      Command.runCommandPromise({
+        command: 'node',
+        parameters: ['-e', "setTimeout(() => {}, 1000);"] ,
+        timeoutMs: 100,
+        shell: false
+      })
+    ).rejects.toThrow('Command timed out');
+  });
+});
