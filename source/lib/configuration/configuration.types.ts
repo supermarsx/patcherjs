@@ -80,7 +80,9 @@ export type ConfigurationObject = {
             {
                 name: string,
                 command: string,
-                enabled: boolean
+                enabled: boolean,
+                timeout?: number,
+                cwd?: string
             }
         ] | []
     },

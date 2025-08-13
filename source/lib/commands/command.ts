@@ -34,10 +34,10 @@ export namespace Command {
      * @returns Command output
      * @since 0.0.1
      */
-    export async function runCommand({ command, parameters, shell = false, timeout, maxBuffer }:
-        { command: string, parameters: string[], shell?: boolean, timeout?: number, maxBuffer?: number }): Promise<CommandResult> {
+    export async function runCommand({ command, parameters, shell = false, timeout, maxBuffer, cwd }:
+        { command: string, parameters: string[], shell?: boolean, timeout?: number, maxBuffer?: number, cwd?: string }): Promise<CommandResult> {
         try {
-            const result = await runCommandPromise({ command, parameters, shell, timeout, maxBuffer });
+            const result = await runCommandPromise({ command, parameters, shell, timeout, maxBuffer, cwd });
             return result;
         } catch (error) {
             if (error instanceof CommandError) {
@@ -70,11 +70,11 @@ export namespace Command {
      * @returns Command output 
      * @since 0.0.1
      */
-    export async function runCommandPromise({ command, parameters, shell = false, timeout, maxBuffer }:
-        { command: string, parameters: string[], shell?: boolean, timeout?: number, maxBuffer?: number }): Promise<CommandResult> {
+    export async function runCommandPromise({ command, parameters, shell = false, timeout, maxBuffer, cwd }:
+        { command: string, parameters: string[], shell?: boolean, timeout?: number, maxBuffer?: number, cwd?: string }): Promise<CommandResult> {
 
         return new Promise(function (resolve, reject) {
-            const childProcess: ChildProcessWithoutNullStreams = spawn(command, parameters, { shell });
+            const childProcess: ChildProcessWithoutNullStreams = spawn(command, parameters, { shell, cwd });
             const limit = maxBuffer ?? 1024 * 1024; // default 1MB per stream
             let timedOut = false;
             let timer: NodeJS.Timeout | undefined;

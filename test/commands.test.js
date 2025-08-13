@@ -54,7 +54,7 @@ describe('Commands.runCommandsGeneral', () => {
       { name: 'test', command: 'echo hi', enabled: true }
     ];
     await Commands.runCommandsGeneral({ configuration: config });
-    expect(Command.default.runCommand).toHaveBeenCalledWith({ command: 'echo hi', parameters: [], timeout: 60000 });
+    expect(Command.default.runCommand).toHaveBeenCalledWith({ command: 'echo hi', parameters: [], timeout: 60000, cwd: undefined });
   });
 
   test('skips disabled general commands', async () => {
@@ -64,5 +64,14 @@ describe('Commands.runCommandsGeneral', () => {
     ];
     await Commands.runCommandsGeneral({ configuration: config });
     expect(Command.default.runCommand).not.toHaveBeenCalled();
+  });
+
+  test('respects timeout and cwd when provided', async () => {
+    const config = ConfigurationDefaults.getDefaultConfigurationObject();
+    config.commands.general = [
+      { name: 'test', command: 'echo hi', enabled: true, timeout: 500, cwd: '/tmp' }
+    ];
+    await Commands.runCommandsGeneral({ configuration: config });
+    expect(Command.default.runCommand).toHaveBeenCalledWith({ command: 'echo hi', parameters: [], timeout: 500, cwd: '/tmp' });
   });
 });
