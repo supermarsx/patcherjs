@@ -90,9 +90,10 @@ export namespace Patches {
 
             const fileSize: number = await getFileSizeUsingPath({ filePath });
             const hasBigOffset: boolean = patchData.some(p => p.offset > 0xffffffffn);
+            const progressInterval: number | undefined = configuration.options.general.progressInterval;
             if (hasBigOffset || fileSize > LARGE_FILE_THRESHOLD) {
                 if (patchOptions.skipWritingBinary === false)
-                    await patchLargeFile({ filePath, patchData, options: patchOptions });
+                    await patchLargeFile({ filePath, patchData, options: patchOptions, progressInterval });
                 else
                     logInfo(`Skipping writing binary file due to options`);
                 return;
@@ -100,7 +101,7 @@ export namespace Patches {
 
             const fileDataBuffer: Buffer = await readBinaryFile({ filePath });
 
-            const patchedFileData: Buffer = patchMultipleOffsets({ fileDataBuffer, patchData, patchOptions });
+            const patchedFileData: Buffer = patchMultipleOffsets({ fileDataBuffer, patchData, patchOptions, progressInterval });
             const buffer: Buffer = patchedFileData;
 
             if (patchOptions.skipWritingBinary === false)
@@ -156,11 +157,13 @@ export namespace Patches {
      * @returns A fully patched buffer (`fileDataBuffer`) based on the provided `patchdata`.
      * @since 0.0.1
      */
-    function patchMultipleOffsets({ fileDataBuffer, patchData, patchOptions }:
-        { fileDataBuffer: Buffer, patchData: PatchArray, patchOptions: PatchOptionsObject }): Buffer {
+    function patchMultipleOffsets({ fileDataBuffer, patchData, patchOptions, progressInterval }:
+        { fileDataBuffer: Buffer, patchData: PatchArray, patchOptions: PatchOptionsObject, progressInterval?: number }): Buffer {
 
         let buffer: Buffer = fileDataBuffer;
         const fileSize: number = buffer.length;
+        const total: number = patchData.length;
+        let processed = 0;
         for (const patch of patchData) {
             const { offset, previousValue, newValue, byteLength } = patch;
             const offsetNumber: number = Number(offset);
@@ -183,6 +186,9 @@ export namespace Patches {
                     bigEndian
                 }
             });
+            processed++;
+            if (progressInterval && progressInterval > 0 && (processed % progressInterval === 0 || processed === total))
+                logInfo(`Processed ${processed}/${total} patches`);
         }
         return buffer;
     }

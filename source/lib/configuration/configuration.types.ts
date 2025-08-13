@@ -9,7 +9,9 @@ export type ConfigurationObject = {
             logging: boolean,
             runningOrder: string[] | [],
             commandsOrder: string[] | [],
-            onlyPackingMode: boolean
+            onlyPackingMode: boolean,
+            /** Interval for emitting progress messages during patching */
+            progressInterval: number
         },
         patches: {
             runPatches: boolean,
