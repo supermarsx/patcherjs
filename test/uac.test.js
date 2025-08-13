@@ -46,7 +46,7 @@ describe('Uac.adminCheck', () => {
     await Uac.adminCheck();
     expect(exitSpy).toHaveBeenCalledWith(1);
     expect(logFn).toHaveBeenCalledWith({
-      message: "Exiting because user doesn't have administrator privileges'",
+      message: "Exiting because user doesn't have administrator privileges",
       color: expect.any(Function)
     });
     exitSpy.mockRestore();
