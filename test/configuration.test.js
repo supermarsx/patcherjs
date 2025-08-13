@@ -81,6 +81,27 @@ describe('Configuration.readConfigurationFile', () => {
     });
   });
 
+  test('concatenates primitive arrays without undefined entries', async () => {
+    const defaults = { nums: [1, 2] };
+    const provided = { nums: [3] };
+    const { Configuration } = await import('../source/lib/configuration/configuration.ts');
+    const result = Configuration.mergeWithDefaults(defaults, provided);
+    expect(result.nums).toEqual([1, 2, 3]);
+    expect(result.nums).not.toContain(undefined);
+  });
+
+  test('handles shorter provided arrays without undefined entries', async () => {
+    const defaults = { patches: [{ name: 'a', enabled: true }, { name: 'b', enabled: false }] };
+    const provided = { patches: [{ enabled: false }] };
+    const { Configuration } = await import('../source/lib/configuration/configuration.ts');
+    const result = Configuration.mergeWithDefaults(defaults, provided);
+    expect(result.patches).toEqual([
+      { name: 'a', enabled: false },
+      { name: 'b', enabled: false }
+    ]);
+    expect(result.patches).not.toContain(undefined);
+  });
+
   test('merges nested structures', async () => {
     const defaults = { a: { b: { c: 1 } } };
     const provided = { a: { b: { d: 2 } } };

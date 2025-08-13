@@ -40,14 +40,15 @@ export namespace Configuration {
         if (defaultIsArray || providedIsArray) {
             const defaultArray: unknown[] = defaultIsArray ? (defaultObj as unknown[]) : [];
             const providedArray: unknown[] = providedIsArray ? (providedObj as unknown[]) : [];
-            const length = Math.max(defaultArray.length, providedArray.length);
-            const result: unknown[] = [];
-            for (let i = 0; i < length; i++) {
-                result[i] = mergeWithDefaults(
-                    defaultArray[i] as any,
-                    providedArray[i] as any
-                );
-            }
+            const result: unknown[] = defaultArray.map(item => mergeWithDefaults(item));
+            providedArray.forEach((item, index) => {
+                if (index < result.length && (isObject(item) || Array.isArray(item)))
+                    result[index] = mergeWithDefaults(result[index], item as any);
+                else if (index < result.length && result[index] === item)
+                    return;
+                else
+                    result.push(mergeWithDefaults(undefined, item as any));
+            });
             return result as T;
         }
 
