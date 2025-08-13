@@ -1,4 +1,8 @@
 import { Parser, ParserWrappers } from '../source/lib/patches/parser.ts';
+import fs from 'fs';
+import { join } from 'path';
+
+const patchDir = join('patch_files');
 
 describe('Parser.parsePatchFile', () => {
   test('parses patch data into objects', async () => {
@@ -74,6 +78,28 @@ describe('Parser.parsePatchFile', () => {
     const data = '00000000: 000 01';
     const patches = await Parser.parsePatchFile({ fileData: data });
     expect(patches).toEqual([]);
+  });
+
+  test('parses comments and empty lines identically to streaming parser', async () => {
+    const data = [
+      '',
+      '# comment',
+      '',
+      '00000000: 00 01',
+      '',
+      '// another comment',
+      '',
+      '00000001: 02 03',
+      '; trailing comment',
+      '',
+    ].join('\n');
+    const patches = await Parser.parsePatchFile({ fileData: data });
+    fs.mkdirSync(patchDir, { recursive: true });
+    const filePath = join(patchDir, 'temp.patch');
+    fs.writeFileSync(filePath, data);
+    const streamPatches = await Parser.parsePatchFileStream({ filePath });
+    fs.unlinkSync(filePath);
+    expect(streamPatches).toEqual(patches);
   });
 });
 

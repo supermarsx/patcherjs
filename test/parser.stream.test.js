@@ -16,6 +16,30 @@ function createLargePatchFile(lines) {
   return new Promise(resolve => stream.end(resolve));
 }
 
+describe('Parser.parsePatchFileStream parsing', () => {
+  test('handles comments and empty lines identically to parsePatchFile', async () => {
+    const data = [
+      '',
+      '# comment',
+      '',
+      '00000000: 00 01',
+      '',
+      '// another comment',
+      '',
+      '00000001: 02 03',
+      '; trailing comment',
+      '',
+    ].join('\n');
+    fs.mkdirSync(patchDir, { recursive: true });
+    const filePath = join(patchDir, 'stream-temp.patch');
+    fs.writeFileSync(filePath, data);
+    const streamPatches = await Parser.parsePatchFileStream({ filePath });
+    const filePatches = await Parser.parsePatchFile({ fileData: data });
+    fs.unlinkSync(filePath);
+    expect(streamPatches).toEqual(filePatches);
+  });
+});
+
 describe('Parser.parsePatchFileStream memory usage', () => {
   const lines = 500000; // ~10MB file
 

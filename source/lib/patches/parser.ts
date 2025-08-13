@@ -36,13 +36,14 @@ export namespace Parser {
             if (dataLength === 0)
                 throw new PatchParseError(`Patch file data is empty or corrupted`);
             logInfo(`Splitting file lines`);
-            let patchData: string[] = splitLines({ fileData });
-            // remove empty lines that may appear due to trailing newlines
-            patchData = patchData.filter((line) => line.trim().length > 0);
-            logInfo(`Building patch objects array`);
-            const patches: PatchArray = buildPatchesArray({ patchData });
-            const patchesCount: number = patches.length;
-            logSuccess(`Patch objects array built with ${patchesCount}`);
+            const patchData: string[] = splitLines({ fileData });
+            logInfo(`Processing patch lines`);
+            async function* lineIterator() {
+                for (const line of patchData) {
+                    yield line;
+                }
+            }
+            const patches: PatchArray = await processLines(lineIterator());
             return patches;
         } catch (error: any) {
             logError(`An error has occurred: ${error}`);
@@ -65,22 +66,9 @@ export namespace Parser {
         { filePath: string }): Promise<PatchArray> {
         try {
             logInfo(`Reading patch file as stream`);
-            const patches: PatchArray = [];
             const stream = createReadStream(filePath, { encoding: 'utf-8' });
             const rl = createInterface({ input: stream, crlfDelay: Infinity });
-            let index = 0;
-            for await (const line of rl) {
-                const trimmed = line.trim();
-                if (trimmed.length === 0)
-                    continue;
-                if (trimmed.startsWith('#') || trimmed.startsWith('//') || trimmed.startsWith(';'))
-                    continue;
-                const patchObject: PatchObject = getPatchObject({ patchLine: trimmed, index });
-                patches.push(patchObject);
-                index++;
-            }
-            const patchesCount: number = patches.length;
-            logSuccess(`Patch objects array built with ${patchesCount}`);
+            const patches: PatchArray = await processLines(rl);
             return patches;
         } catch (error: any) {
             logError(`An error has occurred: ${error}`);
@@ -99,26 +87,24 @@ export namespace Parser {
      * @returns A patch array with patch objects
      * @since 0.0.1
      */
-    function buildPatchesArray({ patchData }:
-        { patchData: string[] }): PatchArray {
+    async function processLines(lines: AsyncIterable<string>): Promise<PatchArray> {
         try {
-            const lines: number = patchData.length;
-            logInfo(`Found ${lines} patch(es) inside patch data`);
             const patches: PatchArray = [];
-            logInfo(`Pushing patch objects into an array`);
-            for (const [index, patchLine] of patchData.entries()) {
-                const trimmed = patchLine.trim();
+            let index = 0;
+            for await (const line of lines) {
+                const trimmed = line.trim();
                 if (trimmed.length === 0)
                     continue;
                 if (trimmed.startsWith('#') || trimmed.startsWith('//') || trimmed.startsWith(';'))
                     continue;
-                const patchObject: PatchObject = getPatchObject({ patchLine: trimmed, index })
+                const patchObject: PatchObject = getPatchObject({ patchLine: trimmed, index });
                 patches.push(patchObject);
+                index++;
             }
             const patchesPushed: number = patches.length;
             if (patchesPushed === 0)
                 throw new PatchParseError(`There were 0 patch objects pushed to the patches array`);
-            logSuccess(`There were ${patchesPushed} patch objects pushed`);
+            logSuccess(`Patch objects array built with ${patchesPushed}`);
             return patches;
         } catch (error: any) {
             logError(`An error has occurred: ${error}`);
