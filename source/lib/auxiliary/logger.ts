@@ -38,12 +38,12 @@ function shouldLog(level: LogLevel): boolean {
 
 let writeQueue: Promise<void> = Promise.resolve();
 
-function writeToFile(message: string): void {
+function writeToFile(line: string): void {
     if (!config.filePath) return;
     const file = resolve(config.filePath);
     writeQueue = writeQueue.then(async () => {
         try {
-            await fs.appendFile(file, message + '\n');
+            await fs.appendFile(file, line + '\n');
         } catch {
             // ignore file write errors
         }
@@ -52,7 +52,7 @@ function writeToFile(message: string): void {
 
 function logMessage(level: LogLevel, message: string, color: (text: string) => string): void {
     if (!shouldLog(level)) return;
-    const line = config.timestamps ? `${new Date().toISOString()} ${message}` : message;
+    const line = `${new Date().toISOString()} ${message}`;
     log({ message: line, color });
     writeToFile(line);
 }
