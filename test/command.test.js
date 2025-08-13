@@ -20,7 +20,7 @@ describe('Command.runCommand error handling', () => {
 
     expect(result).toBeNull();
     expect(logError).toHaveBeenCalledWith(
-      'There was an error running a command: CommandError: Command exited with code 1 and output: line1line2'
+      'There was an error running a command: CommandError: Command exited with code 1. Stdout: , Stderr: line1line2'
     );
   });
 });
@@ -33,7 +33,7 @@ describe('Command.runCommandPromise timeout handling', () => {
       Command.runCommandPromise({
         command: 'node',
         parameters: ['-e', "setTimeout(() => {}, 1000);"] ,
-        timeoutMs: 100,
+        timeout: 100,
         shell: false
       })
     ).rejects.toMatchObject({ name: 'CommandError' });

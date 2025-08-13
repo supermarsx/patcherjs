@@ -12,7 +12,8 @@ export namespace Command {
      * @param params.command Command to run
      * @param params.parameters Command parameters
      * @param [params.shell=false] Use a shell, pass true to enable (disabled by default for security)
-     * @param [params.timeoutMs] Maximum time in milliseconds before the command is killed
+     * @param [params.timeout] Maximum time in milliseconds before the command is killed
+     * @param [params.maxBuffer] Maximum size in bytes for each output stream before truncation
      * @example
      * ```
      * // run a command with the default options (no shell, no timeout)
@@ -22,16 +23,16 @@ export namespace Command {
      * runCommand({ command, parameters, shell: true });
      *
      * // run with a timeout
-     * runCommand({ command, parameters, timeoutMs: 1000 });
+     * runCommand({ command, parameters, timeout: 1000 });
      * ```
      * @returns Command output or null on failure
      * @since 0.0.1
      */
-    export async function runCommand({ command, parameters, shell = false, timeoutMs }:
-        { command: string, parameters: string[], shell?: boolean, timeoutMs?: number }): Promise<string | null> {
+    export async function runCommand({ command, parameters, shell = false, timeout, maxBuffer }:
+        { command: string, parameters: string[], shell?: boolean, timeout?: number, maxBuffer?: number }): Promise<string | null> {
         try {
-            const result: string = await runCommandPromise({ command, parameters, shell, timeoutMs });
-            return result;
+            const result = await runCommandPromise({ command, parameters, shell, timeout, maxBuffer });
+            return result.stdout + result.stderr;
         } catch (error) {
             if (error && typeof error === 'object') {
                 if (String(error).length > 2) {
@@ -49,28 +50,30 @@ export namespace Command {
      * @param params.command Command to run
      * @param params.parameters Command parameters
      * @param [params.shell=false] Use a shell, pass true to enable
-     * @param [params.timeoutMs] Maximum time in milliseconds before the command is killed
+     * @param [params.timeout] Maximum time in milliseconds before the command is killed
+     * @param [params.maxBuffer] Maximum size in bytes for each output stream before truncation
      * @example
      * ```
      * // run without a shell and with a timeout
-     * runCommandPromise({ command, parameters, timeoutMs: 5000 });
+     * runCommandPromise({ command, parameters, timeout: 5000 });
      * ```
      * @returns Command output 
      * @since 0.0.1
      */
-    export async function runCommandPromise({ command, parameters, shell = false, timeoutMs }:
-        { command: string, parameters: string[], shell?: boolean, timeoutMs?: number }): Promise<string> {
+    export async function runCommandPromise({ command, parameters, shell = false, timeout, maxBuffer }:
+        { command: string, parameters: string[], shell?: boolean, timeout?: number, maxBuffer?: number }): Promise<{ stdout: string, stderr: string }> {
 
         return new Promise(function (resolve, reject) {
             const childProcess: ChildProcessWithoutNullStreams = spawn(command, parameters, { shell });
+            const limit = maxBuffer ?? 1024 * 1024; // default 1MB per stream
             let timedOut = false;
             let timer: NodeJS.Timeout | undefined;
-            if (timeoutMs !== undefined) {
+            if (timeout !== undefined) {
                 timer = setTimeout(() => {
                     timedOut = true;
                     childProcess.kill();
-                    reject(new CommandError(`Command timed out after ${timeoutMs}ms`));
-                }, timeoutMs);
+                    reject(new CommandError(`Command timed out after ${timeout}ms`));
+                }, timeout);
             }
 
             childProcess.on('error', (err) => {
@@ -79,22 +82,34 @@ export namespace Command {
                 reject(err);
             });
 
-            let output: string = '';
+            let stdout = '';
+            let stderr = '';
+
             childProcess.stdout.on('data', function (data) {
-                output += data.toString();
+                if (stdout.length < limit) {
+                    const chunk = data.toString();
+                    const remaining = limit - stdout.length;
+                    stdout += chunk.slice(0, remaining);
+                }
             });
+
             childProcess.stderr.on('data', function (data) {
-                output += data.toString();
+                if (stderr.length < limit) {
+                    const chunk = data.toString();
+                    const remaining = limit - stderr.length;
+                    stderr += chunk.slice(0, remaining);
+                }
             });
+
             childProcess.on('close', function (exitCode) {
                 if (timer)
                     clearTimeout(timer);
                 if (timedOut)
                     return;
                 if (exitCode === 0)
-                    resolve(output);
+                    resolve({ stdout, stderr });
                 else
-                    reject(new CommandError(`Command exited with code ${exitCode} and output: ${output}`));
+                    reject(new CommandError(`Command exited with code ${exitCode}. Stdout: ${stdout}, Stderr: ${stderr}`));
             });
         });
     }
