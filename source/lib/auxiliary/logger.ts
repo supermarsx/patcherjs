@@ -1,5 +1,5 @@
 import colorsCli from 'colors-cli';
-import { appendFileSync } from 'fs';
+import { promises as fs } from 'fs';
 import { resolve } from 'path';
 
 import Debug from './debug.js';
@@ -21,8 +21,12 @@ const levelPriority: Record<LogLevel, number> = {
     silent: 3
 };
 
+function getLogLevel(level?: string): LogLevel {
+    return level && level in levelPriority ? (level as LogLevel) : 'info';
+}
+
 let config: LoggerConfig = {
-    level: (process.env.LOG_LEVEL as LogLevel) || 'info',
+    level: getLogLevel(process.env.LOG_LEVEL),
     filePath: process.env.LOG_FILEPATH
 };
 
@@ -30,10 +34,10 @@ function shouldLog(level: LogLevel): boolean {
     return levelPriority[level] >= levelPriority[config.level];
 }
 
-function writeToFile(message: string): void {
+async function writeToFile(message: string): Promise<void> {
     if (!config.filePath) return;
     try {
-        appendFileSync(resolve(config.filePath), message + '\n');
+        await fs.appendFile(resolve(config.filePath), message + '\n');
     } catch {
         // ignore file write errors
     }
@@ -42,7 +46,7 @@ function writeToFile(message: string): void {
 function logMessage(level: LogLevel, message: string, color: (text: string) => string): void {
     if (!shouldLog(level)) return;
     log({ message, color });
-    writeToFile(message);
+    void writeToFile(message);
 }
 
 export namespace Logger {
