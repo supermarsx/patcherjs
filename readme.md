@@ -194,7 +194,7 @@ Patcherjs functions with a configuration json file using the following structure
       "warnOnUnexpectedPreviousValue": true, // Warn/throw a debug message that an unexpected previous/current value was found
       "nullPatch": false, // Just patch the offsets to null (basically 0, mostly useful just for debug)
       "unpatchMode": false, // Reverse previous/current with new value to basically reverse patch a file
-      "verifyPatch": true, // Verify patch (not implemented)
+      "verifyPatch": true, // Verify patch by re-reading patched bytes (adds extra I/O)
       "backupFiles": true, // Create copy with '.bak' extension in the destination directory for every patched file
       "skipWritingBinary": false // Skip writing the patched buffer to file
     },
@@ -258,6 +258,8 @@ Patcherjs functions with a configuration json file using the following structure
 }
 
 ```
+Enabling `verifyPatch` causes the patcher to read back each patched region to confirm it was written correctly. This extra disk read can slow patching on large files or when many patches are applied. See [`source/lib/patches/buffer.ts`](./source/lib/patches/buffer.ts) for implementation details.
+
 ## On .patch files
 ### .patch file format
 
