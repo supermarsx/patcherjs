@@ -207,8 +207,19 @@ export namespace FileWrappers {
         { folderPath: string }): Promise<void> {
 
         try {
-            await rm(folderPath, { recursive: true });
-            logInfo(`Deleted folder: ${folderPath}`);
+            let existed: boolean = true;
+            try {
+                await access(folderPath);
+            } catch {
+                existed = false;
+            }
+
+            await rm(folderPath, { recursive: true, force: true });
+
+            if (existed)
+                logInfo(`Removed folder: ${folderPath}`);
+            else
+                logInfo(`Folder already absent: ${folderPath}`);
         } catch (error) {
             logError(`Failed to delete folder: ${error}`);
         }
