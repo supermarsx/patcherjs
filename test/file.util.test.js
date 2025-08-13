@@ -97,6 +97,21 @@ describe('File utilities', () => {
     const size = await File.getFileSizeUsingPath({ filePath: '/no/such/file' });
     expect(size).toBe(0);
   });
+
+  test('deleteFolder handles missing directory without error', async () => {
+    jest.resetModules();
+    const logInfo = jest.fn();
+    const logSuccess = jest.fn();
+    const logWarn = jest.fn();
+    const logError = jest.fn();
+    jest.unstable_mockModule('../source/lib/auxiliary/logger.ts', () => ({
+      default: { logInfo, logSuccess, logWarn, logError }
+    }));
+    const { File: MockFile } = await import('../source/lib/auxiliary/file.ts');
+    await MockFile.deleteFolder({ folderPath: '/no/such/dir' });
+    expect(logError).not.toHaveBeenCalled();
+    expect(logInfo).toHaveBeenCalledWith('Folder already absent: /no/such/dir');
+  });
 });
 
 describe('writeBinaryFile size logging', () => {
