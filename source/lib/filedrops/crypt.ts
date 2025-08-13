@@ -33,6 +33,8 @@ const {
     CRYPTO_BUFFER_SUBSETS
 } = Constants;
 
+const DEBUG_KEY_LOGGING: boolean = process.env.DEBUG_KEY_LOGGING === 'true';
+
 export * from './crypt.types.js';
 
 export namespace Encryption {
@@ -94,8 +96,12 @@ export namespace Encryption {
             logInfo(`AuthTag: (${authTag.byteLength}) ${authTag.toString(`hex`)}`);
             logInfo(`Detected iterations: ${iterations}`);
 
-            logInfo(`Input key: ${key.slice(0, 4)}...${key.slice(-4)}`);
-            logInfo(`Computed encryption key: ${encryptionKey.toString(`hex`).slice(0, 6)}...${encryptionKey.toString(`hex`).slice(-6)}`);
+            if (DEBUG_KEY_LOGGING) {
+                logInfo(`Input key: ${key.slice(0, 4)}...${key.slice(-4)}`);
+                logInfo(`Computed encryption key: ${encryptionKey.toString(`hex`).slice(0, 6)}...${encryptionKey.toString(`hex`).slice(-6)}`);
+            } else {
+                logInfo(`Encryption key derived`);
+            }
 
             const outputDataBuffer: Buffer = Buffer.concat([
                 dataPrefix,
@@ -178,8 +184,12 @@ export namespace Encryption {
 
             const decryptionKey: Buffer = deriveKeyFromPassword({ password: key, salt: salt, iterations: iterationsInt });
 
-            logInfo(`Input key: ${key.slice(0, 4)}...${key.slice(-4)}`);
-            logInfo(`Computed decryption key: ${decryptionKey.toString(`hex`).slice(0, 6)}...${decryptionKey.toString(`hex`).slice(-6)}`);
+            if (DEBUG_KEY_LOGGING) {
+                logInfo(`Input key: ${key.slice(0, 4)}...${key.slice(-4)}`);
+                logInfo(`Computed decryption key: ${decryptionKey.toString(`hex`).slice(0, 6)}...${decryptionKey.toString(`hex`).slice(-6)}`);
+            } else {
+                logInfo(`Decryption key derived`);
+            }
 
             logInfo(`Inner encrypted data length: ${innerEncryptedData.byteLength}`);
 
