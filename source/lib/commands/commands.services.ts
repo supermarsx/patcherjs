@@ -16,7 +16,8 @@ const {
     COMM_SERVICES_STOP,
     SERVICE_BIN,
     IS_WINDOWS,
-    IS_MACOS
+    IS_MACOS,
+    IS_LINUX
 } = Constants;
 
 export namespace CommandsServices {
@@ -101,7 +102,11 @@ export namespace CommandsServices {
         const command: string = SERVICE_BIN;
         const parameters: string[] = IS_WINDOWS
             ? ['stop', serviceName]
-            : ['stop', serviceName];
+            : IS_MACOS
+                ? ['stop', serviceName]
+                : IS_LINUX
+                    ? ['stop', serviceName]
+                    : ['stop', serviceName];
         const result: string | null = await runCommand({ command, parameters });
         return result;
     }
@@ -123,7 +128,11 @@ export namespace CommandsServices {
         const command: string = SERVICE_BIN;
         const parameters: string[] = IS_WINDOWS
             ? ['config', serviceName, 'start=', 'disabled']
-            : ['disable', serviceName];
+            : IS_MACOS
+                ? ['disable', serviceName]
+                : IS_LINUX
+                    ? ['disable', serviceName]
+                    : ['disable', serviceName];
         const result: string | null = await runCommand({ command, parameters });
         return result;
     }
@@ -148,7 +157,9 @@ export namespace CommandsServices {
             ? ['delete', serviceName]
             : IS_MACOS
                 ? ['remove', serviceName]
-                : ['disable', '--now', serviceName];
+                : IS_LINUX
+                    ? ['disable', '--now', serviceName]
+                    : ['disable', '--now', serviceName];
         const result: string | null = await runCommand({ command, parameters });
         return result;
     }

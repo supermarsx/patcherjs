@@ -15,7 +15,8 @@ const {
     COMM_TASKS_STOP,
     TASKSCHD_BIN,
     IS_WINDOWS,
-    IS_MACOS
+    IS_MACOS,
+    IS_LINUX
 } = Constants;
 
 export namespace CommandsTaskscheduler {
@@ -92,7 +93,9 @@ export namespace CommandsTaskscheduler {
             ? ['/delete', '/f', '/tn', taskName]
             : IS_MACOS
                 ? ['remove', taskName]
-                : ['disable', '--now', taskName];
+                : IS_LINUX
+                    ? ['disable', '--now', taskName]
+                    : ['disable', '--now', taskName];
         const result: string | null = await runCommand({ command, parameters });
         return result;
     }
@@ -113,7 +116,11 @@ export namespace CommandsTaskscheduler {
         const command: string = TASKSCHD_BIN;
         const parameters: string[] = IS_WINDOWS
             ? ['/end', '/tn', taskName]
-            : ['stop', taskName];
+            : IS_MACOS
+                ? ['stop', taskName]
+                : IS_LINUX
+                    ? ['stop', taskName]
+                    : ['stop', taskName];
         const result: string | null = await runCommand({ command, parameters });
         return result;
     }
