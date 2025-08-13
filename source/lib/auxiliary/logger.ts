@@ -12,6 +12,7 @@ type LogLevel = 'info' | 'warn' | 'error' | 'silent';
 interface LoggerConfig {
     level: LogLevel;
     filePath?: string;
+    timestamps?: boolean;
 }
 
 const levelPriority: Record<LogLevel, number> = {
@@ -27,26 +28,33 @@ function getLogLevel(level?: string): LogLevel {
 
 let config: LoggerConfig = {
     level: getLogLevel(process.env.LOG_LEVEL),
-    filePath: process.env.LOG_FILEPATH
+    filePath: process.env.LOG_FILEPATH,
+    timestamps: process.env.LOG_TIMESTAMPS === 'true'
 };
 
 function shouldLog(level: LogLevel): boolean {
     return levelPriority[level] >= levelPriority[config.level];
 }
 
-async function writeToFile(message: string): Promise<void> {
+let writeQueue: Promise<void> = Promise.resolve();
+
+function writeToFile(message: string): void {
     if (!config.filePath) return;
-    try {
-        await fs.appendFile(resolve(config.filePath), message + '\n');
-    } catch {
-        // ignore file write errors
-    }
+    const file = resolve(config.filePath);
+    writeQueue = writeQueue.then(async () => {
+        try {
+            await fs.appendFile(file, message + '\n');
+        } catch {
+            // ignore file write errors
+        }
+    });
 }
 
 function logMessage(level: LogLevel, message: string, color: (text: string) => string): void {
     if (!shouldLog(level)) return;
-    log({ message, color });
-    void writeToFile(message);
+    const line = config.timestamps ? `${new Date().toISOString()} ${message}` : message;
+    log({ message: line, color });
+    writeToFile(line);
 }
 
 export namespace Logger {
