@@ -7,6 +7,9 @@ const { decryptFile } = Crypt;
 import File from '../auxiliary/file.js';
 const { backupFile, readBinaryFile, writeBinaryFile } = File;
 
+import Path from '../auxiliary/path.js';
+const { resolveEnvPath } = Path;
+
 import Logger from '../auxiliary/logger.js';
 const { logInfo, logError, logSuccess } = Logger;
 import { join } from 'path';
@@ -67,7 +70,8 @@ export namespace Filedrops {
                 fileData = await readBinaryFile({ filePath });
             if (isFiledropPacked === true)
                 fileData = await unpackFile({ buffer: fileData, password: filedrop.decryptKey });
-            await writeBinaryFile({ filePath: filedrop.fileNamePath, buffer: fileData });
+            const destinationPath: string = resolveEnvPath({ path: filedrop.fileNamePath });
+            await writeBinaryFile({ filePath: destinationPath, buffer: fileData });
             logSuccess(`File was dropped successfully`);
         } catch (error) {
             logError(`There was an error while dropping a file: ${error}`);
@@ -89,7 +93,7 @@ export namespace Filedrops {
     async function prefiledropChecksAndRoutines({ filedropOptions, filedrop }:
         { filedropOptions: FiledropsOptionsObject, filedrop: FiledropsObject }): Promise<void> {
         const { backupFiles } = filedropOptions;
-        const filePath: string = filedrop.fileNamePath;
+        const filePath: string = resolveEnvPath({ path: filedrop.fileNamePath });
         if (backupFiles === true) {
             logInfo(`Backing up files due to backup files option`);
             await backupFile({ filePath });

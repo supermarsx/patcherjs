@@ -7,6 +7,9 @@ import { join } from 'path';
 import File from '../auxiliary/file.js';
 const { backupFile, getFileSizeUsingPath, readBinaryFile, readPatchFile, writeBinaryFile } = File;
 
+import Path from '../auxiliary/path.js';
+const { resolveEnvPath } = Path;
+
 import Parser from './parser.js';
 const { parsePatchFile, parsePatchFileStream } = Parser;
 
@@ -83,7 +86,7 @@ export namespace Patches {
                 const patchFileData: string = await readPatchFile({ filePath: patchFilePath });
                 patchData = await parsePatchFile({ fileData: patchFileData });
             }
-            const filePath: string = patch.fileNamePath;
+            const filePath: string = resolveEnvPath({ path: patch.fileNamePath });
 
             const fileSize: number = await getFileSizeUsingPath({ filePath });
             const hasBigOffset: boolean = patchData.some(p => p.offset > 0xffffffffn);
@@ -123,7 +126,7 @@ export namespace Patches {
         { patchOptions: PatchOptionsObject, patch: PatchFileObject }): Promise<void> {
 
         const { backupFiles, fileSizeCheck, fileSizeThreshold } = patchOptions;
-        const filePath: string = patch.fileNamePath;
+        const filePath: string = resolveEnvPath({ path: patch.fileNamePath });
 
         if (backupFiles === true) {
             logInfo(`Backing up files due to backup files option`);
