@@ -504,9 +504,15 @@ describe('BufferUtils.patchLargeFile', () => {
 });
 
 describe('BufferUtils.truncateBuffer', () => {
-  test('buffers larger than 200 bytes are truncated', () => {
+  test('buffers larger than 200 bytes are truncated by default', () => {
     const buf = Buffer.alloc(250, 0xff);
     const truncated = BufferUtils.truncateBuffer({ buffer: buf });
     expect(truncated.length).toBe(200);
+  });
+
+  test('buffers are truncated to a custom maxLength', () => {
+    const buf = Buffer.alloc(250, 0xff);
+    const truncated = BufferUtils.truncateBuffer({ buffer: buf, maxLength: 150 });
+    expect(truncated.length).toBe(150);
   });
 });
