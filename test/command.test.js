@@ -20,7 +20,7 @@ describe('Command.runCommand error handling', () => {
 
     expect(result).toBeNull();
     expect(logError).toHaveBeenCalledWith(
-      'There was an error running a command: Error: Command exited with code 1 and output: line1line2'
+      'There was an error running a command: CommandError: Command exited with code 1 and output: line1line2'
     );
   });
 });
@@ -36,6 +36,6 @@ describe('Command.runCommandPromise timeout handling', () => {
         timeoutMs: 100,
         shell: false
       })
-    ).rejects.toThrow('Command timed out');
+    ).rejects.toMatchObject({ name: 'CommandError' });
   });
 });

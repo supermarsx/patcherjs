@@ -7,6 +7,8 @@ const { hexParse, hexParseBig, splitLines } = ParserWrappers;
 import Logger from '../auxiliary/logger.js';
 const { logInfo, logSuccess, logError } = Logger;
 
+import { PatchParseError } from '../errors/index.js';
+
 import {
     PatchArray,
     PatchObject
@@ -32,7 +34,7 @@ export namespace Parser {
         try {
             const dataLength: number = fileData.length;
             if (dataLength === 0)
-                throw new Error(`Patch file data is empty or corrupted`);
+                throw new PatchParseError(`Patch file data is empty or corrupted`);
             logInfo(`Splitting file lines`);
             let patchData: string[] = splitLines({ fileData });
             // remove empty lines that may appear due to trailing newlines
@@ -111,7 +113,7 @@ export namespace Parser {
             }
             const patchesPushed: number = patches.length;
             if (patchesPushed === 0)
-                throw new Error(`There were 0 patch objects pushed to the patches array`);
+                throw new PatchParseError(`There were 0 patch objects pushed to the patches array`);
             logSuccess(`There were ${patchesPushed} patch objects pushed`);
             return patches;
         } catch (error: any) {
@@ -139,7 +141,7 @@ export namespace Parser {
             const patchLineLength: number = patchLine.length;
             const defaultPatchLength: number = 15;
             if (patchLineLength < defaultPatchLength)
-                throw new Error(`Patch at line ${index + 1} is invalid`);
+                throw new PatchParseError(`Patch at line ${index + 1} is invalid`);
             const offsetValuesDelimiter = /:\s+/;
             const previousNewValueDelimiter = ' ';
 
@@ -149,7 +151,7 @@ export namespace Parser {
             const valueLength = Math.max(previousValueString.length, newValueString.length);
             const byteLength = valueLength / 2;
             if (![1, 2, 4, 8].includes(byteLength))
-                throw new Error(`Unsupported patch size ${byteLength}`);
+                throw new PatchParseError(`Unsupported patch size ${byteLength}`);
             const typedByteLength = byteLength as 1 | 2 | 4 | 8;
 
             let offset: bigint;
