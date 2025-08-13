@@ -7,6 +7,7 @@ async function loadModules(platform) {
 
   const windows = platform === 'win';
   const mac = platform === 'mac';
+  const linux = platform === 'linux';
   const constants = {
     COMM_TASKS_DELETE: 'delete',
     COMM_TASKS_STOP: 'stop',
@@ -17,7 +18,8 @@ async function loadModules(platform) {
     SERVICE_BIN: windows ? 'sc.exe' : mac ? 'launchctl' : 'systemctl',
     TASKKILL_BIN: windows ? 'taskkill.exe' : 'kill',
     IS_WINDOWS: windows,
-    IS_MACOS: mac
+    IS_MACOS: mac,
+    IS_LINUX: linux
   };
 
   jest.unstable_mockModule('../source/lib/configuration/constants.js', () => ({
@@ -47,6 +49,7 @@ async function loadModules(platform) {
 
 const removeAliases = ['remove'];
 const stopAliases = ['stop'];
+const disableAliases = ['disable'];
 
 describe('CommandsServices parameter builders', () => {
   test.each(removeAliases)('remove alias %s on Windows', async (fn) => {
@@ -106,6 +109,36 @@ describe('CommandsServices parameter builders', () => {
     expect(Command.default.runCommand).toHaveBeenLastCalledWith({
       command: 'systemctl',
       parameters: ['stop', 'svc']
+    });
+  });
+
+  test.each(disableAliases)('disable alias %s on Windows', async (fn) => {
+    const { CommandsServices, Command } = await loadModules('win');
+    Command.default.runCommand.mockResolvedValue('');
+    await CommandsServices[fn]({ serviceName: 'svc' });
+    expect(Command.default.runCommand).toHaveBeenLastCalledWith({
+      command: 'sc.exe',
+      parameters: ['config', 'svc', 'start=', 'disabled']
+    });
+  });
+
+  test.each(disableAliases)('disable alias %s on macOS', async (fn) => {
+    const { CommandsServices, Command } = await loadModules('mac');
+    Command.default.runCommand.mockResolvedValue('');
+    await CommandsServices[fn]({ serviceName: 'svc' });
+    expect(Command.default.runCommand).toHaveBeenLastCalledWith({
+      command: 'launchctl',
+      parameters: ['disable', 'svc']
+    });
+  });
+
+  test.each(disableAliases)('disable alias %s on Linux', async (fn) => {
+    const { CommandsServices, Command } = await loadModules('linux');
+    Command.default.runCommand.mockResolvedValue('');
+    await CommandsServices[fn]({ serviceName: 'svc' });
+    expect(Command.default.runCommand).toHaveBeenLastCalledWith({
+      command: 'systemctl',
+      parameters: ['disable', 'svc']
     });
   });
 });
