@@ -19,6 +19,7 @@
   "license": "MIT",
   "dependencies": {
     "7zip-bin": "^5.2.0",
+    "ajv": "^8.17.1",
     "colors-cli": "^1.0.32",
     "debug": "^4.3.4",
     "elevated": "^1.1.5",
