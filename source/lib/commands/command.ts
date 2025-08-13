@@ -22,11 +22,12 @@ export namespace Command {
             const result: string = await runCommandPromise({ command, parameters, shell });
             return result;
         } catch (error) {
-            if (error && typeof error === 'object')
+            if (error && typeof error === 'object') {
                 if (String(error).length > 2) {
-                    const errorMessage: string = String(error).replaceAll('\r\n', '')
+                    const errorMessage: string = String(error).replace(/\r?\n/g, '');
                     logError(`There was an error running a command: ${errorMessage}`);
                 }
+            }
             return null;
         }
     }
