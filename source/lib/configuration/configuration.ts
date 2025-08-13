@@ -47,23 +47,32 @@ export namespace Configuration {
         throw err;
     }
 
-    export function mergeWithDefaults<T>(defaultObj: T, providedObj?: DeepPartial<T>): T {
+    interface MergeOptions {
+        arrayMerge?: (defaultArray: unknown[], providedArray: unknown[]) => unknown[];
+    }
+
+    /**
+     * Deeply merges the provided configuration object with the defaults.
+     *
+     * Arrays are replaced by the provided array unless a custom merge strategy
+     * is supplied via the `options.arrayMerge` callback. The callback receives
+     * the default and provided arrays and must return the merged array.
+     *
+     * @param defaultObj Default configuration object
+     * @param providedObj Optional partial configuration
+     * @param options Optional merge options
+     */
+    export function mergeWithDefaults<T>(defaultObj: T, providedObj?: DeepPartial<T>, options: MergeOptions = {}): T {
         if (Array.isArray(defaultObj) || Array.isArray(providedObj)) {
             type Element = T extends Array<infer U> ? U : never;
-            const defaultArray = Array.isArray(defaultObj) ? defaultObj as Element[] : [];
-            const providedArray = Array.isArray(providedObj) ? providedObj as DeepPartial<Element>[] : [];
-            const result = defaultArray.map(item =>
-                mergeWithDefaults<Element>(item)
-            );
-            providedArray.forEach((item, index) => {
-                if (index < result.length && (isObject(item) || Array.isArray(item)))
-                    result[index] = mergeWithDefaults<Element>(result[index], item);
-                else if (index < result.length && result[index] === item)
-                    return;
-                else
-                    result.push(mergeWithDefaults<Element>(item as Element));
-            });
-            return result as unknown as T;
+            const defaultArray = Array.isArray(defaultObj) ? defaultObj as unknown[] : [];
+            const providedArray = Array.isArray(providedObj) ? providedObj as unknown[] : undefined;
+            const mergedArray = options.arrayMerge
+                ? options.arrayMerge(defaultArray, providedArray ?? [])
+                : (providedArray ?? defaultArray);
+            return (mergedArray as unknown[]).map(item =>
+                mergeWithDefaults<Element>(item as Element, undefined, options)
+            ) as unknown as T;
         }
 
         if (isObject(defaultObj) || isObject(providedObj)) {
@@ -75,7 +84,7 @@ export namespace Configuration {
                 ...(Object.keys(providedRecord) as Array<keyof T>)
             ]);
             keys.forEach(key => {
-                result[key] = mergeWithDefaults(defaultRecord[key], providedRecord[key]);
+                result[key] = mergeWithDefaults(defaultRecord[key], providedRecord[key], options);
             });
             return result as T;
         }

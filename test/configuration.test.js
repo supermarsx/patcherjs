@@ -80,38 +80,29 @@ describe('Configuration.readConfigurationFile', () => {
     expect(defaultObj.options.general.obj).toEqual({ a: 1 });
   });
 
-  test('merges arrays of objects', async () => {
+  test('replaces arrays of objects by default', async () => {
     const defaults = { patches: [{ name: 'a', enabled: true }] };
-    const provided = { patches: [{ enabled: false }, { name: 'b', enabled: true }] };
+    const provided = { patches: [{ name: 'b', enabled: false }] };
     const { Configuration } = await import('../source/lib/configuration/configuration.ts');
     const result = Configuration.mergeWithDefaults(defaults, provided);
-    expect(result).toEqual({
-      patches: [
-        { name: 'a', enabled: false },
-        { name: 'b', enabled: true }
-      ]
-    });
+    expect(result).toEqual({ patches: [{ name: 'b', enabled: false }] });
   });
 
-  test('concatenates primitive arrays without undefined entries', async () => {
+  test('replaces primitive arrays', async () => {
     const defaults = { nums: [1, 2] };
     const provided = { nums: [3] };
     const { Configuration } = await import('../source/lib/configuration/configuration.ts');
     const result = Configuration.mergeWithDefaults(defaults, provided);
-    expect(result.nums).toEqual([1, 2, 3]);
-    expect(result.nums).not.toContain(undefined);
+    expect(result.nums).toEqual([3]);
   });
 
-  test('handles shorter provided arrays without undefined entries', async () => {
-    const defaults = { patches: [{ name: 'a', enabled: true }, { name: 'b', enabled: false }] };
-    const provided = { patches: [{ enabled: false }] };
+  test('uses custom array merge strategy when provided', async () => {
+    const defaults = { nums: [1, 2] };
+    const provided = { nums: [3] };
     const { Configuration } = await import('../source/lib/configuration/configuration.ts');
-    const result = Configuration.mergeWithDefaults(defaults, provided);
-    expect(result.patches).toEqual([
-      { name: 'a', enabled: false },
-      { name: 'b', enabled: false }
-    ]);
-    expect(result.patches).not.toContain(undefined);
+    const merge = (defArr, provArr) => defArr.concat(provArr);
+    const result = Configuration.mergeWithDefaults(defaults, provided, { arrayMerge: merge });
+    expect(result.nums).toEqual([1, 2, 3]);
   });
 
   test('merges nested structures', async () => {
