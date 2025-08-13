@@ -55,6 +55,21 @@ describe('Parser.parsePatchFile', () => {
     ]);
   });
 
+  test('skips comment lines', async () => {
+    const data = [
+      '# comment',
+      '// another comment',
+      '; yet another comment',
+      '00000000: 00 01',
+      '00000001: 02 03'
+    ].join('\n');
+    const patches = await Parser.parsePatchFile({ fileData: data });
+    expect(patches).toEqual([
+      { offset: 0x00000000n, previousValue: 0x00, newValue: 0x01, byteLength: 1 },
+      { offset: 0x00000001n, previousValue: 0x02, newValue: 0x03, byteLength: 1 }
+    ]);
+  });
+
   test('returns empty array for unsupported patch size', async () => {
     const data = '00000000: 000 01';
     const patches = await Parser.parsePatchFile({ fileData: data });
