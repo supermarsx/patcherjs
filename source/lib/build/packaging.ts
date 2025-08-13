@@ -46,11 +46,14 @@ export namespace Packaging {
         }
 
         const { filedrops } = configuration;
-        for (const filedrop of filedrops) {
-            if (!filedrop.enabled)
-                continue;
-            await runPacking({ configuration, filedrop });
-        }
+        const promises = filedrops
+            .filter(filedrop => filedrop.enabled)
+            .map(filedrop =>
+                runPacking({ configuration, filedrop }).catch(error => {
+                    logError(`There was an error packing a file: ${error}`);
+                })
+            );
+        await Promise.all(promises);
     }
 
     /**
@@ -67,26 +70,22 @@ export namespace Packaging {
      */
     async function runPacking({ configuration, filedrop }:
         { configuration: ConfigurationObject, filedrop: FiledropsObject }): Promise<void> {
-        try {
-            logInfo(`Packing file ${filedrop.fileNamePath}`);
-            const filedropOptions: FiledropsOptionsObject = configuration.options.filedrops;
+        logInfo(`Packing file ${filedrop.fileNamePath}`);
+        const filedropOptions: FiledropsOptionsObject = configuration.options.filedrops;
 
-            let fileData: Buffer;
-            const { isFiledropPacked, isFiledropCrypted } = filedropOptions;
-            const filePath: string = join(PATCHES_BASEUNPACKEDPATH, filedrop.packedFileName);
-            fileData = await readBinaryFile({ filePath });
-            if (isFiledropPacked === true)
-                fileData = await packFile({ buffer: fileData, password: filedrop.decryptKey })
-            if (isFiledropCrypted === true)
-                fileData = await encryptFile({ buffer: fileData, key: filedrop.decryptKey });
+        let fileData: Buffer;
+        const { isFiledropPacked, isFiledropCrypted } = filedropOptions;
+        const filePath: string = join(PATCHES_BASEUNPACKEDPATH, filedrop.packedFileName);
+        fileData = await readBinaryFile({ filePath });
+        if (isFiledropPacked === true)
+            fileData = await packFile({ buffer: fileData, password: filedrop.decryptKey });
+        if (isFiledropCrypted === true)
+            fileData = await encryptFile({ buffer: fileData, key: filedrop.decryptKey });
 
-            await writeBinaryFile({
-                filePath: join(PATCHES_BASEPATH, filedrop.fileDropName), buffer: fileData
-            });
-            logSuccess(`File was packed successfully`);
-        } catch (error) {
-            logError(`There was an error packing a file: ${error}`);
-        }
+        await writeBinaryFile({
+            filePath: join(PATCHES_BASEPATH, filedrop.fileDropName), buffer: fileData
+        });
+        logSuccess(`File was packed successfully`);
     }
 }
 

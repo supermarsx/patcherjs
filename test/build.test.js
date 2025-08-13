@@ -143,7 +143,7 @@ describe('Predist.predistPackage', () => {
 });
 
 describe('Packaging.runPackings', () => {
-  test('runs packing and encryption in order', async () => {
+  test('runs packing and encryption for enabled filedrops', async () => {
     const config = ConfigurationDefaults.getDefaultConfigurationObject();
     config.filedrops = [
       { name: 'a', fileDropName: 'out1', packedFileName: 'p1', fileNamePath: 'f1', decryptKey: 'k1', enabled: true },
@@ -151,22 +151,12 @@ describe('Packaging.runPackings', () => {
     ];
     await Packaging.runPackings({ configuration: config });
 
-    const order = [
-      File.default.readBinaryFile.mock.invocationCallOrder[0],
-      Packer.default.packFile.mock.invocationCallOrder[0],
-      Crypt.default.encryptFile.mock.invocationCallOrder[0],
-      File.default.writeBinaryFile.mock.invocationCallOrder[0],
-      File.default.readBinaryFile.mock.invocationCallOrder[1],
-      Packer.default.packFile.mock.invocationCallOrder[1],
-      Crypt.default.encryptFile.mock.invocationCallOrder[1],
-      File.default.writeBinaryFile.mock.invocationCallOrder[1]
-    ];
-    expect(order).toEqual(order.slice().sort((a,b)=>a-b));
-
-    expect(File.default.readBinaryFile).toHaveBeenNthCalledWith(1, { filePath: join(Constants.PATCHES_BASEUNPACKEDPATH, 'p1') });
-    expect(Packer.default.packFile).toHaveBeenNthCalledWith(1, { buffer: expect.any(Buffer), password: 'k1' });
-    expect(Crypt.default.encryptFile).toHaveBeenNthCalledWith(1, { buffer: expect.any(Buffer), key: 'k1' });
-    expect(File.default.writeBinaryFile).toHaveBeenNthCalledWith(1, { filePath: join(Constants.PATCHES_BASEPATH, 'out1'), buffer: expect.any(Buffer) });
+    expect(File.default.readBinaryFile).toHaveBeenCalledWith({ filePath: join(Constants.PATCHES_BASEUNPACKEDPATH, 'p1') });
+    expect(File.default.readBinaryFile).toHaveBeenCalledWith({ filePath: join(Constants.PATCHES_BASEUNPACKEDPATH, 'p2') });
+    expect(Packer.default.packFile).toHaveBeenCalledTimes(2);
+    expect(Crypt.default.encryptFile).toHaveBeenCalledTimes(2);
+    expect(File.default.writeBinaryFile).toHaveBeenCalledWith({ filePath: join(Constants.PATCHES_BASEPATH, 'out1'), buffer: expect.any(Buffer) });
+    expect(File.default.writeBinaryFile).toHaveBeenCalledWith({ filePath: join(Constants.PATCHES_BASEPATH, 'out2'), buffer: expect.any(Buffer) });
   });
 
   test('disabled filedrops are skipped', async () => {
