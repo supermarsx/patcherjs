@@ -42,7 +42,7 @@ export namespace Uac {
         const isAdministrator: boolean = await isAdmin();
         const exitCode: number = 1;
         if (!isAdministrator) {
-            logError(`Exiting because user doesn't have administrator privileges'`);
+            logError(`Exiting because user doesn't have administrator privileges`);
             exit(exitCode);
         }
     }
