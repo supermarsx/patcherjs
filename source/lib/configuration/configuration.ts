@@ -118,7 +118,7 @@ export namespace Configuration {
             else
                 logSuccess(`Configuration file read successfully`);
             const configObject: unknown = JSON.parse(fileData);
-            const validatedConfig: ConfigurationObject = validateConfiguration(configObject);
+            validateConfiguration(configObject);
             const defaultConfig: ConfigurationObject = getDefaultConfigurationObject();
             const mergedConfig = mergeWithDefaults<ConfigurationObject>(defaultConfig, configObject as DeepPartial<ConfigurationObject>);
             return mergedConfig;
