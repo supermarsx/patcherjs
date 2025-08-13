@@ -1,4 +1,5 @@
 import { jest } from '@jest/globals';
+import { randomBytes } from 'crypto';
 
 jest.unstable_mockModule('../source/lib/auxiliary/file.js', () => ({
   default: {
@@ -23,6 +24,14 @@ describe('Encryption.encryptFile and decryptFile', () => {
   test('roundtrips buffer data', async () => {
     const data = Buffer.from('secret');
     const key = 'pass';
+    const encrypted = await Crypt.encryptFile({ buffer: data, key });
+    const decrypted = await Crypt.decryptFile({ buffer: encrypted, key });
+    expect(decrypted.equals(data)).toBe(true);
+  });
+
+  test('roundtrips binary data', async () => {
+    const data = randomBytes(256);
+    const key = 'bin';
     const encrypted = await Crypt.encryptFile({ buffer: data, key });
     const decrypted = await Crypt.decryptFile({ buffer: encrypted, key });
     expect(decrypted.equals(data)).toBe(true);

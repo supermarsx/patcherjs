@@ -27,7 +27,6 @@ const {
     CRYPTO_KEYLENGTH,
     CRYPTO_PREFIX,
     //CRYPTO_FORMAT,
-    CRYPTO_ENCODING,
     //CRYPTO_ENCODING_DECRYPT,
     //CRYPTO_PREFIX_ENCODING,
     //CRYPTO_PREFIX_BYTES,
@@ -55,7 +54,7 @@ export namespace Encryption {
         { filePath?: string | undefined, buffer?: Buffer | undefined, key: string }): Promise<Buffer> {
 
         try {
-            let fileData: Buffer | string;
+            let fileData: Buffer;
 
             if (filePath && typeof filePath !== 'undefined' && typeof filePath === 'string') {
                 const filename: string = getFilename({ filePath });
@@ -71,8 +70,6 @@ export namespace Encryption {
                 }
             }
 
-            fileData = fileData.toString(CRYPTO_ENCODING);
-
             const salt: Buffer = randomBytes(CRYPTO_SALT_RANDOMBYTES);
             const iv: BinaryLike = randomBytes(CRYPTO_IV_RANDOMBYTES);
             const algorithm: CipherGCMTypes = CRYPTO_ALG;
@@ -84,7 +81,7 @@ export namespace Encryption {
             logInfo(`Encrypting data`);
 
             const encryptedData: Buffer = Buffer.concat([
-                Buffer.from(cipher.update(fileData, CRYPTO_ENCODING)),
+                cipher.update(fileData),
                 cipher.final()
             ]);
 
