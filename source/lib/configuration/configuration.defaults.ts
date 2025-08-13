@@ -48,6 +48,7 @@ export namespace ConfigurationDefaults {
                     verifyPatch: true,
                     backupFiles: true,
                     skipWritingBinary: false,
+                    streamingParser: false,
                 },
                 commands: {
                     runCommands: true

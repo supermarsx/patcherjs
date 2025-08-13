@@ -30,7 +30,8 @@
       "unpatchMode": false,
       "verifyPatch": true,
       "backupFiles": true,
-      "skipWritingBinary": false
+      "skipWritingBinary": false,
+      "streamingParser": false
     },
     "commands": {
       "runCommands": true

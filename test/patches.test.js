@@ -55,6 +55,26 @@ describe('Patches.runPatches', () => {
     expect(data[0]).toBe(0xff);
   });
 
+  test('patches a binary file using streaming parser', async () => {
+    const config = ConfigurationDefaults.getDefaultConfigurationObject();
+    fs.writeFileSync(testBinPath, Buffer.from([0x00]));
+    config.patches = [
+      { name: 'test', patchFilename: 'test.patch', fileNamePath: testBinPath, enabled: true }
+    ];
+    const pOpts = config.options.patches;
+    pOpts.backupFiles = false;
+    pOpts.fileSizeCheck = false;
+    pOpts.skipWritingBinary = false;
+    pOpts.warnOnUnexpectedPreviousValue = false;
+    pOpts.failOnUnexpectedPreviousValue = false;
+    pOpts.runPatches = true;
+    pOpts.streamingParser = true;
+
+    await Patches.runPatches({ configuration: config });
+    const data = fs.readFileSync(testBinPath);
+    expect(data[0]).toBe(0xff);
+  });
+
   test('handles 64-bit offsets', async () => {
     const config = ConfigurationDefaults.getDefaultConfigurationObject();
     fs.writeFileSync(testBinPath, Buffer.from([0x00]));

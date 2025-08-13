@@ -1,3 +1,6 @@
+import { createReadStream } from 'fs';
+import { createInterface } from 'readline';
+
 import ParserWrappers from './parser.wrappers.js';
 const { hexParse, hexParseBig, splitLines } = ParserWrappers;
 
@@ -42,6 +45,42 @@ export namespace Parser {
         } catch (error: any) {
             logError(`An error has occurred: ${error}`);
             return new Array();
+        }
+    }
+
+    /**
+     * Parse a patch file using a readable stream to keep memory usage bounded
+     *
+     * @param filePath Path to the patch file
+     * @example
+     * ```
+     * parsePatchFileStream({ filePath });
+     * ```
+     * @returns Patch object array or `PatchArray` type, empty array on failure
+     * @since 0.0.1
+     */
+    export async function parsePatchFileStream({ filePath }:
+        { filePath: string }): Promise<PatchArray> {
+        try {
+            logInfo(`Reading patch file as stream`);
+            const patches: PatchArray = [];
+            const stream = createReadStream(filePath, { encoding: 'utf-8' });
+            const rl = createInterface({ input: stream, crlfDelay: Infinity });
+            let index = 0;
+            for await (const line of rl) {
+                const trimmed = line.trim();
+                if (trimmed.length === 0)
+                    continue;
+                const patchObject: PatchObject = getPatchObject({ patchLine: trimmed, index });
+                patches.push(patchObject);
+                index++;
+            }
+            const patchesCount: number = patches.length;
+            logSuccess(`Patch objects array built with ${patchesCount}`);
+            return patches;
+        } catch (error: any) {
+            logError(`An error has occurred: ${error}`);
+            return [];
         }
     }
 
