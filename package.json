@@ -26,7 +26,8 @@
     "esbuild": "0.25.8",
     "node-7z": "^3.0.0",
     "supports-color": "^9.4.0",
-    "tmp": "^0.2.1"
+    "tmp": "^0.2.1",
+    "yargs": "^18.0.0"
   },
   "devDependencies": {
     "@types/debug": "^4.1.8",

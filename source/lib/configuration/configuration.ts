@@ -48,41 +48,39 @@ export namespace Configuration {
     }
 
     export function mergeWithDefaults<T>(defaultObj: T, providedObj?: DeepPartial<T>): T {
-        const defaultIsArray: boolean = Array.isArray(defaultObj);
-        const providedIsArray: boolean = Array.isArray(providedObj);
-
-        if (defaultIsArray || providedIsArray) {
-            const defaultArray: unknown[] = defaultIsArray ? (defaultObj as unknown[]) : [];
-            const providedArray: unknown[] = providedIsArray ? (providedObj as unknown[]) : [];
-            const result: unknown[] = defaultArray.map(item => mergeWithDefaults(item));
+        if (Array.isArray(defaultObj) || Array.isArray(providedObj)) {
+            type Element = T extends Array<infer U> ? U : never;
+            const defaultArray = Array.isArray(defaultObj) ? defaultObj as Element[] : [];
+            const providedArray = Array.isArray(providedObj) ? providedObj as DeepPartial<Element>[] : [];
+            const result = defaultArray.map(item =>
+                mergeWithDefaults<Element>(item)
+            );
             providedArray.forEach((item, index) => {
                 if (index < result.length && (isObject(item) || Array.isArray(item)))
-                    result[index] = mergeWithDefaults(result[index], item as any);
+                    result[index] = mergeWithDefaults<Element>(result[index], item);
                 else if (index < result.length && result[index] === item)
                     return;
                 else
-                    result.push(mergeWithDefaults(undefined, item as any));
+                    result.push(mergeWithDefaults<Element>(item as Element));
+            });
+            return result as unknown as T;
+        }
+
+        if (isObject(defaultObj) || isObject(providedObj)) {
+            const defaultRecord = (isObject(defaultObj) ? defaultObj : {}) as { [K in keyof T]: T[K] };
+            const providedRecord = (isObject(providedObj) ? providedObj : {}) as { [K in keyof T]?: DeepPartial<T[K]> };
+            const result = {} as { [K in keyof T]: T[K] };
+            const keys = new Set<keyof T>([
+                ...(Object.keys(defaultRecord) as Array<keyof T>),
+                ...(Object.keys(providedRecord) as Array<keyof T>)
+            ]);
+            keys.forEach(key => {
+                result[key] = mergeWithDefaults(defaultRecord[key], providedRecord[key]);
             });
             return result as T;
         }
 
-        const defaultIsObj: boolean = isObject(defaultObj);
-        const providedIsObj: boolean = isObject(providedObj);
-
-        if (!defaultIsObj && !providedIsObj)
-            return (providedObj !== undefined ? providedObj : defaultObj) as T;
-
-        const result: Record<string, unknown> = {};
-        const keys = new Set<string>([
-            ...Object.keys(defaultIsObj ? (defaultObj as Record<string, unknown>) : {}),
-            ...Object.keys(providedIsObj ? (providedObj as Record<string, unknown>) : {})
-        ]);
-        keys.forEach(key => {
-            const dVal = defaultIsObj ? (defaultObj as any)[key] : undefined;
-            const pVal = providedIsObj ? (providedObj as any)[key] : undefined;
-            result[key] = mergeWithDefaults(dVal, pVal);
-        });
-        return result as T;
+        return (providedObj !== undefined ? providedObj : defaultObj) as T;
     }
 
     /**
@@ -122,7 +120,7 @@ export namespace Configuration {
             const configObject: unknown = JSON.parse(fileData);
             const validatedConfig: ConfigurationObject = validateConfiguration(configObject);
             const defaultConfig: ConfigurationObject = getDefaultConfigurationObject();
-            const mergedConfig: ConfigurationObject = mergeWithDefaults(defaultConfig, validatedConfig);
+            const mergedConfig = mergeWithDefaults<ConfigurationObject>(defaultConfig, configObject as DeepPartial<ConfigurationObject>);
             return mergedConfig;
         } catch (error: any) {
             logError(`An error has occurred: ${error}`);
