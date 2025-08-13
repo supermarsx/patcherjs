@@ -148,6 +148,11 @@ export namespace BufferUtils {
             const stats = await handle!.stat();
             const fileSize: number = Number(stats.size);
             const maxSafe = BigInt(Number.MAX_SAFE_INTEGER);
+            // Sort patches by offset to reduce costly seek operations on large files.
+            // Processing patches sequentially allows the underlying fs implementation
+            // to take advantage of read/write locality which can have a significant
+            // performance impact when patch data is provided out of order.
+            patchData.sort((a, b) => a.offset === b.offset ? 0 : (a.offset < b.offset ? -1 : 1));
             for (const patch of patchData) {
                 const { offset, previousValue, newValue, byteLength } = patch;
                 if (offset < 0n) {

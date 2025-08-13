@@ -427,6 +427,29 @@ describe('BufferUtils.patchLargeFile', () => {
     await fsPromises.rm(dir, { recursive: true, force: true });
   });
 
+  test('applies overlapping patches when patchData is unsorted', async () => {
+    const dir = await fsPromises.mkdtemp(join(os.tmpdir(), 'large-'));
+    const filePath = join(dir, 'tmp.bin');
+    await fsPromises.writeFile(filePath, Buffer.from([0x11, 0x22]));
+    const patchData = [
+      { offset: 1n, previousValue: 0x33, newValue: 0x55, byteLength: 1 },
+      { offset: 0n, previousValue: 0x2211, newValue: 0x3344, byteLength: 2 }
+    ];
+    const opts = {
+      forcePatch: false,
+      unpatchMode: false,
+      nullPatch: false,
+      failOnUnexpectedPreviousValue: true,
+      warnOnUnexpectedPreviousValue: false,
+      skipWritePatch: false,
+      allowOffsetOverflow: false
+    };
+    await BufferUtils.patchLargeFile({ filePath, patchData, options: opts });
+    const result = await fsPromises.readFile(filePath);
+    expect(Array.from(result)).toEqual([0x44, 0x55]);
+    await fsPromises.rm(dir, { recursive: true, force: true });
+  });
+
   test('verifyPatch succeeds for files', async () => {
     const dir = await fsPromises.mkdtemp(join(os.tmpdir(), 'large-'));
     const filePath = join(dir, 'tmp.bin');
