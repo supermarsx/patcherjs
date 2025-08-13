@@ -6,6 +6,8 @@ import {
     CryptBufferSubsets
 } from '../filedrops/crypt.types.js';
 
+import type { CompositeName } from '../composites.types.js';
+
 const { floor, random } = Math;
 
 namespace Constants {
@@ -66,9 +68,9 @@ namespace Constants {
     export const CONFIG_ENCODING: BufferEncoding = `utf-8`;
 
     // COMPOSITES
-    export const COMP_COMMANDS: string = `commands`;
-    export const COMP_FILEDROPS: string = `filedrops`;
-    export const COMP_PATCHES: string = `patches`;
+    export const COMP_COMMANDS: CompositeName = `commands`;
+    export const COMP_FILEDROPS: CompositeName = `filedrops`;
+    export const COMP_PATCHES: CompositeName = `patches`;
 
     // COMMANDS
     export const COMM_TASKS: string = `tasks`;

@@ -1,3 +1,5 @@
+import type { CompositeName } from '../composites.types.js';
+
 /**
  * Configuration object type, configuration read from `config.json` file
  */
@@ -7,7 +9,7 @@ export type ConfigurationObject = {
             exitOnNonAdmin: boolean,
             debug: boolean,
             logging: boolean,
-            runningOrder: string[] | [],
+            runningOrder: CompositeName[] | [],
             commandsOrder: string[] | [],
             onlyPackingMode: boolean,
             /** Interval for emitting progress messages during patching */
