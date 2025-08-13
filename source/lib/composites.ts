@@ -41,6 +41,7 @@ export namespace Patcher {
      * 
      * @param params.configFilePath Configuration file path
      * @param params.waitForExit Wait for keypress before exiting (default true)
+     * @param params.waitForExitOnNonTTY Wait even if stdin is not a TTY (default false)
      * @example
      * ```
      * runPatcher({ configFilePath, waitForExit: false });
@@ -50,10 +51,12 @@ export namespace Patcher {
      */
     export async function runPatcher({
         configFilePath = CONFIG_FILEPATH,
-        waitForExit = true
+        waitForExit = true,
+        waitForExitOnNonTTY = false
     }: {
         configFilePath?: string,
-        waitForExit?: boolean
+        waitForExit?: boolean,
+        waitForExitOnNonTTY?: boolean
     }): Promise<void> {
         let failed = false;
         try {
@@ -80,7 +83,7 @@ export namespace Patcher {
 
             if (waitForExit) {
                 logInfo(`Press any key to close application...`);
-                await waitForKeypress();
+                await waitForKeypress({ force: waitForExitOnNonTTY });
             }
         }
     }

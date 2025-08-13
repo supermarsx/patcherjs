@@ -92,7 +92,7 @@ describe('Patcher.runPatcher', () => {
       Patches.default.runPatches.mock.invocationCallOrder[0]
     ];
     expect(order).toEqual(order.slice().sort((a, b) => a - b));
-    expect(Console.default.waitForKeypress).toHaveBeenCalled();
+    expect(Console.default.waitForKeypress).toHaveBeenCalledWith({ force: false });
   });
 
   test('skips waiting when waitForExit is false', async () => {
