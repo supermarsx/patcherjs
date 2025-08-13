@@ -77,7 +77,7 @@ export namespace DebugLogging {
         const loggingEnabled: boolean = getEnvBoolean({ envVarName: LOGGING });
         if (loggingEnabled === true && safeCalleeFunction !== 'logToFile') {
             const logMessage: string = `${safeCalleeFilename}::${safeCalleeFunction} ::: ${message}`;
-            logToFile({ message: logMessage });
+            void logToFile({ message: logMessage }).catch(() => {});
         }
 
         const debug: Debugger = DebugLib.default(`${safeCalleeFilename}::${safeCalleeFunction}`);
