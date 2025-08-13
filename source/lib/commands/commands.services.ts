@@ -1,4 +1,4 @@
-import Command from './command.js';
+import Command, { CommandResult } from './command.js';
 const { runCommand } = Command;
 
 import Logger from '../auxiliary/logger.js';
@@ -94,7 +94,7 @@ export namespace CommandsServices {
      * @since 0.0.1
      */
     export async function stop({ serviceName }:
-        { serviceName: string }): Promise<string | null> {
+        { serviceName: string }): Promise<CommandResult> {
 
         const command: string = SERVICE_BIN;
         const parametersMap: { [key: string]: string[] } = {
@@ -106,7 +106,7 @@ export namespace CommandsServices {
         if (!parameters) {
             throw new Error(`Unsupported platform for stop: ${process.platform}`);
         }
-        const result: string | null = await runCommand({ command, parameters });
+        const result: CommandResult = await runCommand({ command, parameters });
         return result;
     }
 
@@ -122,7 +122,7 @@ export namespace CommandsServices {
      * @since 0.0.1
      */
     export async function disable({ serviceName }:
-        { serviceName: string }): Promise<string | null> {
+        { serviceName: string }): Promise<CommandResult> {
 
         const command: string = SERVICE_BIN;
         const parametersMap: { [key: string]: string[] } = {
@@ -134,7 +134,7 @@ export namespace CommandsServices {
         if (!parameters) {
             throw new Error(`Unsupported platform for disable: ${process.platform}`);
         }
-        const result: string | null = await runCommand({ command, parameters });
+        const result: CommandResult = await runCommand({ command, parameters });
         return result;
     }
 
@@ -151,7 +151,7 @@ export namespace CommandsServices {
      * @since 0.0.1
      */
     export async function remove({ serviceName }:
-        { serviceName: string }): Promise<string | null> {
+        { serviceName: string }): Promise<CommandResult> {
 
         const command: string = SERVICE_BIN;
         const parametersMap: { [key: string]: string[] } = {
@@ -163,7 +163,7 @@ export namespace CommandsServices {
         if (!parameters) {
             throw new Error(`Unsupported platform for remove: ${process.platform}`);
         }
-        const result: string | null = await runCommand({ command, parameters });
+        const result: CommandResult = await runCommand({ command, parameters });
         return result;
     }
 }

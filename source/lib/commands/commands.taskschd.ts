@@ -1,4 +1,4 @@
-import Command from './command.js';
+import Command, { CommandResult } from './command.js';
 const { runCommand } = Command;
 
 import Logger from '../auxiliary/logger.js';
@@ -87,7 +87,7 @@ export namespace CommandsTaskscheduler {
      * @since 0.0.1
      */
     export async function remove({ taskName }:
-        { taskName: string }): Promise<string | null> {
+        { taskName: string }): Promise<CommandResult> {
         const command: string = TASKSCHD_BIN;
         const parameters: string[] = IS_WINDOWS
             ? ['/delete', '/f', '/tn', taskName]
@@ -96,7 +96,7 @@ export namespace CommandsTaskscheduler {
                 : IS_LINUX
                     ? ['disable', '--now', taskName]
                     : ['disable', '--now', taskName];
-        const result: string | null = await runCommand({ command, parameters });
+        const result: CommandResult = await runCommand({ command, parameters });
         return result;
     }
 
@@ -112,7 +112,7 @@ export namespace CommandsTaskscheduler {
      * @since 0.0.1
      */
     export async function stop({ taskName }:
-        { taskName: string }): Promise<string | null> {
+        { taskName: string }): Promise<CommandResult> {
         const command: string = TASKSCHD_BIN;
         const parameters: string[] = IS_WINDOWS
             ? ['/end', '/tn', taskName]
@@ -121,7 +121,7 @@ export namespace CommandsTaskscheduler {
                 : IS_LINUX
                     ? ['stop', taskName]
                     : ['stop', taskName];
-        const result: string | null = await runCommand({ command, parameters });
+        const result: CommandResult = await runCommand({ command, parameters });
         return result;
     }
 }

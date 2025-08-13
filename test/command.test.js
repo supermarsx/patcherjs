@@ -12,15 +12,14 @@ describe('Command.runCommand error handling', () => {
 
     const Command = (await import('../source/lib/commands/command.js')).default;
 
-    const result = await Command.runCommand({
+    await expect(Command.runCommand({
       command: 'node',
       parameters: ['-e', "console.error('line1\\r\\nline2'); process.exit(1)"],
       shell: false
-    });
+    })).rejects.toMatchObject({ name: 'CommandError', exitCode: 1 });
 
-    expect(result).toBeNull();
     expect(logError).toHaveBeenCalledWith(
-      'There was an error running a command: CommandError: Command exited with code 1. Stdout: , Stderr: line1line2'
+      'There was an error running a command: Command exited with code 1'
     );
   });
 });
