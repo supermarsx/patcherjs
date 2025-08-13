@@ -1,4 +1,5 @@
 import Logger from './logger.js';
+import os from 'os';
 const { logWarn } = Logger;
 
 export namespace Path {
@@ -14,12 +15,23 @@ export namespace Path {
      * @since 0.0.1
      */
     export function resolveEnvPath({ path }:{ path: string }): string {
-        return path.replace(/\$\{(.*?)\}/g, (_match: string, name: string): string => {
+        let resolvedPath: string = path.replace(/^~(?=$|[\\/])/, os.homedir());
+
+        resolvedPath = resolvedPath.replace(/\$\{(.*?)\}/g, (_match: string, name: string): string => {
             const value: string | undefined = process.env[name];
             if (value === undefined)
                 logWarn(`Environment variable ${name} is not defined`);
             return value ?? '';
         });
+
+        resolvedPath = resolvedPath.replace(/%([^%]+)%/g, (_match: string, name: string): string => {
+            const value: string | undefined = process.env[name];
+            if (value === undefined)
+                logWarn(`Environment variable ${name} is not defined`);
+            return value ?? '';
+        });
+
+        return resolvedPath;
     }
 }
 
