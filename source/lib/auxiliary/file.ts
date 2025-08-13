@@ -11,6 +11,8 @@ import { FileHandle } from 'fs/promises';
 import Logger from './logger.js';
 const { logInfo, logSuccess, logWarn, logError } = Logger;
 
+import { FileIOError } from '../errors/index.js';
+
 export * from './file.wrappers.js';
 
 export namespace File {
@@ -40,7 +42,7 @@ export namespace File {
             logInfo(`Opening file path, ${filePath}, in read mode`);
             const cantReadFile: boolean = !(await isFileReadable({ filePath }));
             if (cantReadFile)
-                throw new Error(`File is not readable, is missing or corrupted`);
+                throw new FileIOError(`File is not readable, is missing or corrupted`);
             fileHandle = await fs.open(filePath);
             const bufferSize: number = await getFileSize({ fileHandle });
             if (bufferSize === 0)
@@ -85,7 +87,7 @@ export namespace File {
         try {
             logInfo(`Opening file path, ${filePath}, in read mode`);
             if (!(await isFileReadable({ filePath })))
-                throw new Error(`File is not readable, is missing or corrupted`);
+                throw new FileIOError(`File is not readable, is missing or corrupted`);
             fileHandle = await fs.open(filePath);
             logInfo('Getting file size');
             const bufferSize: number = await getFileSize({ fileHandle });

@@ -3,6 +3,8 @@ import { spawn, ChildProcessWithoutNullStreams } from 'child_process';
 import Logger from '../auxiliary/logger.js';
 const { logError } = Logger;
 
+import { CommandError } from '../errors/index.js';
+
 export namespace Command { 
     /**
      * Run a command
@@ -67,7 +69,7 @@ export namespace Command {
                 timer = setTimeout(() => {
                     timedOut = true;
                     childProcess.kill();
-                    reject(new Error(`Command timed out after ${timeoutMs}ms`));
+                    reject(new CommandError(`Command timed out after ${timeoutMs}ms`));
                 }, timeoutMs);
             }
 
@@ -92,7 +94,7 @@ export namespace Command {
                 if (exitCode === 0)
                     resolve(output);
                 else
-                    reject(new Error(`Command exited with code ${exitCode} and output: ${output}`));
+                    reject(new CommandError(`Command exited with code ${exitCode} and output: ${output}`));
             });
         });
     }
