@@ -8,7 +8,7 @@ import File from '../auxiliary/file.js';
 const { backupFile, getFileSizeUsingPath, readBinaryFile, readPatchFile, writeBinaryFile } = File;
 
 import Parser from './parser.js';
-const { parsePatchFile } = Parser;
+const { parsePatchFile, parsePatchFileStream } = Parser;
 
 import BufferUtils from './buffer.js';
 const { patchBuffer, patchLargeFile } = BufferUtils;
@@ -75,8 +75,14 @@ export namespace Patches {
             const patchOptions: PatchOptionsObject = configuration.options.patches;
 
             await prepatchChecksAndRoutines({ patchOptions, patch });
-            const patchFileData: string = await readPatchFile({ filePath: join(PATCHES_BASEPATH, patch.patchFilename) });
-            const patchData: PatchArray = await parsePatchFile({ fileData: patchFileData });
+            const patchFilePath: string = join(PATCHES_BASEPATH, patch.patchFilename);
+            let patchData: PatchArray;
+            if (patchOptions.streamingParser === true)
+                patchData = await parsePatchFileStream({ filePath: patchFilePath });
+            else {
+                const patchFileData: string = await readPatchFile({ filePath: patchFilePath });
+                patchData = await parsePatchFile({ fileData: patchFileData });
+            }
             const filePath: string = patch.fileNamePath;
 
             const fileSize: number = await getFileSizeUsingPath({ filePath });

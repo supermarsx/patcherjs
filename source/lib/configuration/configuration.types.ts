@@ -28,6 +28,8 @@ export type ConfigurationObject = {
             verifyPatch: boolean,
             backupFiles: boolean,
             skipWritingBinary: boolean,
+            /** Use streaming parser for patch files */
+            streamingParser: boolean,
         },
         commands: {
             runCommands: boolean
