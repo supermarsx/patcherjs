@@ -1,0 +1,26 @@
+import { jest } from '@jest/globals';
+
+describe('Command.runCommand error handling', () => {
+  test('logs error when command fails', async () => {
+    jest.resetModules();
+    jest.clearAllMocks();
+
+    const logError = jest.fn();
+    jest.unstable_mockModule('../source/lib/auxiliary/logger.js', () => ({
+      default: { logError }
+    }));
+
+    const Command = (await import('../source/lib/commands/command.js')).default;
+
+    const result = await Command.runCommand({
+      command: 'node',
+      parameters: ['-e', "console.error('line1\\r\\nline2'); process.exit(1)"],
+      shell: false
+    });
+
+    expect(result).toBeNull();
+    expect(logError).toHaveBeenCalledWith(
+      'There was an error running a command: Error: Command exited with code 1 and output: line1line2'
+    );
+  });
+});
