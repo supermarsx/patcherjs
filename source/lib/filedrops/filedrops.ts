@@ -12,7 +12,8 @@ const { resolveEnvPath } = Path;
 
 import Logger from '../auxiliary/logger.js';
 const { logInfo, logError, logSuccess } = Logger;
-import { join } from 'path';
+import { join, dirname } from 'path';
+import { mkdir } from 'fs/promises';
 
 import { ConfigurationObject, FiledropsObject, FiledropsOptionsObject } from '../configuration/configuration.types.js';
 
@@ -94,6 +95,8 @@ export namespace Filedrops {
         { filedropOptions: FiledropsOptionsObject, filedrop: FiledropsObject }): Promise<void> {
         const { backupFiles } = filedropOptions;
         const filePath: string = resolveEnvPath({ path: filedrop.fileNamePath });
+        const directoryPath: string = dirname(filePath);
+        await mkdir(directoryPath, { recursive: true });
         if (backupFiles === true) {
             logInfo(`Backing up files due to backup files option`);
             await backupFile({ filePath });
