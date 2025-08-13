@@ -71,6 +71,8 @@ export namespace Parser {
                 const trimmed = line.trim();
                 if (trimmed.length === 0)
                     continue;
+                if (trimmed.startsWith('#') || trimmed.startsWith('//') || trimmed.startsWith(';'))
+                    continue;
                 const patchObject: PatchObject = getPatchObject({ patchLine: trimmed, index });
                 patches.push(patchObject);
                 index++;
@@ -105,6 +107,8 @@ export namespace Parser {
             for (const [index, patchLine] of patchData.entries()) {
                 const trimmed = patchLine.trim();
                 if (trimmed.length === 0)
+                    continue;
+                if (trimmed.startsWith('#') || trimmed.startsWith('//') || trimmed.startsWith(';'))
                     continue;
                 const patchObject: PatchObject = getPatchObject({ patchLine: trimmed, index })
                 patches.push(patchObject);
