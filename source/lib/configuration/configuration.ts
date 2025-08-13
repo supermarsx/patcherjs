@@ -23,41 +23,51 @@ export * from './configuration.defaults.js';
 export * from './configuration.types.js';
 
 export namespace Configuration {
-    export function mergeWithDefaults(defaultObj: any, providedObj: any): any {
+    type DeepPartial<T> = T extends Array<infer U>
+        ? Array<DeepPartial<U>>
+        : T extends object
+            ? { [K in keyof T]?: DeepPartial<T[K]> }
+            : T | undefined;
+
+    function isObject(value: unknown): value is Record<string, unknown> {
+        return typeof value === 'object' && value !== null && !Array.isArray(value);
+    }
+
+    export function mergeWithDefaults<T>(defaultObj: T, providedObj?: DeepPartial<T>): T {
         const defaultIsArray: boolean = Array.isArray(defaultObj);
         const providedIsArray: boolean = Array.isArray(providedObj);
 
         if (defaultIsArray || providedIsArray) {
-            const dArr: any[] = defaultIsArray ? defaultObj : [];
-            const resultArr: any[] = dArr.map(item => mergeWithDefaults(item, undefined));
-            if (providedIsArray) {
-                providedObj.forEach((item: any, index: number) => {
-                    resultArr[index] = mergeWithDefaults(dArr[index], item);
-                });
+            const defaultArray: unknown[] = defaultIsArray ? (defaultObj as unknown[]) : [];
+            const providedArray: unknown[] = providedIsArray ? (providedObj as unknown[]) : [];
+            const length = Math.max(defaultArray.length, providedArray.length);
+            const result: unknown[] = [];
+            for (let i = 0; i < length; i++) {
+                result[i] = mergeWithDefaults(
+                    defaultArray[i] as any,
+                    providedArray[i] as any
+                );
             }
-            return resultArr;
+            return result as T;
         }
 
-        const defaultIsObj: boolean = defaultObj && typeof defaultObj === 'object';
-        const providedIsObj: boolean = providedObj && typeof providedObj === 'object';
+        const defaultIsObj: boolean = isObject(defaultObj);
+        const providedIsObj: boolean = isObject(providedObj);
 
         if (!defaultIsObj && !providedIsObj)
-            return providedObj !== undefined ? providedObj : defaultObj;
+            return (providedObj !== undefined ? providedObj : defaultObj) as T;
 
-        const result: any = defaultIsObj
-            ? Object.keys(defaultObj).reduce((acc: any, key: string) => {
-                acc[key] = mergeWithDefaults(defaultObj[key], undefined);
-                return acc;
-            }, {})
-            : {};
-
-        if (providedIsObj) {
-            for (const [key, value] of Object.entries(providedObj)) {
-                result[key] = mergeWithDefaults(defaultIsObj ? defaultObj[key] : undefined, value);
-            }
-        }
-
-        return result;
+        const result: Record<string, unknown> = {};
+        const keys = new Set<string>([
+            ...Object.keys(defaultIsObj ? (defaultObj as Record<string, unknown>) : {}),
+            ...Object.keys(providedIsObj ? (providedObj as Record<string, unknown>) : {})
+        ]);
+        keys.forEach(key => {
+            const dVal = defaultIsObj ? (defaultObj as any)[key] : undefined;
+            const pVal = providedIsObj ? (providedObj as any)[key] : undefined;
+            result[key] = mergeWithDefaults(dVal, pVal);
+        });
+        return result as T;
     }
 
     /**
