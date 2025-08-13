@@ -68,6 +68,27 @@ describe('Configuration.readConfigurationFile', () => {
     expect(defaultObj.options.general.obj).toEqual({ a: 1 });
   });
 
+  test('merges arrays of objects', async () => {
+    const defaults = { patches: [{ name: 'a', enabled: true }] };
+    const provided = { patches: [{ enabled: false }, { name: 'b', enabled: true }] };
+    const { Configuration } = await import('../source/lib/configuration/configuration.ts');
+    const result = Configuration.mergeWithDefaults(defaults, provided);
+    expect(result).toEqual({
+      patches: [
+        { name: 'a', enabled: false },
+        { name: 'b', enabled: true }
+      ]
+    });
+  });
+
+  test('merges nested structures', async () => {
+    const defaults = { a: { b: { c: 1 } } };
+    const provided = { a: { b: { d: 2 } } };
+    const { Configuration } = await import('../source/lib/configuration/configuration.ts');
+    const result = Configuration.mergeWithDefaults(defaults, provided);
+    expect(result).toEqual({ a: { b: { c: 1, d: 2 } } });
+  });
+
   test('returns defaults when file not readable', async () => {
     jest.resetModules();
     jest.unstable_mockModule('../source/lib/auxiliary/file.wrappers.ts', () => ({
