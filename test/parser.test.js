@@ -97,7 +97,7 @@ describe('Parser.parsePatchFile', () => {
     fs.mkdirSync(patchDir, { recursive: true });
     const filePath = join(patchDir, 'temp.patch');
     fs.writeFileSync(filePath, data);
-    const streamPatches = await Parser.parsePatchFileStream({ filePath });
+    const streamPatches = await Parser.parsePatchFile({ filePath, useStream: true });
     fs.unlinkSync(filePath);
     expect(streamPatches).toEqual(patches);
   });

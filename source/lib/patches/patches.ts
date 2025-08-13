@@ -5,13 +5,13 @@ const { logInfo, logWarn, logError } = Logger;
 import { join } from 'path';
 
 import File from '../auxiliary/file.js';
-const { backupFile, getFileSizeUsingPath, readBinaryFile, readPatchFile, writeBinaryFile } = File;
+const { backupFile, getFileSizeUsingPath, readBinaryFile, writeBinaryFile } = File;
 
 import Path from '../auxiliary/path.js';
 const { resolveEnvPath } = Path;
 
 import Parser from './parser.js';
-const { parsePatchFile, parsePatchFileStream } = Parser;
+const { parsePatchFile } = Parser;
 
 import BufferUtils from './buffer.js';
 const { patchBuffer, patchLargeFile } = BufferUtils;
@@ -79,13 +79,7 @@ export namespace Patches {
 
             await prepatchChecksAndRoutines({ patchOptions, patch });
             const patchFilePath: string = join(PATCHES_BASEPATH, patch.patchFilename);
-            let patchData: PatchArray;
-            if (patchOptions.streamingParser === true)
-                patchData = await parsePatchFileStream({ filePath: patchFilePath });
-            else {
-                const patchFileData: string = await readPatchFile({ filePath: patchFilePath });
-                patchData = await parsePatchFile({ fileData: patchFileData });
-            }
+            const patchData: PatchArray = await parsePatchFile({ filePath: patchFilePath, useStream: patchOptions.streamingParser });
             const filePath: string = resolveEnvPath({ path: patch.fileNamePath });
 
             const fileSize: number = await getFileSizeUsingPath({ filePath });

@@ -1,4 +1,5 @@
 import { createReadStream } from 'fs';
+import { stat, readFile } from 'fs/promises';
 import { createInterface } from 'readline';
 
 import ParserWrappers from './parser.wrappers.js';
@@ -19,56 +20,63 @@ export * from './parser.wrappers.js';
 
 export namespace Parser {
     /**
-     * Parse a patch file based on a buffer string to an patch object array or `PatchArray`
-     * 
-     * @param fileData String formatted buffer read from patch file
+     * Parse a patch file from either raw data or a file path. When a file path
+     * is provided, parsing will stream the file if `useStream` is true or if the
+     * file size exceeds `streamThreshold`.
+     *
+     * @param params.fileData Pre-loaded patch file contents
+     * @param params.filePath Path to the patch file
+     * @param params.useStream Force streaming mode
+     * @param params.streamThreshold Size in bytes above which streaming is automatically used
      * @example
      * ```
      * parsePatchFile({ fileData });
+     * parsePatchFile({ filePath, useStream: true });
      * ```
      * @returns Patch object array or `PatchArray` type, empty array on failure
      * @since 0.0.1
      */
-    export async function parsePatchFile({ fileData }:
-        { fileData: string }): Promise<PatchArray> {
+    export async function parsePatchFile({ fileData, filePath, useStream = false, streamThreshold = 1024 * 1024 }:
+        { fileData?: string, filePath?: string, useStream?: boolean, streamThreshold?: number }): Promise<PatchArray> {
         try {
-            const dataLength: number = fileData.length;
-            if (dataLength === 0)
-                throw new PatchParseError(`Patch file data is empty or corrupted`);
-            logInfo(`Splitting file lines`);
-            const patchData: string[] = splitLines({ fileData });
-            logInfo(`Processing patch lines`);
-            async function* lineIterator() {
-                for (const line of patchData) {
-                    yield line;
-                }
-            }
-            const patches: PatchArray = await processLines(lineIterator());
-            return patches;
-        } catch (error: any) {
-            logError(`An error has occurred: ${error}`);
-            return new Array();
-        }
-    }
+            let lines: AsyncIterable<string>;
 
-    /**
-     * Parse a patch file using a readable stream to keep memory usage bounded
-     *
-     * @param filePath Path to the patch file
-     * @example
-     * ```
-     * parsePatchFileStream({ filePath });
-     * ```
-     * @returns Patch object array or `PatchArray` type, empty array on failure
-     * @since 0.0.1
-     */
-    export async function parsePatchFileStream({ filePath }:
-        { filePath: string }): Promise<PatchArray> {
-        try {
-            logInfo(`Reading patch file as stream`);
-            const stream = createReadStream(filePath, { encoding: 'utf-8' });
-            const rl = createInterface({ input: stream, crlfDelay: Infinity });
-            const patches: PatchArray = await processLines(rl);
+            if (fileData !== undefined) {
+                if (fileData.length === 0)
+                    throw new PatchParseError(`Patch file data is empty or corrupted`);
+                logInfo(`Splitting file lines`);
+                const patchData: string[] = splitLines({ fileData });
+                logInfo(`Processing patch lines`);
+                async function* lineIterator() {
+                    for (const line of patchData)
+                        yield line;
+                }
+                lines = lineIterator();
+            } else if (filePath !== undefined) {
+                let stream = useStream;
+                if (!stream) {
+                    const stats = await stat(filePath);
+                    stream = stats.size > streamThreshold;
+                }
+
+                if (stream) {
+                    logInfo(`Reading patch file as stream`);
+                    const fileStream = createReadStream(filePath, { encoding: 'utf-8' });
+                    lines = createInterface({ input: fileStream, crlfDelay: Infinity });
+                } else {
+                    logInfo(`Reading patch file`);
+                    const data = await readFile(filePath, { encoding: 'utf-8' });
+                    const patchData: string[] = splitLines({ fileData: data });
+                    async function* lineIterator() {
+                        for (const line of patchData)
+                            yield line;
+                    }
+                    lines = lineIterator();
+                }
+            } else
+                throw new PatchParseError(`No patch file data or path provided`);
+
+            const patches: PatchArray = await processLines(lines);
             return patches;
         } catch (error: any) {
             logError(`An error has occurred: ${error}`);
@@ -77,13 +85,9 @@ export namespace Parser {
     }
 
     /**
-     * Create a patch array based on patch data read from a patch file
-     * 
-     * @param patchData Patch data extracted from a patch file, an array of patch lines
-     * @example
-     * ```
-     * buildPatchesArray({ patchData });
-     * ```
+     * Process each patch line into a `PatchArray`.
+     *
+     * @param lines Patch lines to process
      * @returns A patch array with patch objects
      * @since 0.0.1
      */
