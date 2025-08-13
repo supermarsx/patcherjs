@@ -119,7 +119,9 @@ export const configurationSchema = {
                         properties: {
                             name: { type: 'string' },
                             command: { type: 'string' },
-                            enabled: { type: 'boolean' }
+                            enabled: { type: 'boolean' },
+                            timeout: { type: 'number' },
+                            cwd: { type: 'string' }
                         },
                         required: ['name', 'command', 'enabled'],
                         additionalProperties: true

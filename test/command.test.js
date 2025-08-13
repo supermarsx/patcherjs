@@ -38,3 +38,15 @@ describe('Command.runCommandPromise timeout handling', () => {
     ).rejects.toMatchObject({ name: 'CommandError' });
   });
 });
+
+describe('Command.runCommandPromise cwd handling', () => {
+  test('runs command in specified cwd', async () => {
+    const Command = (await import('../source/lib/commands/command.js')).default;
+    const result = await Command.runCommandPromise({
+      command: 'node',
+      parameters: ['-e', "console.log(process.cwd())"],
+      cwd: '/'
+    });
+    expect(result.stdout).toBe('/\n');
+  });
+});
