@@ -2,6 +2,14 @@ import { jest } from '@jest/globals';
 import { ConfigurationDefaults } from '../source/lib/configuration/configuration.defaults.ts';
 import { join } from 'path';
 
+jest.unstable_mockModule('fs/promises', () => {
+  const actual = jest.requireActual('fs/promises');
+  return {
+    ...actual,
+    mkdir: jest.fn(async () => {})
+  };
+});
+
 jest.unstable_mockModule('../source/lib/filedrops/crypt.js', () => ({
   default: { decryptFile: jest.fn(async () => Buffer.from('decrypted')) }
 }));
@@ -22,12 +30,14 @@ let Filedrops;
 let Crypt;
 let Packer;
 let File;
+let Fs;
 
 beforeAll(async () => {
   Filedrops = (await import('../source/lib/filedrops/filedrops.ts')).Filedrops;
   Crypt = await import('../source/lib/filedrops/crypt.js');
   Packer = await import('../source/lib/filedrops/packer.js');
   File = await import('../source/lib/auxiliary/file.js');
+  Fs = await import('fs/promises');
 });
 
 beforeEach(() => {
@@ -102,5 +112,28 @@ describe('Filedrops.runFiledrops', () => {
     await Filedrops.runFiledrops({ configuration: config });
     expect(File.default.writeBinaryFile).toHaveBeenCalledWith({ filePath: dest, buffer: Buffer.from('binary') });
     delete process.env.MY_DROP_PATH;
+  });
+
+  test('creates missing directories before backup and write', async () => {
+    const destDir = join(process.cwd(), 'missing', 'dir');
+    const dest = join(destDir, 'fd.bin');
+    const config = ConfigurationDefaults.getDefaultConfigurationObject();
+    config.filedrops = [
+      { name: 'd', fileDropName: 'f.bin', packedFileName: 'f.pack', fileNamePath: dest, decryptKey: '', enabled: true }
+    ];
+    const opts = config.options.filedrops;
+    opts.runFiledrops = true;
+    opts.isFiledropPacked = false;
+    opts.isFiledropCrypted = false;
+    opts.backupFiles = true;
+    await Filedrops.runFiledrops({ configuration: config });
+    const order = [
+      Fs.mkdir.mock.invocationCallOrder[0],
+      File.default.backupFile.mock.invocationCallOrder[0],
+      File.default.writeBinaryFile.mock.invocationCallOrder[0]
+    ];
+    expect(order).toEqual(order.slice().sort((a, b) => a - b));
+    expect(Fs.mkdir).toHaveBeenCalledWith(destDir, { recursive: true });
+    expect(File.default.writeBinaryFile).toHaveBeenCalledWith({ filePath: dest, buffer: Buffer.from('binary') });
   });
 });
