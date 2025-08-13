@@ -120,7 +120,11 @@ export namespace BufferUtils {
     }
 
     /**
-     * Patch offsets in a large file using fs read/write with position
+     * Patch offsets in a large file using fs read/write with position.
+     *
+     * The provided {@link patchData} array is not mutated; patches are applied
+     * using a shallow copy sorted by offset to minimize costly seek
+     * operations.
      *
      * @param params.filePath Path to file
      * @param params.patchData Array of patch objects
@@ -151,11 +155,12 @@ export namespace BufferUtils {
             // Sort patches by offset to reduce costly seek operations on large files.
             // Processing patches sequentially allows the underlying fs implementation
             // to take advantage of read/write locality which can have a significant
-            // performance impact when patch data is provided out of order.
-            patchData.sort((a, b) => a.offset === b.offset ? 0 : (a.offset < b.offset ? -1 : 1));
-            const total: number = patchData.length;
+            // performance impact when patch data is provided out of order. A shallow
+            // copy is sorted so the original array order remains unchanged.
+            const sorted = [...patchData].sort((a, b) => a.offset === b.offset ? 0 : (a.offset < b.offset ? -1 : 1));
+            const total: number = sorted.length;
             let processed = 0;
-            for (const patch of patchData) {
+            for (const patch of sorted) {
                 const { offset, previousValue, newValue, byteLength } = patch;
                 if (offset < 0n) {
                     logWarn(`Offset ${offset} is negative, skipping patch`);

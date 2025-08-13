@@ -1,4 +1,5 @@
 import { Patches } from '../source/lib/patches/patches.ts';
+import { BufferUtils } from '../source/lib/patches/buffer.ts';
 import { ConfigurationDefaults } from '../source/lib/configuration/configuration.defaults.ts';
 import fs from 'fs';
 import { join } from 'path';
@@ -214,5 +215,40 @@ describe('Patches.runPatches', () => {
     await Patches.runPatches({ configuration: config });
     const data = fs.readFileSync(testBinPath);
     expect(data[0]).toBe(0x00);
+  });
+});
+
+describe('BufferUtils.patchLargeFile', () => {
+  test('does not mutate input array order', async () => {
+    const tmpFile = join('test', 'order.tmp');
+    fs.mkdirSync('test', { recursive: true });
+    fs.writeFileSync(tmpFile, Buffer.alloc(3));
+
+    const patchData = [
+      { offset: 2n, previousValue: 0x00, newValue: 0x03, byteLength: 1 },
+      { offset: 0n, previousValue: 0x00, newValue: 0x01, byteLength: 1 },
+      { offset: 1n, previousValue: 0x00, newValue: 0x02, byteLength: 1 }
+    ];
+    const originalOrder = patchData.map(p => p.offset);
+
+    const options = {
+      forcePatch: false,
+      unpatchMode: false,
+      nullPatch: false,
+      failOnUnexpectedPreviousValue: false,
+      warnOnUnexpectedPreviousValue: false,
+      skipWritePatch: false,
+      allowOffsetOverflow: false,
+      bigEndian: false,
+      verifyPatch: false
+    };
+
+    await BufferUtils.patchLargeFile({ filePath: tmpFile, patchData, options });
+
+    const data = fs.readFileSync(tmpFile);
+    expect(Array.from(data)).toEqual([0x01, 0x02, 0x03]);
+    expect(patchData.map(p => p.offset)).toEqual(originalOrder);
+
+    fs.rmSync(tmpFile, { force: true });
   });
 });
