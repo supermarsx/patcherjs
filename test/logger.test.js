@@ -7,6 +7,7 @@ const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 afterEach(() => {
   delete process.env.LOG_LEVEL;
+  delete process.env.LOG_TIMESTAMPS;
 });
 
 describe('Logger file output', () => {
@@ -17,6 +18,7 @@ describe('Logger file output', () => {
     const file = join(dir, 'out.log');
     Logger.setConfig({ level: 'info', filePath: file });
     Logger.logInfo('hello file');
+    expect(fs.existsSync(file)).toBe(false);
     await delay(20);
     const content = await fs.promises.readFile(file, 'utf8');
     expect(content.trim()).toBe('hello file');
@@ -50,6 +52,19 @@ describe('Logger file output', () => {
     await delay(20);
     const content = await fs.promises.readFile(file, 'utf8');
     expect(content.trim()).toBe('invalid level');
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+
+  test('prepends timestamps when enabled', async () => {
+    jest.resetModules();
+    const { Logger } = await import('../source/lib/auxiliary/logger.ts');
+    const dir = fs.mkdtempSync(join(os.tmpdir(), 'logger-'));
+    const file = join(dir, 'out.log');
+    Logger.setConfig({ level: 'info', filePath: file, timestamps: true });
+    Logger.logInfo('timed');
+    await delay(20);
+    const content = await fs.promises.readFile(file, 'utf8');
+    expect(content.trim()).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z timed$/);
     fs.rmSync(dir, { recursive: true, force: true });
   });
 });
