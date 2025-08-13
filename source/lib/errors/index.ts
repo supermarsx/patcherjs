@@ -12,10 +12,22 @@ export class FileIOError extends Error {
     }
 }
 
+export interface CommandErrorOptions {
+    stdout?: string;
+    stderr?: string;
+    exitCode?: number | null;
+}
+
 export class CommandError extends Error {
-    constructor(message: string) {
+    stdout: string;
+    stderr: string;
+    exitCode: number | null;
+    constructor(message: string, { stdout = '', stderr = '', exitCode = null }: CommandErrorOptions = {}) {
         super(message);
         this.name = 'CommandError';
+        this.stdout = stdout;
+        this.stderr = stderr;
+        this.exitCode = exitCode;
     }
 }
 

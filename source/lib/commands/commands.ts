@@ -111,7 +111,12 @@ export namespace Commands {
             if (command.enabled === true) {
                 logInfo(`Running general command ${command.name}: ${command.command}`);
                 const DEFAULT_TIMEOUT = 60_000; // 60 seconds
-                await runCommand({ command: command.command, parameters: [], timeout: DEFAULT_TIMEOUT });
+                const { stdout, stderr, exitCode } = await runCommand({ command: command.command, parameters: [], timeout: DEFAULT_TIMEOUT });
+                if (stdout)
+                    logInfo(stdout);
+                if (stderr)
+                    logError(stderr);
+                logInfo(`Command exited with code ${exitCode}`);
             }
     }
 }

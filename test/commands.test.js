@@ -14,7 +14,7 @@ jest.unstable_mockModule('../source/lib/commands/commands.kill.js', () => ({
 }));
 
 jest.unstable_mockModule('../source/lib/commands/command.js', () => ({
-  default: { runCommand: jest.fn() }
+  default: { runCommand: jest.fn().mockResolvedValue({ stdout: '', stderr: '', exitCode: 0 }) }
 }));
 
 let Commands;

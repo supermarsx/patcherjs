@@ -5,7 +5,13 @@ const { logError } = Logger;
 
 import { CommandError } from '../errors/index.js';
 
-export namespace Command { 
+export interface CommandResult {
+    stdout: string;
+    stderr: string;
+    exitCode: number;
+}
+
+export namespace Command {
     /**
      * Run a command
      * 
@@ -25,22 +31,26 @@ export namespace Command {
      * // run with a timeout
      * runCommand({ command, parameters, timeout: 1000 });
      * ```
-     * @returns Command output or null on failure
+     * @returns Command output
      * @since 0.0.1
      */
     export async function runCommand({ command, parameters, shell = false, timeout, maxBuffer }:
-        { command: string, parameters: string[], shell?: boolean, timeout?: number, maxBuffer?: number }): Promise<string | null> {
+        { command: string, parameters: string[], shell?: boolean, timeout?: number, maxBuffer?: number }): Promise<CommandResult> {
         try {
             const result = await runCommandPromise({ command, parameters, shell, timeout, maxBuffer });
-            return result.stdout + result.stderr;
+            return result;
         } catch (error) {
-            if (error && typeof error === 'object') {
-                if (String(error).length > 2) {
-                    const errorMessage: string = String(error).replace(/\r?\n/g, '');
-                    logError(`There was an error running a command: ${errorMessage}`);
-                }
+            if (error instanceof CommandError) {
+                const errorMessage: string = String(error.message).replace(/\r?\n/g, '');
+                logError(`There was an error running a command: ${errorMessage}`);
+                throw error;
             }
-            return null;
+            if (error && typeof error === 'object') {
+                const errorMessage: string = String(error).replace(/\r?\n/g, '');
+                logError(`There was an error running a command: ${errorMessage}`);
+                throw new CommandError(errorMessage);
+            }
+            throw new CommandError('Unknown error running command');
         }
     }
 
@@ -61,7 +71,7 @@ export namespace Command {
      * @since 0.0.1
      */
     export async function runCommandPromise({ command, parameters, shell = false, timeout, maxBuffer }:
-        { command: string, parameters: string[], shell?: boolean, timeout?: number, maxBuffer?: number }): Promise<{ stdout: string, stderr: string }> {
+        { command: string, parameters: string[], shell?: boolean, timeout?: number, maxBuffer?: number }): Promise<CommandResult> {
 
         return new Promise(function (resolve, reject) {
             const childProcess: ChildProcessWithoutNullStreams = spawn(command, parameters, { shell });
@@ -72,18 +82,19 @@ export namespace Command {
                 timer = setTimeout(() => {
                     timedOut = true;
                     childProcess.kill();
-                    reject(new CommandError(`Command timed out after ${timeout}ms`));
+                    reject(new CommandError(`Command timed out after ${timeout}ms`, { stdout, stderr, exitCode: null }));
                 }, timeout);
             }
+
+            let stdout = '';
+            let stderr = '';
 
             childProcess.on('error', (err) => {
                 if (timer)
                     clearTimeout(timer);
-                reject(err);
+                const message = err instanceof Error ? err.message : String(err);
+                reject(new CommandError(message, { stdout, stderr, exitCode: null }));
             });
-
-            let stdout = '';
-            let stderr = '';
 
             childProcess.stdout.on('data', function (data) {
                 if (stdout.length < limit) {
@@ -106,10 +117,11 @@ export namespace Command {
                     clearTimeout(timer);
                 if (timedOut)
                     return;
-                if (exitCode === 0)
-                    resolve({ stdout, stderr });
-                else
-                    reject(new CommandError(`Command exited with code ${exitCode}. Stdout: ${stdout}, Stderr: ${stderr}`));
+                if (exitCode === 0) {
+                    resolve({ stdout, stderr, exitCode });
+                } else {
+                    reject(new CommandError(`Command exited with code ${exitCode}`, { stdout, stderr, exitCode }));
+                }
             });
         });
     }

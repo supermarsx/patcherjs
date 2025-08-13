@@ -1,4 +1,4 @@
-import Command from './command.js';
+import Command, { CommandResult } from './command.js';
 const { runCommand } = Command;
 
 import Logger from '../auxiliary/logger.js';
@@ -70,17 +70,17 @@ export namespace CommandsKill {
      * @since 0.0.1
      */
     export async function killTask({ taskName }:
-        { taskName: string }): Promise<string | null> {
+        { taskName: string }): Promise<CommandResult> {
 
         if (IS_WINDOWS) {
             const command: string = TASKKILL_BIN;
             const parameters: string[] = ['/f', '/im', taskName];
-            const result: string | null = await runCommand({ command, parameters });
+            const result: CommandResult = await runCommand({ command, parameters });
             return result;
         } else {
             const command: string = 'pkill';
             const parameters: string[] = ['-9', '-f', taskName];
-            const result: string | null = await runCommand({ command, parameters, shell: false });
+            const result: CommandResult = await runCommand({ command, parameters, shell: false });
             return result;
         }
     }
