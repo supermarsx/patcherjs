@@ -58,6 +58,7 @@ beforeAll(async () => {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  process.exitCode = undefined;
 });
 
 describe('Patcher.runFunction', () => {
@@ -71,10 +72,9 @@ describe('Patcher.runFunction', () => {
     expect(Patches.default.runPatches).toHaveBeenCalledWith({ configuration: config });
   });
 
-  test('logs error when unknown function is provided', async () => {
+  test('throws when unknown function is provided', async () => {
     const config = ConfigurationDefaults.getDefaultConfigurationObject();
-    await Patcher.runFunction({ configuration: config, functionName: 'bad' });
-    expect(Debug.default.log).toHaveBeenCalled();
+    await expect(Patcher.runFunction({ configuration: config, functionName: 'bad' })).rejects.toThrow('Unknown function');
   });
 });
 
@@ -102,6 +102,36 @@ describe('Patcher.runPatcher', () => {
     Configuration.default.readConfigurationFile.mockResolvedValue(config);
     await Patcher.runPatcher({ configFilePath: 'cfg.json', waitForExit: false });
     expect(Console.default.waitForKeypress).not.toHaveBeenCalled();
+  });
+
+  test('rejects and sets exit code when a command fails', async () => {
+    const config = ConfigurationDefaults.getDefaultConfigurationObject();
+    config.options.general.onlyPackingMode = false;
+    config.options.general.runningOrder = [Constants.COMP_COMMANDS];
+    Commands.default.runCommands.mockRejectedValue(new Error('cmd fail'));
+    Configuration.default.readConfigurationFile.mockResolvedValue(config);
+    await expect(Patcher.runPatcher({ configFilePath: 'cfg.json', waitForExit: false })).rejects.toThrow('cmd fail');
+    expect(process.exitCode).toBe(1);
+  });
+
+  test('rejects and sets exit code when a filedrop fails', async () => {
+    const config = ConfigurationDefaults.getDefaultConfigurationObject();
+    config.options.general.onlyPackingMode = false;
+    config.options.general.runningOrder = [Constants.COMP_FILEDROPS];
+    Filedrops.default.runFiledrops.mockRejectedValue(new Error('fd fail'));
+    Configuration.default.readConfigurationFile.mockResolvedValue(config);
+    await expect(Patcher.runPatcher({ configFilePath: 'cfg.json', waitForExit: false })).rejects.toThrow('fd fail');
+    expect(process.exitCode).toBe(1);
+  });
+
+  test('rejects and sets exit code when a patch fails', async () => {
+    const config = ConfigurationDefaults.getDefaultConfigurationObject();
+    config.options.general.onlyPackingMode = false;
+    config.options.general.runningOrder = [Constants.COMP_PATCHES];
+    Patches.default.runPatches.mockRejectedValue(new Error('patch fail'));
+    Configuration.default.readConfigurationFile.mockResolvedValue(config);
+    await expect(Patcher.runPatcher({ configFilePath: 'cfg.json', waitForExit: false })).rejects.toThrow('patch fail');
+    expect(process.exitCode).toBe(1);
   });
 });
 

@@ -55,6 +55,7 @@ export namespace Patcher {
         configFilePath?: string,
         waitForExit?: boolean
     }): Promise<void> {
+        let failed = false;
         try {
             const configuration: ConfigurationObject = await readConfigurationFile({ filePath: configFilePath });
             await runGeneralChecksAndInit({ configuration });
@@ -67,9 +68,16 @@ export namespace Patcher {
                     await runFunction({ configuration, functionName: nextFunction });
             }
         } catch (error) {
+            failed = true;
+            process.exitCode = 1;
             logError(`There was an error running patcher: ${error}`);
+            throw error;
         } finally {
-            logSuccess(`Patcher finished running`);
+            if (failed)
+                logError(`Patcher finished with errors`);
+            else
+                logSuccess(`Patcher finished running`);
+
             if (waitForExit) {
                 logInfo(`Press any key to close application...`);
                 await waitForKeypress();
@@ -127,7 +135,7 @@ export namespace Patcher {
             }
         } catch (error) {
             logError(`Failed to process function ${error}`);
-            return;
+            throw error;
         }
     }
 
