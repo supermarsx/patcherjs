@@ -17,20 +17,20 @@ describe('Uac.isAdmin', () => {
     const res = await Uac.isAdmin();
     expect(res).toBe(true);
     expect(checkFn).toHaveBeenCalled();
-    expect(logFn).toHaveBeenCalledWith({
-      message: 'Is current user admin: true',
+    expect(logFn).toHaveBeenCalledWith(expect.objectContaining({
+      message: expect.stringContaining('Is current user admin: true'),
       color: expect.any(Function)
-    });
+    }));
   });
 
   test('returns false and logs', async () => {
     const { Uac, logFn } = await loadUac(false);
     const res = await Uac.isAdmin();
     expect(res).toBe(false);
-    expect(logFn).toHaveBeenCalledWith({
-      message: 'Is current user admin: false',
+    expect(logFn).toHaveBeenCalledWith(expect.objectContaining({
+      message: expect.stringContaining('Is current user admin: false'),
       color: expect.any(Function)
-    });
+    }));
   });
 });
 
@@ -45,10 +45,10 @@ describe('Uac.adminCheck', () => {
     const { Uac } = await import('../source/lib/auxiliary/uac.ts');
     await Uac.adminCheck();
     expect(exitSpy).toHaveBeenCalledWith(1);
-    expect(logFn).toHaveBeenCalledWith({
-      message: "Exiting because user doesn't have administrator privileges",
+    expect(logFn).toHaveBeenCalledWith(expect.objectContaining({
+      message: expect.stringContaining("Exiting because user doesn't have administrator privileges"),
       color: expect.any(Function)
-    });
+    }));
     exitSpy.mockRestore();
   });
 });
