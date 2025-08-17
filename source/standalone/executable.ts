@@ -21,4 +21,9 @@ const argv = yargs(hideBin(process.argv))
   .parseSync();
 
 /** Just run the patcher */
-runPatcher({ configFilePath: argv.config as string | undefined });
+try {
+  await runPatcher({ configFilePath: argv.config as string | undefined });
+} catch (error) {
+  console.error(error);
+  process.exitCode = 1;
+}
