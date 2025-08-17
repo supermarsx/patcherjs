@@ -127,13 +127,13 @@ export namespace Configuration {
             else
                 logSuccess(`Configuration file read successfully`);
             const configObject: unknown = JSON.parse(fileData);
-            validateConfiguration(configObject);
             const defaultConfig: ConfigurationObject = getDefaultConfigurationObject();
             const mergedConfig = mergeWithDefaults<ConfigurationObject>(defaultConfig, configObject as DeepPartial<ConfigurationObject>);
+            validateConfiguration(mergedConfig);
             return mergedConfig;
         } catch (error: any) {
             logError(`An error has occurred: ${error}`);
-            if (error instanceof Error && error.name === 'ValidationError')
+            if (error instanceof SyntaxError || (error instanceof Error && error.name === 'ValidationError'))
                 throw error;
             const emptyConfig: ConfigurationObject = getDefaultConfigurationObject();
             return emptyConfig;

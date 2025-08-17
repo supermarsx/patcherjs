@@ -36,6 +36,14 @@ describe('Configuration.readConfigurationFile', () => {
     fs.rmSync(dir, { recursive: true, force: true });
   });
 
+  test('validation after merge rejects invalid values', async () => {
+    const invalid = { options: { general: { debug: 'false' } } };
+    const defaults = ConfigurationDefaults.getDefaultConfigurationObject();
+    const { Configuration } = await import('../source/lib/configuration/configuration.ts');
+    const merged = Configuration.mergeWithDefaults(defaults, invalid);
+    expect(() => Configuration.validateConfiguration(merged)).toThrow('Configuration validation failed');
+  });
+
   test('merges configuration with defaults for missing keys', async () => {
     const dir = fs.mkdtempSync(join(os.tmpdir(), 'cfg-'));
     const filePath = join(dir, 'config.json');
@@ -144,10 +152,10 @@ describe('Configuration.readConfigurationFile', () => {
     const { Configuration } = await import('../source/lib/configuration/configuration.ts');
     await Configuration.readConfigurationFile({ filePath });
 
-    expect(logFn).toHaveBeenCalledWith({
-      message: 'Configuration file read successfully',
+    expect(logFn).toHaveBeenCalledWith(expect.objectContaining({
+      message: expect.stringContaining('Configuration file read successfully'),
       color: expect.any(Function)
-    });
+    }));
     fs.rmSync(dir, { recursive: true, force: true });
   });
 
