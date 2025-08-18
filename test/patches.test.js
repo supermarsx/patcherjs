@@ -10,6 +10,7 @@ const bigPatchPath = join(patchDir, 'big.patch');
 const multiPatchPath = join(patchDir, 'multi.patch');
 const endPatchPath = join(patchDir, 'end.patch');
 const overflowPatchPath = join(patchDir, 'overflow.patch');
+const mismatchPatchPath = join(patchDir, 'mismatch.patch');
 const testBinPath = join('test', 'tmp.bin');
 
 describe('Patches.runPatches', () => {
@@ -27,6 +28,7 @@ describe('Patches.runPatches', () => {
     ].join('\n'));
     fs.writeFileSync(endPatchPath, '00000001: 01 aa\n');
     fs.writeFileSync(overflowPatchPath, '00000002: 00 ff\n');
+    fs.writeFileSync(mismatchPatchPath, '00000000: 01 ff\n');
   });
 
   afterAll(() => {
@@ -36,6 +38,7 @@ describe('Patches.runPatches', () => {
     fs.rmSync(multiPatchPath, { force: true });
     fs.rmSync(endPatchPath, { force: true });
     fs.rmSync(overflowPatchPath, { force: true });
+    fs.rmSync(mismatchPatchPath, { force: true });
   });
 
   test('patches a binary file', async () => {
@@ -196,6 +199,25 @@ describe('Patches.runPatches', () => {
     await Patches.runPatches({ configuration: config });
     const data = fs.readFileSync(testBinPath);
     expect(Array.from(data)).toEqual([0x00, 0x01]);
+  });
+
+  test('throws error when previous value does not match and failing is enabled', async () => {
+    const config = ConfigurationDefaults.getDefaultConfigurationObject();
+    fs.writeFileSync(testBinPath, Buffer.from([0x00]));
+    config.patches = [
+      { name: 'mismatch', patchFilename: 'mismatch.patch', fileNamePath: testBinPath, enabled: true }
+    ];
+    const pOpts = config.options.patches;
+    pOpts.backupFiles = false;
+    pOpts.fileSizeCheck = false;
+    pOpts.skipWritingBinary = false;
+    pOpts.warnOnUnexpectedPreviousValue = false;
+    pOpts.failOnUnexpectedPreviousValue = true;
+    pOpts.runPatches = true;
+
+    await expect(Patches.runPatches({ configuration: config })).rejects.toThrow('Found unexpected previous value');
+    const data = fs.readFileSync(testBinPath);
+    expect(data[0]).toBe(0x00);
   });
 
   test('disabled patches are skipped', async () => {
