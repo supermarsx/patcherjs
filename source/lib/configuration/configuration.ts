@@ -131,8 +131,9 @@ export namespace Configuration {
             const mergedConfig = mergeWithDefaults<ConfigurationObject>(defaultConfig, configObject as DeepPartial<ConfigurationObject>);
             validateConfiguration(mergedConfig);
             return mergedConfig;
-        } catch (error: any) {
-            logError(`An error has occurred: ${error}`);
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            logError(`An error has occurred: ${errorMessage}`);
             if (error instanceof SyntaxError || (error instanceof Error && error.name === 'ValidationError'))
                 throw error;
             const emptyConfig: ConfigurationObject = getDefaultConfigurationObject();
