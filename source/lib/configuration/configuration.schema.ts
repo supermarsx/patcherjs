@@ -1,3 +1,6 @@
+import Constants from './constants.js';
+const { COMPONENTS, COMMAND_TYPES } = Constants;
+
 export const configurationSchema = {
     type: 'object',
     properties: {
@@ -10,8 +13,8 @@ export const configurationSchema = {
                         exitOnNonAdmin: { type: 'boolean' },
                         debug: { type: 'boolean' },
                         logging: { type: 'boolean' },
-                        runningOrder: { type: 'array', items: { type: 'string' } },
-                        commandsOrder: { type: 'array', items: { type: 'string' } },
+                        runningOrder: { type: 'array', items: { type: 'string', enum: Object.values(COMPONENTS) } },
+                        commandsOrder: { type: 'array', items: { type: 'string', enum: Object.values(COMMAND_TYPES) } },
                         onlyPackingMode: { type: 'boolean' }
                     },
                     additionalProperties: true

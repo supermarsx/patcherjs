@@ -1,6 +1,8 @@
 import {
     ConfigurationObject
 } from './configuration.types.js';
+import Constants from './constants.js';
+const { COMPONENTS, COMMAND_TYPES } = Constants;
 
 export namespace ConfigurationDefaults {
     /**
@@ -21,15 +23,15 @@ export namespace ConfigurationDefaults {
                     debug: true,
                     logging: false,
                     runningOrder: [
-                        "commands",
-                        "filedrops",
-                        "patches"
+                        COMPONENTS.COMMANDS,
+                        COMPONENTS.FILEDROPS,
+                        COMPONENTS.PATCHES
                     ],
                     commandsOrder: [
-                        "tasks",
-                        "services",
-                        "kill",
-                        "general"
+                        COMMAND_TYPES.TASKS,
+                        COMMAND_TYPES.SERVICES,
+                        COMMAND_TYPES.KILL,
+                        COMMAND_TYPES.GENERAL
                     ],
                     onlyPackingMode: false,
                     progressInterval: 0

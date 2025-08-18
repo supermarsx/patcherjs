@@ -17,12 +17,9 @@ import {
     ConfigurationObject
 } from '../configuration/configuration.types.js';
 
-import Constants from '../configuration/constants.js';
+import Constants, { type CommandType } from '../configuration/constants.js';
 const {
-    COMM_GENERAL,
-    COMM_KILL,
-    COMM_SERVICES,
-    COMM_TASKS
+    COMMAND_TYPES
 } = Constants;
 
 export * from './command.js';
@@ -69,25 +66,20 @@ export namespace Commands {
      * @returns Nada
      * @since 0.0.1
      */
+    const commandMap: Record<CommandType, (p: { configuration: ConfigurationObject }) => Promise<void>> = {
+        [COMMAND_TYPES.TASKS]: runCommandsTaskScheduler,
+        [COMMAND_TYPES.SERVICES]: runCommandsServices,
+        [COMMAND_TYPES.KILL]: runCommandsKill,
+        [COMMAND_TYPES.GENERAL]: runCommandsGeneral
+    };
+
     async function runCommandType({ configuration, functionName }:
-        { configuration: ConfigurationObject, functionName: string }): Promise<void> {
+        { configuration: ConfigurationObject, functionName: CommandType }): Promise<void> {
         try {
-            switch (functionName) {
-                case COMM_TASKS:
-                    await runCommandsTaskScheduler({ configuration });
-                    break;
-                case COMM_SERVICES:
-                    await runCommandsServices({ configuration });
-                    break;
-                case COMM_KILL:
-                    await runCommandsKill({ configuration });
-                    break;
-                case COMM_GENERAL:
-                    await runCommandsGeneral({ configuration });
-                    break;
-                default:
-                    throw new Error(`Unknown command type: ${functionName}`);
-            }
+            const fn = commandMap[functionName];
+            if (!fn)
+                throw new Error(`Unknown command type: ${functionName}`);
+            await fn({ configuration });
         } catch (error) {
             logError(`Failed to process command type ${error}`);
         }
