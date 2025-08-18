@@ -104,6 +104,7 @@ export namespace Patches {
                 logInfo(`Skipping writing binary file due to options`);
         } catch (error) {
             logError(`An error has ocurred running the patch ${error}`);
+            throw error;
         }
     }
 
