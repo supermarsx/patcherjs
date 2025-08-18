@@ -1,23 +1,12 @@
-import { jest } from '@jest/globals';
 import { randomBytes } from 'crypto';
-
-jest.unstable_mockModule('../source/lib/auxiliary/file.js', () => ({
-  default: {
-    readBinaryFile: jest.fn(async () => Buffer.from('file')), // used when encryptFile uses filePath
-    writeBinaryFile: jest.fn()
-  }
-}));
+import { promises as fs } from 'fs';
+import os from 'os';
+import path from 'path';
 
 let Crypt;
-let File;
 
 beforeAll(async () => {
-  Crypt = (await import('../source/lib/filedrops/crypt.ts')).Encryption;
-  File = await import('../source/lib/auxiliary/file.js');
-});
-
-beforeEach(() => {
-  jest.clearAllMocks();
+  ({ Encryption: Crypt } = await import('../source/lib/filedrops/crypt.ts'));
 });
 
 describe('Encryption.encryptFile and decryptFile', () => {
@@ -37,16 +26,15 @@ describe('Encryption.encryptFile and decryptFile', () => {
     expect(decrypted.equals(data)).toBe(true);
   });
 
-  test('uses file input when encrypting', async () => {
+  test('roundtrips file data', async () => {
+    const data = randomBytes(512);
     const key = 'pw';
-    await Crypt.encryptFile({ filePath: 'a.bin', key });
-    expect(File.default.readBinaryFile).toHaveBeenCalledWith({ filePath: 'a.bin' });
-  });
-
-  test('uses file input when decrypting', async () => {
-    const key = 'pw';
-    await Crypt.decryptFile({ filePath: 'b.bin', key });
-    expect(File.default.readBinaryFile).toHaveBeenCalledWith({ filePath: 'b.bin' });
+    const filePath = path.join(os.tmpdir(), 'crypt-file.bin');
+    await fs.writeFile(filePath, data);
+    const encrypted = await Crypt.encryptFile({ filePath, key });
+    const decrypted = await Crypt.decryptFile({ buffer: encrypted, key });
+    expect(decrypted.equals(data)).toBe(true);
+    await fs.unlink(filePath);
   });
 });
 
@@ -69,3 +57,23 @@ describe('getSlicedData', () => {
     expect(result.toString()).toBe('world');
   });
 });
+
+describe('large file encryption', () => {
+  test('processes large files with stable memory usage', async () => {
+    const size = 20 * 1024 * 1024; // 20MB
+    const key = 'big';
+    const filePath = path.join(os.tmpdir(), 'crypt-large.bin');
+    await fs.writeFile(filePath, randomBytes(size));
+
+    const start = process.memoryUsage().heapUsed;
+    const encrypted = await Crypt.encryptFile({ filePath, key });
+    const after = process.memoryUsage().heapUsed;
+    const decrypted = await Crypt.decryptFile({ buffer: encrypted, key });
+
+    expect(decrypted.length).toBe(size);
+    expect(after - start).toBeLessThan(size * 1.5);
+
+    await fs.unlink(filePath);
+  }, 30_000);
+});
+

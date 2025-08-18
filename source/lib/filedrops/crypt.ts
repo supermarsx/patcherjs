@@ -1,7 +1,7 @@
 import { BinaryLike, createCipheriv, createDecipheriv, randomBytes, pbkdf2Sync, CipherGCM, DecipherGCM, CipherGCMTypes } from 'crypto';
-
-import File from '../auxiliary/file.js';
-const { readBinaryFile } = File;
+import { createReadStream } from 'fs';
+import { open } from 'fs/promises';
+import { Readable } from 'stream';
 
 import Packer from './packer.js';
 const { getFilename } = Packer;
@@ -56,18 +56,18 @@ export namespace Encryption {
         { filePath?: string | undefined, buffer?: Buffer | undefined, key: string }): Promise<Buffer> {
 
         try {
-            let fileData: Buffer;
+            let readStream: Readable;
 
             if (filePath && typeof filePath !== 'undefined' && typeof filePath === 'string') {
                 const filename: string = getFilename({ filePath });
                 logInfo(`Reading file to encrypt ${filename}`);
-                fileData = await readBinaryFile({ filePath });
+                readStream = createReadStream(filePath);
             } else {
                 logInfo(`Reading buffer to encrypt`);
                 if (buffer && typeof buffer !== 'undefined' && Buffer.isBuffer(buffer) === true) {
-                    fileData = buffer;
+                    readStream = Readable.from(buffer);
                 } else {
-                    fileData = createBuffer({ size: 0 });
+                    readStream = Readable.from([]);
                     logWarn(`Encryption will probably fail because buffer is empty`);
                 }
             }
@@ -82,10 +82,11 @@ export namespace Encryption {
 
             logInfo(`Encrypting data`);
 
-            const encryptedData: Buffer = Buffer.concat([
-                cipher.update(fileData),
-                cipher.final()
-            ]);
+            const encryptedChunks: Buffer[] = [];
+            for await (const chunk of readStream) {
+                encryptedChunks.push(cipher.update(chunk as Buffer));
+            }
+            encryptedChunks.push(cipher.final());
 
             const iterationsBuffer: Buffer = Buffer.from(iterations.toString());
             const authTag: Buffer = cipher.getAuthTag();
@@ -109,7 +110,7 @@ export namespace Encryption {
                 iv,
                 authTag,
                 iterationsBuffer,
-                encryptedData
+                ...encryptedChunks
             ]);
 
             return outputDataBuffer;
@@ -135,43 +136,44 @@ export namespace Encryption {
     export async function decryptFile({ filePath, buffer, key }:
         { filePath?: string | undefined, buffer?: Buffer | undefined, key: string }): Promise<Buffer> {
         try {
-            let fileData: Buffer;
+            let headerBuffer: Buffer;
+            let encryptedStream: Readable;
 
             if (filePath && typeof filePath !== 'undefined' && typeof filePath === 'string') {
                 const filename: string = getFilename({ filePath });
                 logInfo(`Reading file to decrypt ${filename}`);
-                fileData = await readBinaryFile({ filePath });
+                const headerSize: number = CRYPTO_BUFFER_SUBSETS.innerEncryptedData.offset;
+                const handle = await open(filePath, 'r');
+                headerBuffer = Buffer.alloc(headerSize);
+                await handle.read(headerBuffer, 0, headerSize, 0);
+                await handle.close();
+                encryptedStream = createReadStream(filePath, { start: headerSize });
             } else {
                 logInfo(`Reading buffer to decrypt`);
                 if (buffer && typeof buffer !== 'undefined' && Buffer.isBuffer(buffer) === true) {
-                    fileData = buffer;
+                    headerBuffer = buffer;
+                    encryptedStream = Readable.from(buffer.subarray(CRYPTO_BUFFER_SUBSETS.innerEncryptedData.offset));
                 } else {
-                    fileData = createBuffer({ size: 0 });
+                    headerBuffer = createBuffer({ size: 0 });
+                    encryptedStream = Readable.from([]);
                     logWarn(`Decryption will probably fail because buffer is empty`);
                 }
             }
 
-            //log({ message: `${truncateBuffer(fileData).toString(`hex`)}`, color: white });
-
-
             const dataPrefix: string = getEncryptedPrefix();
             const bufferSubsets: CryptBufferSubsets = CRYPTO_BUFFER_SUBSETS;
 
-            // const fileDataHexConverted: Buffer = Buffer.from(fileData.toString('hex'));
-
-            const packedPrefixString: string = (getSlicedData({ data: fileData, subsetOptions: bufferSubsets.prefix })).toString();
+            const packedPrefixString: string = (getSlicedData({ data: headerBuffer, subsetOptions: bufferSubsets.prefix })).toString();
             logInfo(`Detected pack prefix: ${packedPrefixString}`);
 
             if (dataPrefix !== packedPrefixString)
                 throw new Error(`May have not be encrypted using patcher`);
 
-            //const encryptedDataBuffer: Buffer = Buffer.from(truncateBuffer({ buffer: Buffer.from(encryptedData.toString(), CRYPTO_ENCODING) }).toString('hex'));
-
-            const salt: Buffer = getSlicedData({ data: fileData, subsetOptions: bufferSubsets.salt });
-            const iv: Buffer = getSlicedData({ data: fileData, subsetOptions: bufferSubsets.iv });
-            const authTag: Buffer = getSlicedData({ data: fileData, subsetOptions: bufferSubsets.authTag });
+            const salt: Buffer = getSlicedData({ data: headerBuffer, subsetOptions: bufferSubsets.salt });
+            const iv: Buffer = getSlicedData({ data: headerBuffer, subsetOptions: bufferSubsets.iv });
+            const authTag: Buffer = getSlicedData({ data: headerBuffer, subsetOptions: bufferSubsets.authTag });
             const algorithm: CipherGCMTypes = CRYPTO_ALG;
-            const iterations: Buffer = getSlicedData({ data: fileData, subsetOptions: bufferSubsets.iterations });
+            const iterations: Buffer = getSlicedData({ data: headerBuffer, subsetOptions: bufferSubsets.iterations });
 
             const iterationsInt = parseInt(iterations.toString(), 10);
 
@@ -179,8 +181,6 @@ export namespace Encryption {
             logInfo(`Detected IV: (${iv.byteLength}) ${iv.toString(`hex`)}`);
             logInfo(`Detected authTag: (${authTag.byteLength}) ${authTag.toString(`hex`)}`);
             logInfo(`Detected iterations: ${iterationsInt}`);
-
-            const innerEncryptedData: Buffer = getSlicedData({ data: fileData, subsetOptions: bufferSubsets.innerEncryptedData });
 
             const decryptionKey: Buffer = deriveKeyFromPassword({ password: key, salt: salt, iterations: iterationsInt });
 
@@ -191,18 +191,17 @@ export namespace Encryption {
                 logInfo(`Decryption key derived`);
             }
 
-            logInfo(`Inner encrypted data length: ${innerEncryptedData.byteLength}`);
-
             const decipher: DecipherGCM = createDecipheriv(algorithm, decryptionKey, iv);
             decipher.setAuthTag(authTag);
 
             logInfo(`Decrypting data`);
-            const decryptedData: Buffer = Buffer.concat([
-                decipher.update(innerEncryptedData),
-                decipher.final()
-            ]);
+            const decryptedChunks: Buffer[] = [];
+            for await (const chunk of encryptedStream) {
+                decryptedChunks.push(decipher.update(chunk as Buffer));
+            }
+            decryptedChunks.push(decipher.final());
 
-            return decryptedData;
+            return Buffer.concat(decryptedChunks);
         } catch (error) {
             logError(`There was an error decrypting: ${error}`);
             return createBuffer({ size: 0 });
