@@ -1,4 +1,5 @@
 import { Parser, ParserWrappers } from '../source/lib/patches/parser.ts';
+import { PatchParseError } from '../source/lib/errors/index.ts';
 import fs from 'fs';
 import { join } from 'path';
 
@@ -74,10 +75,9 @@ describe('Parser.parsePatchFile', () => {
     ]);
   });
 
-  test('returns empty array for unsupported patch size', async () => {
+  test('throws for unsupported patch size', async () => {
     const data = '00000000: 000 01';
-    const patches = await Parser.parsePatchFile({ fileData: data });
-    expect(patches).toEqual([]);
+    await expect(Parser.parsePatchFile({ fileData: data })).rejects.toThrow(PatchParseError);
   });
 
   test('parses comments and empty lines identically to streaming parser', async () => {
