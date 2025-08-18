@@ -221,10 +221,10 @@ export namespace Encryption {
      * @returns Buffer containing the sliced data
      * @since 0.0.1
      */
-    function getSlicedData({ data, subsetOptions }:
+    export function getSlicedData({ data, subsetOptions }:
         { data: Buffer, subsetOptions: SubsetOptionsObject }): Buffer {
         const { offset, bytes } = subsetOptions;
-        const sanitizedBytes: number = parseInt(bytes ? bytes.toString() : data.byteLength.toString());
+        const sanitizedBytes: number = bytes ?? data.byteLength;
         const limit: number = Math.min(offset + sanitizedBytes, data.length);
         logInfo(`reading offset at ${offset}, ${limit} bytes`);
         if (offset >= data.length)
