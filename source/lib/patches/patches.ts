@@ -79,7 +79,13 @@ export namespace Patches {
 
             await prepatchChecksAndRoutines({ patchOptions, patch });
             const patchFilePath: string = join(PATCHES_BASEPATH, patch.patchFilename);
-            const patchData: PatchArray = await parsePatchFile({ filePath: patchFilePath, useStream: patchOptions.streamingParser });
+            let patchData: PatchArray;
+            try {
+                patchData = await parsePatchFile({ filePath: patchFilePath, useStream: patchOptions.streamingParser });
+            } catch (error) {
+                logError(`Failed to parse patch file ${patchFilePath}: ${error}`);
+                throw error;
+            }
             const filePath: string = resolveEnvPath({ path: patch.fileNamePath });
 
             const fileSize: number = await getFileSizeUsingPath({ filePath });

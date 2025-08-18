@@ -80,7 +80,9 @@ export namespace Parser {
             return patches;
         } catch (error: any) {
             logError(`An error has occurred: ${error}`);
-            return [];
+            if (error instanceof PatchParseError)
+                throw error;
+            throw new PatchParseError(error?.message ?? String(error));
         }
     }
 
@@ -112,8 +114,9 @@ export namespace Parser {
             return patches;
         } catch (error: any) {
             logError(`An error has occurred: ${error}`);
-            const emptyPatchArray: PatchArray = [];
-            return emptyPatchArray;
+            if (error instanceof PatchParseError)
+                throw error;
+            throw new PatchParseError(error?.message ?? String(error));
         }
     }
 
