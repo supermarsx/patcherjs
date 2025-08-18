@@ -27,15 +27,11 @@ import {
     ConfigurationObject
 } from './configuration/configuration.types.js';
 
-import Constants from './configuration/constants.js';
+import Constants, { type Component } from './configuration/constants.js';
 const {
-    COMP_COMMANDS,
-    COMP_FILEDROPS,
-    COMP_PATCHES,
+    COMPONENTS,
     CONFIG_FILEPATH
 } = Constants;
-
-import type { CompositeName } from './composites.types.js';
 
 export namespace Patcher {
     /**
@@ -119,22 +115,19 @@ export namespace Patcher {
      * @returns Nada
      * @since 0.0.1
      */
+    const compositeMap: Record<Component, (p: { configuration: ConfigurationObject }) => Promise<void>> = {
+        [COMPONENTS.COMMANDS]: runCommands,
+        [COMPONENTS.FILEDROPS]: runFiledrops,
+        [COMPONENTS.PATCHES]: runPatches
+    };
+
     export async function runFunction({ configuration, functionName }:
-        { configuration: ConfigurationObject, functionName: CompositeName }): Promise<void> {
+        { configuration: ConfigurationObject, functionName: Component }): Promise<void> {
         try {
-            switch (functionName) {
-                case COMP_COMMANDS:
-                    await runCommands({ configuration });
-                    break;
-                case COMP_FILEDROPS:
-                    await runFiledrops({ configuration });
-                    break;
-                case COMP_PATCHES:
-                    await runPatches({ configuration });
-                    break;
-                default:
-                    throw new Error(`Unknown function: ${functionName}`);
-            }
+            const fn = compositeMap[functionName];
+            if (!fn)
+                throw new Error(`Unknown function: ${functionName}`);
+            await fn({ configuration });
         } catch (error) {
             logError(`Failed to process function ${error}`);
             throw error;

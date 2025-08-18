@@ -6,8 +6,6 @@ import {
     CryptBufferSubsets
 } from '../filedrops/crypt.types.js';
 
-import type { CompositeName } from '../composites.types.js';
-
 const { floor, random } = Math;
 
 namespace Constants {
@@ -68,15 +66,19 @@ namespace Constants {
     export const CONFIG_ENCODING: BufferEncoding = `utf-8`;
 
     // COMPOSITES
-    export const COMP_COMMANDS: CompositeName = `commands`;
-    export const COMP_FILEDROPS: CompositeName = `filedrops`;
-    export const COMP_PATCHES: CompositeName = `patches`;
+    export const COMPONENTS = {
+        COMMANDS: `commands`,
+        FILEDROPS: `filedrops`,
+        PATCHES: `patches`
+    } as const;
 
-    // COMMANDS
-    export const COMM_TASKS: string = `tasks`;
-    export const COMM_KILL: string = `kill`;
-    export const COMM_SERVICES: string = `services`;
-    export const COMM_GENERAL: string = `general`;
+    // COMMAND TYPES
+    export const COMMAND_TYPES = {
+        TASKS: `tasks`,
+        KILL: `kill`,
+        SERVICES: `services`,
+        GENERAL: `general`
+    } as const;
 
     // PATCHES
     export const PATCHES_BACKUPEXT: string = `.bak`;
@@ -125,5 +127,8 @@ namespace Constants {
         }
     };
 }
+
+export type Component = typeof Constants.COMPONENTS[keyof typeof Constants.COMPONENTS];
+export type CommandType = typeof Constants.COMMAND_TYPES[keyof typeof Constants.COMMAND_TYPES];
 
 export default Constants;

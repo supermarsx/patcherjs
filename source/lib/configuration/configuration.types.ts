@@ -1,4 +1,4 @@
-import type { CompositeName } from '../composites.types.js';
+import type { Component, CommandType } from './constants.js';
 
 /**
  * Configuration object type, configuration read from `config.json` file
@@ -9,8 +9,8 @@ export type ConfigurationObject = {
             exitOnNonAdmin: boolean,
             debug: boolean,
             logging: boolean,
-            runningOrder: CompositeName[] | [],
-            commandsOrder: string[] | [],
+            runningOrder: Component[] | [],
+            commandsOrder: CommandType[] | [],
             onlyPackingMode: boolean,
             /** Interval for emitting progress messages during patching */
             progressInterval: number
