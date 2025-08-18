@@ -49,3 +49,23 @@ describe('Encryption.encryptFile and decryptFile', () => {
     expect(File.default.readBinaryFile).toHaveBeenCalledWith({ filePath: 'b.bin' });
   });
 });
+
+describe('getSlicedData', () => {
+  test('slices with explicit bytes', () => {
+    const buffer = Buffer.from('hello world');
+    const result = Crypt.getSlicedData({
+      data: buffer,
+      subsetOptions: { offset: 0, bytes: 5 }
+    });
+    expect(result.toString()).toBe('hello');
+  });
+
+  test('slices to end when bytes omitted', () => {
+    const buffer = Buffer.from('hello world');
+    const result = Crypt.getSlicedData({
+      data: buffer,
+      subsetOptions: { offset: 6 }
+    });
+    expect(result.toString()).toBe('world');
+  });
+});
