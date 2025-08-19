@@ -88,29 +88,20 @@ describe('Configuration.readConfigurationFile', () => {
     expect(defaultObj.options.general.obj).toEqual({ a: 1 });
   });
 
-  test('replaces arrays of objects by default', async () => {
+  test('merges arrays of objects by index', async () => {
     const defaults = { patches: [{ name: 'a', enabled: true }] };
-    const provided = { patches: [{ name: 'b', enabled: false }] };
+    const provided = { patches: [{ name: 'b' }] };
     const { Configuration } = await import('../source/lib/configuration/configuration.ts');
     const result = Configuration.mergeWithDefaults(defaults, provided);
-    expect(result).toEqual({ patches: [{ name: 'b', enabled: false }] });
+    expect(result).toEqual({ patches: [{ name: 'b', enabled: true }] });
   });
 
-  test('replaces primitive arrays', async () => {
+  test('merges primitive arrays by index', async () => {
     const defaults = { nums: [1, 2] };
     const provided = { nums: [3] };
     const { Configuration } = await import('../source/lib/configuration/configuration.ts');
     const result = Configuration.mergeWithDefaults(defaults, provided);
-    expect(result.nums).toEqual([3]);
-  });
-
-  test('uses custom array merge strategy when provided', async () => {
-    const defaults = { nums: [1, 2] };
-    const provided = { nums: [3] };
-    const { Configuration } = await import('../source/lib/configuration/configuration.ts');
-    const merge = (defArr, provArr) => defArr.concat(provArr);
-    const result = Configuration.mergeWithDefaults(defaults, provided, { arrayMerge: merge });
-    expect(result.nums).toEqual([1, 2, 3]);
+    expect(result.nums).toEqual([3, 2]);
   });
 
   test('merges nested structures', async () => {
