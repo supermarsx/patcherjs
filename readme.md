@@ -259,9 +259,8 @@ Patcherjs functions with a configuration json file using the following structure
 
 ```
 When a configuration file is loaded its values are merged with the defaults.
-Arrays in the provided file replace their default counterparts unless a custom
-merge strategy is specified when calling
-`Configuration.mergeWithDefaults`.
+Arrays in the provided file are merged element-wise with their default
+counterparts so missing fields inherit default values.
 Enabling `verifyPatch` causes the patcher to read back each patched region to confirm it was written correctly. This extra disk read can slow patching on large files or when many patches are applied. See [`source/lib/patches/buffer.ts`](./source/lib/patches/buffer.ts) for implementation details.
 
 ## On .patch files

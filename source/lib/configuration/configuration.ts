@@ -54,9 +54,8 @@ export namespace Configuration {
     /**
      * Deeply merges the provided configuration object with the defaults.
      *
-     * Arrays are replaced by the provided array unless a custom merge strategy
-     * is supplied via the `options.arrayMerge` callback. The callback receives
-     * the default and provided arrays and must return the merged array.
+     * Arrays are merged element-wise so that each provided item merges with its
+     * default counterpart.
      *
      * @param defaultObj Default configuration object
      * @param providedObj Optional partial configuration
@@ -65,13 +64,14 @@ export namespace Configuration {
     export function mergeWithDefaults<T>(defaultObj: T, providedObj?: DeepPartial<T>, options: MergeOptions = {}): T {
         if (Array.isArray(defaultObj) || Array.isArray(providedObj)) {
             type Element = T extends Array<infer U> ? U : never;
-            const defaultArray = Array.isArray(defaultObj) ? defaultObj as unknown[] : [];
-            const providedArray = Array.isArray(providedObj) ? providedObj as unknown[] : undefined;
-            const mergedArray = options.arrayMerge
-                ? options.arrayMerge(defaultArray, providedArray ?? [])
-                : (providedArray ?? defaultArray);
-            return (mergedArray as unknown[]).map(item =>
-                mergeWithDefaults<Element>(item as Element, undefined, options)
+            const defaultArray = Array.isArray(defaultObj) ? (defaultObj as unknown[]) : [];
+            const providedArray = Array.isArray(providedObj) ? (providedObj as unknown[]) : undefined;
+            return defaultArray.map((item, i) =>
+                mergeWithDefaults<Element>(
+                    item as Element,
+                    providedArray?.[i] as DeepPartial<Element>,
+                    options
+                )
             ) as unknown as T;
         }
 
