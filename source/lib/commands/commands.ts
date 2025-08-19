@@ -81,7 +81,8 @@ export namespace Commands {
                 throw new Error(`Unknown command type: ${functionName}`);
             await fn({ configuration });
         } catch (error) {
-            logError(`Failed to process command type ${error}`);
+            const msg = error instanceof Error ? error.message : String(error);
+            logError(`Failed to process command type ${msg}`);
         }
     }
 
