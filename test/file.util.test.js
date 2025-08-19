@@ -32,6 +32,18 @@ describe('File utilities', () => {
     fs.rmSync(dir, { recursive: true, force: true });
   });
 
+  test('writeBinaryFile overwrites existing files', async () => {
+    const dir = fs.mkdtempSync(join(os.tmpdir(), 'fileutil-'));
+    const p = join(dir, 'out.bin');
+    const buf1 = Buffer.from([1, 2, 3, 4]);
+    const buf2 = Buffer.from([5, 6]);
+    await File.writeBinaryFile({ filePath: p, buffer: buf1 });
+    await File.writeBinaryFile({ filePath: p, buffer: buf2 });
+    const data = fs.readFileSync(p);
+    expect(data.equals(buf2)).toBe(true);
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+
   test('writeBinaryFile returns 0 on failure', async () => {
     const bytes = await File.writeBinaryFile({ filePath: '/no/path/out.bin', buffer: Buffer.from([1]) });
     expect(bytes).toBe(0);

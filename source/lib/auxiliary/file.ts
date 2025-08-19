@@ -130,8 +130,8 @@ export namespace File {
         let fileHandle: fs.FileHandle | undefined;
         try {
             const fileExists: boolean = await isFileReadable({ filePath });
-            const flags: string = fileExists ? 'r+' : 'a';
-            logInfo(`Opening file path, ${filePath}, in ${fileExists ? 'read/write' : 'append'} mode`);
+            const flags: string = fileExists ? 'r+' : 'w';
+            logInfo(`Opening file path, ${filePath}, in ${fileExists ? 'read/write' : 'write'} mode`);
             fileHandle = await fs.open(filePath, flags);
             if (fileExists) {
                 const originalSize: number = await getFileSize({ fileHandle });
