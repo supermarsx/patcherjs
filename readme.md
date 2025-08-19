@@ -99,6 +99,10 @@ Run the Jest suite with the provided npm script. It builds the TypeScript source
 npm test
 ```
 
+#### Logger configuration
+
+The logger can prefix each message with an ISO timestamp. Enable timestamps by setting the environment variable `LOG_TIMESTAMPS=true` or by calling `Logger.setConfig({ timestamps: true })`. When not enabled, messages are written without a timestamp.
+
 #### Example files
 
 The project comes with an example `.patch` file and a `.dll` file to be packed, these files should be removed and you should add your own files.

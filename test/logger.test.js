@@ -16,7 +16,7 @@ describe('Logger file output', () => {
     const { Logger } = await import('../source/lib/auxiliary/logger.ts');
     const dir = fs.mkdtempSync(join(os.tmpdir(), 'logger-'));
     const file = join(dir, 'out.log');
-    Logger.setConfig({ level: 'info', filePath: file });
+    Logger.setConfig({ level: 'info', filePath: file, timestamps: true });
     Logger.logInfo('hello file');
     expect(fs.existsSync(file)).toBe(false);
     await delay(20);
@@ -30,7 +30,7 @@ describe('Logger file output', () => {
     const { Logger } = await import('../source/lib/auxiliary/logger.ts');
     const dir = fs.mkdtempSync(join(os.tmpdir(), 'logger-'));
     const file = join(dir, 'out.log');
-    Logger.setConfig({ level: 'error', filePath: file });
+    Logger.setConfig({ level: 'error', filePath: file, timestamps: true });
     Logger.logWarn('skip this');
     await delay(20);
     expect(fs.existsSync(file)).toBe(false);
@@ -47,7 +47,7 @@ describe('Logger file output', () => {
     const { Logger } = await import('../source/lib/auxiliary/logger.ts');
     const dir = fs.mkdtempSync(join(os.tmpdir(), 'logger-'));
     const file = join(dir, 'out.log');
-    Logger.setConfig({ filePath: file });
+    Logger.setConfig({ filePath: file, timestamps: true });
     Logger.logInfo('invalid level');
     await delay(20);
     const content = await fs.promises.readFile(file, 'utf8');
@@ -55,16 +55,29 @@ describe('Logger file output', () => {
     fs.rmSync(dir, { recursive: true, force: true });
   });
 
-  test('prepends timestamps', async () => {
+  test('prepends timestamps when enabled', async () => {
     jest.resetModules();
     const { Logger } = await import('../source/lib/auxiliary/logger.ts');
     const dir = fs.mkdtempSync(join(os.tmpdir(), 'logger-'));
     const file = join(dir, 'out.log');
-    Logger.setConfig({ level: 'info', filePath: file });
+    Logger.setConfig({ level: 'info', filePath: file, timestamps: true });
     Logger.logInfo('timed');
     await delay(20);
     const content = await fs.promises.readFile(file, 'utf8');
     expect(content.trim()).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z timed$/);
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+
+  test('logs raw message when timestamps disabled', async () => {
+    jest.resetModules();
+    const { Logger } = await import('../source/lib/auxiliary/logger.ts');
+    const dir = fs.mkdtempSync(join(os.tmpdir(), 'logger-'));
+    const file = join(dir, 'out.log');
+    Logger.setConfig({ level: 'info', filePath: file, timestamps: false });
+    Logger.logInfo('plain');
+    await delay(20);
+    const content = await fs.promises.readFile(file, 'utf8');
+    expect(content.trim()).toBe('plain');
     fs.rmSync(dir, { recursive: true, force: true });
   });
 });
