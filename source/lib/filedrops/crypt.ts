@@ -1,6 +1,6 @@
 import { BinaryLike, createCipheriv, createDecipheriv, randomBytes, pbkdf2Sync, CipherGCM, DecipherGCM, CipherGCMTypes } from 'crypto';
 import { createReadStream } from 'fs';
-import { open } from 'fs/promises';
+import { open, type FileHandle } from 'fs/promises';
 import { Readable } from 'stream';
 
 import Packer from './packer.js';
@@ -143,10 +143,14 @@ export namespace Encryption {
                 const filename: string = getFilename({ filePath });
                 logInfo(`Reading file to decrypt ${filename}`);
                 const headerSize: number = CRYPTO_BUFFER_SUBSETS.innerEncryptedData.offset;
-                const handle = await open(filePath, 'r');
-                headerBuffer = Buffer.alloc(headerSize);
-                await handle.read(headerBuffer, 0, headerSize, 0);
-                await handle.close();
+                let handle: FileHandle | undefined;
+                try {
+                    handle = await open(filePath, 'r');
+                    headerBuffer = Buffer.alloc(headerSize);
+                    await handle.read(headerBuffer, 0, headerSize, 0);
+                } finally {
+                    await handle?.close();
+                }
                 encryptedStream = createReadStream(filePath, { start: headerSize });
             } else {
                 logInfo(`Reading buffer to decrypt`);
