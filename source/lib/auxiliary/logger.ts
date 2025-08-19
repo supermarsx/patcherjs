@@ -29,6 +29,7 @@ function getLogLevel(level?: string): LogLevel {
 let config: LoggerConfig = {
     level: getLogLevel(process.env.LOG_LEVEL),
     filePath: process.env.LOG_FILEPATH,
+    // include ISO timestamps only when explicitly enabled
     timestamps: process.env.LOG_TIMESTAMPS === 'true'
 };
 
@@ -52,7 +53,9 @@ function writeToFile(line: string): void {
 
 function logMessage(level: LogLevel, message: string, color: (text: string) => string): void {
     if (!shouldLog(level)) return;
-    const line = `${new Date().toISOString()} ${message}`;
+    const line = config.timestamps
+        ? `${new Date().toISOString()} ${message}`
+        : message;
     log({ message: line, color });
     writeToFile(line);
 }
