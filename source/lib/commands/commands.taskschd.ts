@@ -86,7 +86,7 @@ export namespace CommandsTaskscheduler {
     export async function remove({ taskName }:
         { taskName: string }): Promise<CommandResult> {
         const command: string = TASKSCHD_BIN;
-        const parametersMap: { [key: string]: string[] } = {
+        const parametersMap: Partial<Record<NodeJS.Platform, string[]>> = {
             win32: ['/delete', '/f', '/tn', taskName],
             darwin: ['remove', taskName],
             linux: ['disable', '--now', taskName]
@@ -95,8 +95,7 @@ export namespace CommandsTaskscheduler {
         if (!parameters) {
             throw new Error(`Unsupported platform for remove: ${process.platform}`);
         }
-        const result: CommandResult = await runCommand({ command, parameters });
-        return result;
+        return await runCommand({ command, parameters });
     }
 
     /**
@@ -113,7 +112,7 @@ export namespace CommandsTaskscheduler {
     export async function stop({ taskName }:
         { taskName: string }): Promise<CommandResult> {
         const command: string = TASKSCHD_BIN;
-        const parametersMap: { [key: string]: string[] } = {
+        const parametersMap: Partial<Record<NodeJS.Platform, string[]>> = {
             win32: ['/end', '/tn', taskName],
             darwin: ['stop', taskName],
             linux: ['stop', taskName]
@@ -122,8 +121,7 @@ export namespace CommandsTaskscheduler {
         if (!parameters) {
             throw new Error(`Unsupported platform for stop: ${process.platform}`);
         }
-        const result: CommandResult = await runCommand({ command, parameters });
-        return result;
+        return await runCommand({ command, parameters });
     }
 }
 
