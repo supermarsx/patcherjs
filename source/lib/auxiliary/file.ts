@@ -61,7 +61,7 @@ export namespace File {
             return fileData;
         } catch (error: any) {
             logError(`An error has occurred: ${error}`);
-            return '';
+            throw error;
         } finally {
             if (fileHandle) {
                 await fileHandle.close();
@@ -103,7 +103,7 @@ export namespace File {
             return buffer;
         } catch (error: any) {
             logError(`An error has occurred: ${error}`);
-            return createBuffer({ size: 0 });
+            throw error;
         } finally {
             if (fileHandle) {
                 await fileHandle.close();
@@ -153,7 +153,7 @@ export namespace File {
             return bytesWritten;
         } catch (error: any) {
             logError(`An error has occurred: ${error}`);
-            return 0;
+            throw error;
         } finally {
             if (fileHandle) {
                 await fileHandle.close();

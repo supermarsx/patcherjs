@@ -15,9 +15,12 @@ describe('File utilities', () => {
     fs.rmSync(dir, { recursive: true, force: true });
   });
 
-  test('readPatchFile returns empty string on failure', async () => {
-    const res = await File.readPatchFile({ filePath: '/no/such/file' });
-    expect(res).toBe('');
+  test('readPatchFile rejects on failure', async () => {
+    await expect(File.readPatchFile({ filePath: '/no/such/file' })).rejects.toThrow();
+  });
+
+  test('readBinaryFile rejects on failure', async () => {
+    await expect(File.readBinaryFile({ filePath: '/no/such/file' })).rejects.toThrow();
   });
 
   test('writeBinaryFile writes buffers and returns byte count', async () => {
@@ -44,9 +47,10 @@ describe('File utilities', () => {
     fs.rmSync(dir, { recursive: true, force: true });
   });
 
-  test('writeBinaryFile returns 0 on failure', async () => {
-    const bytes = await File.writeBinaryFile({ filePath: '/no/path/out.bin', buffer: Buffer.from([1]) });
-    expect(bytes).toBe(0);
+  test('writeBinaryFile rejects on failure', async () => {
+    await expect(
+      File.writeBinaryFile({ filePath: '/no/path/out.bin', buffer: Buffer.from([1]) })
+    ).rejects.toThrow();
   });
 
   test('backupFile creates a .bak file', async () => {
@@ -168,29 +172,33 @@ describe('writeBinaryFile size logging', () => {
 });
 
 describe('File utilities failure mocks', () => {
-  test('readPatchFile returns empty string when open fails', async () => {
+  test('readPatchFile rejects when open fails', async () => {
+    const dir = fs.mkdtempSync(join(os.tmpdir(), 'fileutil-'));
+    const p = join(dir, 'file.txt');
+    fs.writeFileSync(p, 'data');
     jest.resetModules();
     jest.unstable_mockModule('fs/promises', () => {
       const actual = jest.requireActual('fs/promises');
       return { ...actual, open: jest.fn(async () => { throw new Error('fail'); }) };
     });
     const { File: MockFile } = await import('../source/lib/auxiliary/file.ts');
-    const res = await MockFile.readPatchFile({ filePath: 'any' });
-    expect(res).toBe('');
+    await expect(MockFile.readPatchFile({ filePath: p })).rejects.toThrow('fail');
+    fs.rmSync(dir, { recursive: true, force: true });
   });
 
-  test('writeBinaryFile returns 0 when open fails', async () => {
+  test('writeBinaryFile rejects when open fails', async () => {
     jest.resetModules();
     jest.unstable_mockModule('fs/promises', () => {
       const actual = jest.requireActual('fs/promises');
       return { ...actual, open: jest.fn(async () => { throw new Error('fail'); }) };
     });
     const { File: MockFile } = await import('../source/lib/auxiliary/file.ts');
-    const bytes = await MockFile.writeBinaryFile({ filePath: 'any', buffer: Buffer.from([1]) });
-    expect(bytes).toBe(0);
+    await expect(
+      MockFile.writeBinaryFile({ filePath: 'any', buffer: Buffer.from([1]) })
+    ).rejects.toThrow('fail');
   });
 
-  test('readPatchFile closes handle when read fails', async () => {
+  test('readPatchFile rejects and closes handle when read fails', async () => {
     const dir = fs.mkdtempSync(join(os.tmpdir(), 'fileutil-'));
     const p = join(dir, 'file.txt');
     fs.writeFileSync(p, 'data');
@@ -208,13 +216,12 @@ describe('File utilities failure mocks', () => {
       };
     });
     const { File: MockFile } = await import('../source/lib/auxiliary/file.ts');
-    const res = await MockFile.readPatchFile({ filePath: p });
-    expect(res).toBe('');
+    await expect(MockFile.readPatchFile({ filePath: p })).rejects.toThrow('fail');
     expect(mockClose).toHaveBeenCalled();
     fs.rmSync(dir, { recursive: true, force: true });
   });
 
-  test('readBinaryFile closes handle when read fails', async () => {
+  test('readBinaryFile rejects and closes handle when read fails', async () => {
     const dir = fs.mkdtempSync(join(os.tmpdir(), 'fileutil-'));
     const p = join(dir, 'file.bin');
     fs.writeFileSync(p, 'data');
@@ -232,13 +239,12 @@ describe('File utilities failure mocks', () => {
       };
     });
     const { File: MockFile } = await import('../source/lib/auxiliary/file.ts');
-    const buf = await MockFile.readBinaryFile({ filePath: p });
-    expect(buf.length).toBe(0);
+    await expect(MockFile.readBinaryFile({ filePath: p })).rejects.toThrow('fail');
     expect(mockClose).toHaveBeenCalled();
     fs.rmSync(dir, { recursive: true, force: true });
   });
 
-  test('writeBinaryFile closes handle when write fails', async () => {
+  test('writeBinaryFile rejects and closes handle when write fails', async () => {
     const dir = fs.mkdtempSync(join(os.tmpdir(), 'fileutil-'));
     const p = join(dir, 'out.bin');
     fs.writeFileSync(p, '');
@@ -250,14 +256,16 @@ describe('File utilities failure mocks', () => {
         ...actual,
         open: jest.fn(async () => ({
           write: jest.fn(async () => { throw new Error('fail'); }),
+          truncate: jest.fn(async () => {}),
           close: mockClose,
           stat: jest.fn(async () => ({ size: 0 }))
         }))
       };
     });
     const { File: MockFile } = await import('../source/lib/auxiliary/file.ts');
-    const bytes = await MockFile.writeBinaryFile({ filePath: p, buffer: Buffer.from([1]) });
-    expect(bytes).toBe(0);
+    await expect(
+      MockFile.writeBinaryFile({ filePath: p, buffer: Buffer.from([1]) })
+    ).rejects.toThrow('fail');
     expect(mockClose).toHaveBeenCalled();
     fs.rmSync(dir, { recursive: true, force: true });
   });
