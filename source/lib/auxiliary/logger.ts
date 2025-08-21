@@ -53,9 +53,7 @@ function writeToFile(line: string): void {
 
 function logMessage(level: LogLevel, message: string, color: (text: string) => string): void {
     if (!shouldLog(level)) return;
-    const line = config.timestamps
-        ? `${new Date().toISOString()} ${message}`
-        : message;
+    const line = config.timestamps ? `${new Date().toISOString()} ${message}` : message;
     log({ message: line, color });
     writeToFile(line);
 }
