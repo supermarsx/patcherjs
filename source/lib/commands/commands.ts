@@ -105,17 +105,22 @@ export namespace Commands {
                 logInfo(`Running general command ${command.name}: ${command.command}`);
                 const DEFAULT_TIMEOUT = 60_000; // 60 seconds
                 const timeout = command.timeout ?? DEFAULT_TIMEOUT;
-                const { stdout, stderr, exitCode } = await runCommand({
-                    command: command.command,
-                    parameters: [],
-                    timeout,
-                    cwd: command.cwd
-                });
-                if (stdout)
-                    logInfo(stdout);
-                if (stderr)
-                    logError(stderr);
-                logInfo(`Command exited with code ${exitCode}`);
+                try {
+                    const { stdout, stderr, exitCode } = await runCommand({
+                        command: command.command,
+                        parameters: [],
+                        timeout,
+                        cwd: command.cwd
+                    });
+                    if (stdout)
+                        logInfo(stdout);
+                    if (stderr)
+                        logError(stderr);
+                    logInfo(`Command exited with code ${exitCode}`);
+                } catch (error) {
+                    const msg = error instanceof Error ? error.message : String(error);
+                    logError(`Failed to execute command ${command.name}: ${msg}`);
+                }
             }
     }
 }
