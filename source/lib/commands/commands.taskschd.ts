@@ -13,10 +13,7 @@ import Constants from '../configuration/constants.js';
 const {
     COMM_TASKS_DELETE,
     COMM_TASKS_STOP,
-    TASKSCHD_BIN,
-    IS_WINDOWS,
-    IS_MACOS,
-    IS_LINUX
+    TASKSCHD_BIN
 } = Constants;
 
 export namespace CommandsTaskscheduler {
@@ -89,13 +86,15 @@ export namespace CommandsTaskscheduler {
     export async function remove({ taskName }:
         { taskName: string }): Promise<CommandResult> {
         const command: string = TASKSCHD_BIN;
-        const parameters: string[] = IS_WINDOWS
-            ? ['/delete', '/f', '/tn', taskName]
-            : IS_MACOS
-                ? ['remove', taskName]
-                : IS_LINUX
-                    ? ['disable', '--now', taskName]
-                    : ['disable', '--now', taskName];
+        const parametersMap: { [key: string]: string[] } = {
+            win32: ['/delete', '/f', '/tn', taskName],
+            darwin: ['remove', taskName],
+            linux: ['disable', '--now', taskName]
+        };
+        const parameters = parametersMap[process.platform];
+        if (!parameters) {
+            throw new Error(`Unsupported platform for remove: ${process.platform}`);
+        }
         const result: CommandResult = await runCommand({ command, parameters });
         return result;
     }
@@ -114,13 +113,15 @@ export namespace CommandsTaskscheduler {
     export async function stop({ taskName }:
         { taskName: string }): Promise<CommandResult> {
         const command: string = TASKSCHD_BIN;
-        const parameters: string[] = IS_WINDOWS
-            ? ['/end', '/tn', taskName]
-            : IS_MACOS
-                ? ['stop', taskName]
-                : IS_LINUX
-                    ? ['stop', taskName]
-                    : ['stop', taskName];
+        const parametersMap: { [key: string]: string[] } = {
+            win32: ['/end', '/tn', taskName],
+            darwin: ['stop', taskName],
+            linux: ['stop', taskName]
+        };
+        const parameters = parametersMap[process.platform];
+        if (!parameters) {
+            throw new Error(`Unsupported platform for stop: ${process.platform}`);
+        }
         const result: CommandResult = await runCommand({ command, parameters });
         return result;
     }

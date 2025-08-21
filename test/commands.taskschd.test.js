@@ -1,25 +1,26 @@
 import { jest } from '@jest/globals';
 import { ConfigurationDefaults } from '../source/lib/configuration/configuration.defaults.ts';
 
+const originalPlatform = process.platform;
+afterEach(() => {
+  Object.defineProperty(process, 'platform', { value: originalPlatform, configurable: true });
+});
+
 async function loadModules(platform) {
   jest.resetModules();
   jest.clearAllMocks();
 
-  const windows = platform === 'win';
-  const mac = platform === 'mac';
-  const linux = platform === 'linux';
+  Object.defineProperty(process, 'platform', { value: platform, configurable: true });
+
   const constants = {
     COMM_TASKS_DELETE: 'delete',
     COMM_TASKS_STOP: 'stop',
     COMM_SERVICES_STOP: 'stop',
     COMM_SERVICES_DISABLE: 'disable',
     COMM_SERVICES_REMOVE: 'delete',
-    TASKSCHD_BIN: windows ? 'schtasks.exe' : mac ? 'launchctl' : 'systemctl',
-    SERVICE_BIN: windows ? 'sc.exe' : mac ? 'launchctl' : 'systemctl',
-    TASKKILL_BIN: windows ? 'taskkill.exe' : 'kill',
-    IS_WINDOWS: windows,
-    IS_MACOS: mac,
-    IS_LINUX: linux
+    TASKSCHD_BIN: platform === 'win32' ? 'schtasks.exe' : platform === 'darwin' ? 'launchctl' : 'systemctl',
+    SERVICE_BIN: platform === 'win32' ? 'sc.exe' : platform === 'darwin' ? 'launchctl' : 'systemctl',
+    TASKKILL_BIN: platform === 'win32' ? 'taskkill.exe' : 'kill'
   };
 
   jest.unstable_mockModule('../source/lib/configuration/constants.js', () => ({
@@ -41,7 +42,7 @@ const stopAliases = ['stop'];
 
 describe('CommandsTaskscheduler parameter builders', () => {
   test.each(removeAliases)('remove alias %s on Windows', async (fn) => {
-    const { CommandsTaskscheduler, Command } = await loadModules('win');
+    const { CommandsTaskscheduler, Command } = await loadModules('win32');
     Command.default.runCommand.mockResolvedValue('');
     await CommandsTaskscheduler[fn]({ taskName: 'task' });
     expect(Command.default.runCommand).toHaveBeenLastCalledWith({
@@ -51,7 +52,7 @@ describe('CommandsTaskscheduler parameter builders', () => {
   });
 
   test.each(removeAliases)('remove alias %s on macOS', async (fn) => {
-    const { CommandsTaskscheduler, Command } = await loadModules('mac');
+    const { CommandsTaskscheduler, Command } = await loadModules('darwin');
     Command.default.runCommand.mockResolvedValue('');
     await CommandsTaskscheduler[fn]({ taskName: 'task' });
     expect(Command.default.runCommand).toHaveBeenLastCalledWith({
@@ -71,7 +72,7 @@ describe('CommandsTaskscheduler parameter builders', () => {
   });
 
   test.each(stopAliases)('stop alias %s on Windows', async (fn) => {
-    const { CommandsTaskscheduler, Command } = await loadModules('win');
+    const { CommandsTaskscheduler, Command } = await loadModules('win32');
     Command.default.runCommand.mockResolvedValue('');
     await CommandsTaskscheduler[fn]({ taskName: 'task' });
     expect(Command.default.runCommand).toHaveBeenLastCalledWith({
@@ -81,7 +82,7 @@ describe('CommandsTaskscheduler parameter builders', () => {
   });
 
   test.each(stopAliases)('stop alias %s on macOS', async (fn) => {
-    const { CommandsTaskscheduler, Command } = await loadModules('mac');
+    const { CommandsTaskscheduler, Command } = await loadModules('darwin');
     Command.default.runCommand.mockResolvedValue('');
     await CommandsTaskscheduler[fn]({ taskName: 'task' });
     expect(Command.default.runCommand).toHaveBeenLastCalledWith({
@@ -103,7 +104,7 @@ describe('CommandsTaskscheduler parameter builders', () => {
 
 describe('CommandsTaskscheduler.runCommandsTaskScheduler', () => {
   test('runs only enabled tasks', async () => {
-    const { CommandsTaskscheduler, Command } = await loadModules('win');
+    const { CommandsTaskscheduler, Command } = await loadModules('win32');
     Command.default.runCommand.mockResolvedValue('');
     const cfg = ConfigurationDefaults.getDefaultConfigurationObject();
     cfg.commands.tasks = [
