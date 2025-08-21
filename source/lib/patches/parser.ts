@@ -143,7 +143,14 @@ export namespace Parser {
             const previousNewValueDelimiter = ' ';
 
             const [offsetString, valuesString] = patchLine.split(offsetValuesDelimiter);
+            if (!offsetString || !valuesString)
+                throw new PatchParseError(`Patch at line ${index + 1} is missing offset or values`);
+
             const [previousValueString, newValueString] = valuesString.split(previousNewValueDelimiter);
+            if (!previousValueString || !newValueString)
+                throw new PatchParseError(`Patch at line ${index + 1} is missing previous or new value`);
+            if (previousValueString.length !== newValueString.length)
+                throw new PatchParseError(`Patch at line ${index + 1} previous and new values length mismatch`);
 
             const valueLength = Math.max(previousValueString.length, newValueString.length);
             const byteLength = valueLength / 2;
