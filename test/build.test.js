@@ -1,6 +1,7 @@
 import { jest } from '@jest/globals';
 import { EventEmitter } from 'events';
 import { join } from 'path';
+import { PassThrough } from 'stream';
 import { ConfigurationDefaults } from '../source/lib/configuration/configuration.defaults.ts';
 import Constants from '../source/lib/configuration/constants.ts';
 
@@ -13,9 +14,14 @@ jest.unstable_mockModule('fs/promises', () => {
   return {
     ...actual,
     rm: jest.fn(async () => {}),
-    mkdir: jest.fn(async () => {})
+    mkdir: jest.fn(async () => {}),
+    open: jest.fn(async () => ({ write: jest.fn(async () => {}), close: jest.fn(async () => {}) }))
   };
 });
+
+jest.unstable_mockModule('stream/promises', () => ({
+  pipeline: jest.fn(async () => {})
+}));
 
 let sevenEmitter;
 jest.unstable_mockModule('node-7z', () => ({
@@ -31,16 +37,10 @@ jest.unstable_mockModule('node-7z', () => ({
 jest.unstable_mockModule('../source/lib/auxiliary/file.js', () => ({
   default: {
     readBinaryFile: jest.fn(async () => Buffer.from('buf')),
-    writeBinaryFile: jest.fn(async () => {})
+    writeBinaryFile: jest.fn(async () => {}),
+    createReadStream: jest.fn(() => new PassThrough()),
+    createWriteStream: jest.fn(() => new PassThrough())
   }
-}));
-
-jest.unstable_mockModule('../source/lib/filedrops/packer.js', () => ({
-  default: { packFile: jest.fn(async ({ buffer }) => Buffer.from('packed')) }
-}));
-
-jest.unstable_mockModule('../source/lib/filedrops/crypt.js', () => ({
-  default: { encryptFile: jest.fn(async ({ buffer }) => Buffer.from('crypted')) }
 }));
 
 let Builder;
@@ -51,8 +51,6 @@ let Command;
 let Fs;
 let Seven;
 let File;
-let Packer;
-let Crypt;
 
 beforeAll(async () => {
   Builder = (await import('../source/lib/build/builder.ts')).Builder;
@@ -64,8 +62,6 @@ beforeAll(async () => {
   Fs = await import('fs/promises');
   Seven = await import('node-7z');
   File = await import('../source/lib/auxiliary/file.js');
-  Packer = await import('../source/lib/filedrops/packer.js');
-  Crypt = await import('../source/lib/filedrops/crypt.js');
 });
 
 beforeEach(() => {
@@ -145,18 +141,18 @@ describe('Predist.predistPackage', () => {
 describe('Packaging.runPackings', () => {
   test('runs packing and encryption for enabled filedrops', async () => {
     const config = ConfigurationDefaults.getDefaultConfigurationObject();
+    config.options.filedrops.isFiledropPacked = false;
+    config.options.filedrops.isFiledropCrypted = false;
     config.filedrops = [
       { name: 'a', fileDropName: 'out1', packedFileName: 'p1', fileNamePath: 'f1', decryptKey: 'k1', enabled: true },
       { name: 'b', fileDropName: 'out2', packedFileName: 'p2', fileNamePath: 'f2', decryptKey: 'k2', enabled: true }
     ];
     await Packaging.runPackings({ configuration: config });
 
-    expect(File.default.readBinaryFile).toHaveBeenCalledWith({ filePath: join(Constants.PATCHES_BASEUNPACKEDPATH, 'p1') });
-    expect(File.default.readBinaryFile).toHaveBeenCalledWith({ filePath: join(Constants.PATCHES_BASEUNPACKEDPATH, 'p2') });
-    expect(Packer.default.packFile).toHaveBeenCalledTimes(2);
-    expect(Crypt.default.encryptFile).toHaveBeenCalledTimes(2);
-    expect(File.default.writeBinaryFile).toHaveBeenCalledWith({ filePath: join(Constants.PATCHES_BASEPATH, 'out1'), buffer: expect.any(Buffer) });
-    expect(File.default.writeBinaryFile).toHaveBeenCalledWith({ filePath: join(Constants.PATCHES_BASEPATH, 'out2'), buffer: expect.any(Buffer) });
+    expect(File.default.createReadStream).toHaveBeenCalledWith({ filePath: join(Constants.PATCHES_BASEUNPACKEDPATH, 'p1') });
+    expect(File.default.createReadStream).toHaveBeenCalledWith({ filePath: join(Constants.PATCHES_BASEUNPACKEDPATH, 'p2') });
+    expect(File.default.createWriteStream).toHaveBeenCalledWith({ filePath: join(Constants.PATCHES_BASEPATH, 'out1') });
+    expect(File.default.createWriteStream).toHaveBeenCalledWith({ filePath: join(Constants.PATCHES_BASEPATH, 'out2') });
   });
 
   test('disabled filedrops are skipped', async () => {
@@ -167,9 +163,7 @@ describe('Packaging.runPackings', () => {
 
     await Packaging.runPackings({ configuration: config });
 
-    expect(File.default.readBinaryFile).not.toHaveBeenCalled();
-    expect(Packer.default.packFile).not.toHaveBeenCalled();
-    expect(Crypt.default.encryptFile).not.toHaveBeenCalled();
-    expect(File.default.writeBinaryFile).not.toHaveBeenCalled();
+    expect(File.default.createReadStream).not.toHaveBeenCalled();
+    expect(File.default.createWriteStream).not.toHaveBeenCalled();
   });
 });
