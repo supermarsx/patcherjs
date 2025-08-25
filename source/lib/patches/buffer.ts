@@ -119,6 +119,14 @@ export namespace BufferUtils {
         }
     }
 
+    function patternToBuffer(pattern: Buffer | string | number[]): Buffer {
+        if (Buffer.isBuffer(pattern))
+            return pattern;
+        if (typeof pattern === 'string')
+            return Buffer.from(pattern.replace(/\s+/g, ''), 'hex');
+        return Buffer.from(pattern);
+    }
+
     /**
      * Patch offsets in a large file using fs read/write with position.
      *
@@ -152,23 +160,37 @@ export namespace BufferUtils {
             const stats = await handle!.stat();
             const fileSize: number = Number(stats.size);
             const maxSafe = BigInt(Number.MAX_SAFE_INTEGER);
-            // Sort patches by offset to reduce costly seek operations on large files.
-            // Processing patches sequentially allows the underlying fs implementation
-            // to take advantage of read/write locality which can have a significant
-            // performance impact when patch data is provided out of order. A shallow
-            // copy is sorted so the original array order remains unchanged.
-            const sorted = [...patchData].sort((a, b) => a.offset === b.offset ? 0 : (a.offset < b.offset ? -1 : 1));
+
+            let fileBuffer: Buffer | undefined;
+            if (patchData.some(p => p.pattern !== undefined))
+                fileBuffer = await handle.readFile();
+
+            const resolved: PatchArray = [];
+            for (const patch of patchData) {
+                if (patch.pattern) {
+                    const patternBuf = patternToBuffer(patch.pattern);
+                    const idx = fileBuffer!.indexOf(patternBuf);
+                    if (idx === -1) {
+                        logWarn(`Pattern not found, skipping patch`);
+                        continue;
+                    }
+                    resolved.push({ ...patch, offset: BigInt(idx) });
+                } else if (patch.offset !== undefined)
+                    resolved.push(patch);
+            }
+
+            const sorted = [...resolved].sort((a, b) => a.offset! === b.offset! ? 0 : (a.offset! < b.offset! ? -1 : 1));
             const total: number = sorted.length;
             let processed = 0;
             for (const patch of sorted) {
                 const { offset, previousValue, newValue, byteLength } = patch;
-                if (offset < 0n) {
+                if (offset! < 0n) {
                     logWarn(`Offset ${offset} is negative, skipping patch`);
                     continue;
                 }
-                if (offset > maxSafe)
+                if (offset! > maxSafe)
                     throw new Error(`Offset ${offset} exceeds Number.MAX_SAFE_INTEGER`);
-                const position = Number(offset);
+                const position = Number(offset!);
                 if (position + byteLength > fileSize && allowOffsetOverflow !== true) {
                     logWarn(`Offset ${offset} with length ${byteLength} exceeds file size ${fileSize}, skipping patch`);
                     continue;
@@ -178,7 +200,7 @@ export namespace BufferUtils {
                 const currentValue = readValue({ buffer: buf, offset: 0, byteLength, bigEndian });
 
                 validatePatchValues({
-                    offset,
+                    offset: offset!,
                     currentValue,
                     previousValue,
                     newValue,
@@ -188,7 +210,7 @@ export namespace BufferUtils {
                 });
 
                 const valueToWrite = determineValueToWrite({
-                    offset,
+                    offset: offset!,
                     currentValue,
                     previousValue,
                     newValue,
@@ -216,6 +238,57 @@ export namespace BufferUtils {
             if (handle)
                 await handle.close();
         }
+    }
+
+    export function patchMultipleOffsets({ buffer, patchData, options, progressInterval }:
+        { buffer: Buffer, patchData: PatchArray, options: OptionsType, progressInterval?: number }): Buffer {
+
+        let working = buffer;
+        const fileSize: number = working.length;
+        const total: number = patchData.length;
+        let processed = 0;
+        for (const patch of patchData) {
+            const { previousValue, newValue, byteLength } = patch;
+            let offsetNumber: number | undefined;
+            if (patch.pattern) {
+                const patternBuf = patternToBuffer(patch.pattern);
+                const idx = working.indexOf(patternBuf);
+                if (idx === -1) {
+                    logWarn(`Pattern not found, skipping patch`);
+                    continue;
+                }
+                offsetNumber = idx;
+            } else if (patch.offset !== undefined) {
+                offsetNumber = Number(patch.offset);
+            }
+            if (offsetNumber === undefined) {
+                logWarn(`No offset or pattern provided, skipping patch`);
+                continue;
+            }
+            const { forcePatch, unpatchMode, nullPatch, failOnUnexpectedPreviousValue, warnOnUnexpectedPreviousValue, skipWritePatch, allowOffsetOverflow, verifyPatch, bigEndian } = options;
+            if (offsetNumber >= fileSize && allowOffsetOverflow !== true) {
+                logWarn(`Offset ${offsetNumber} exceeds file size ${fileSize}, skipping patch`);
+                continue;
+            }
+            working = patchBuffer({
+                buffer: working, offset: offsetNumber, previousValue, newValue, byteLength,
+                options: {
+                    forcePatch,
+                    unpatchMode,
+                    nullPatch,
+                    failOnUnexpectedPreviousValue,
+                    warnOnUnexpectedPreviousValue,
+                    skipWritePatch,
+                    allowOffsetOverflow,
+                    verifyPatch,
+                    bigEndian
+                }
+            });
+            processed++;
+            if (progressInterval && progressInterval > 0 && (processed % progressInterval === 0 || processed === total))
+                logInfo(`Processed ${processed}/${total} patches`);
+        }
+        return working;
     }
 
     function validatePatchValues({

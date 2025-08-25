@@ -158,11 +158,23 @@ export namespace Parser {
                 throw new PatchParseError(`Unsupported patch size ${byteLength}`);
             const typedByteLength = byteLength as 1 | 2 | 4 | 8;
 
-            let offset: bigint;
-            if (offsetString.length > 8)
-                offset = hexParseBig({ hexString: offsetString });
-            else
-                offset = BigInt(hexParse({ hexString: offsetString }));
+            let offset: bigint | undefined;
+            let pattern: Buffer | undefined;
+            const hexOnly = /^[0-9a-fA-F]+$/;
+            if (hexOnly.test(offsetString)) {
+                if (offsetString.length > 8)
+                    offset = hexParseBig({ hexString: offsetString });
+                else
+                    offset = BigInt(hexParse({ hexString: offsetString }));
+            } else if (offsetString.startsWith('[') && offsetString.endsWith(']')) {
+                const bytes = offsetString.slice(1, -1).split(/[\s,]+/).filter(Boolean).map(b => parseInt(b, 16));
+                pattern = Buffer.from(bytes);
+            } else {
+                const cleaned = offsetString.replace(/\s+/g, '');
+                if (cleaned.length % 2 !== 0)
+                    throw new PatchParseError(`Pattern at line ${index + 1} has invalid length`);
+                pattern = Buffer.from(cleaned, 'hex');
+            }
 
             let previousValue: number | bigint;
             let newValue: number | bigint;
@@ -176,6 +188,7 @@ export namespace Parser {
 
             const patchObject = {
                 offset,
+                pattern,
                 previousValue,
                 newValue,
                 byteLength: typedByteLength
