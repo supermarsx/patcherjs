@@ -3,7 +3,9 @@
  */
 export type PatchObject = {
     /** Decimal offset value */
-    offset: bigint,
+    offset?: bigint,
+    /** Byte pattern to locate offset dynamically */
+    pattern?: Buffer | string | number[],
     /** Decimal current/previous value to find */
     previousValue: number | bigint,
     /** Decimal new value to previous/current value */

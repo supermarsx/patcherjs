@@ -11,6 +11,7 @@ const multiPatchPath = join(patchDir, 'multi.patch');
 const endPatchPath = join(patchDir, 'end.patch');
 const overflowPatchPath = join(patchDir, 'overflow.patch');
 const mismatchPatchPath = join(patchDir, 'mismatch.patch');
+const patternPatchPath = join(patchDir, 'pattern.patch');
 const testBinPath = join('test', 'tmp.bin');
 
 describe('Patches.runPatches', () => {
@@ -29,6 +30,7 @@ describe('Patches.runPatches', () => {
     fs.writeFileSync(endPatchPath, '00000001: 01 aa\n');
     fs.writeFileSync(overflowPatchPath, '00000002: 00 ff\n');
     fs.writeFileSync(mismatchPatchPath, '00000000: 01 ff\n');
+    fs.writeFileSync(patternPatchPath, 'aa bb cc dd: ddccbbaa 44332211\n');
   });
 
   afterAll(() => {
@@ -39,6 +41,7 @@ describe('Patches.runPatches', () => {
     fs.rmSync(endPatchPath, { force: true });
     fs.rmSync(overflowPatchPath, { force: true });
     fs.rmSync(mismatchPatchPath, { force: true });
+    fs.rmSync(patternPatchPath, { force: true });
   });
 
   test('patches a binary file', async () => {
@@ -77,6 +80,25 @@ describe('Patches.runPatches', () => {
     await Patches.runPatches({ configuration: config });
     const data = fs.readFileSync(testBinPath);
     expect(data[0]).toBe(0xff);
+  });
+
+  test('patches a binary file using pattern search', async () => {
+    const config = ConfigurationDefaults.getDefaultConfigurationObject();
+    fs.writeFileSync(testBinPath, Buffer.from([0xaa, 0xbb, 0xcc, 0xdd]));
+    config.patches = [
+      { name: 'pattern', patchFilename: 'pattern.patch', fileNamePath: testBinPath, enabled: true }
+    ];
+    const pOpts = config.options.patches;
+    pOpts.backupFiles = false;
+    pOpts.fileSizeCheck = false;
+    pOpts.skipWritingBinary = false;
+    pOpts.warnOnUnexpectedPreviousValue = false;
+    pOpts.failOnUnexpectedPreviousValue = false;
+    pOpts.runPatches = true;
+
+    await Patches.runPatches({ configuration: config });
+    const data = fs.readFileSync(testBinPath);
+    expect(Array.from(data)).toEqual([0x11, 0x22, 0x33, 0x44]);
   });
 
   test('handles 64-bit offsets', async () => {
@@ -271,6 +293,32 @@ describe('BufferUtils.patchLargeFile', () => {
     expect(Array.from(data)).toEqual([0x01, 0x02, 0x03]);
     expect(patchData.map(p => p.offset)).toEqual(originalOrder);
 
+    fs.rmSync(tmpFile, { force: true });
+  });
+
+  test('patches using pattern search', async () => {
+    const tmpFile = join('test', 'pattern.tmp');
+    fs.mkdirSync('test', { recursive: true });
+    fs.writeFileSync(tmpFile, Buffer.from([0xaa, 0xbb, 0xcc, 0xdd]));
+
+    const patchData = [
+      { pattern: Buffer.from([0xaa, 0xbb, 0xcc, 0xdd]), previousValue: 0xddccbbaa, newValue: 0x44332211, byteLength: 4 }
+    ];
+    const options = {
+      forcePatch: false,
+      unpatchMode: false,
+      nullPatch: false,
+      failOnUnexpectedPreviousValue: false,
+      warnOnUnexpectedPreviousValue: false,
+      skipWritePatch: false,
+      allowOffsetOverflow: false,
+      bigEndian: false,
+      verifyPatch: false
+    };
+
+    await BufferUtils.patchLargeFile({ filePath: tmpFile, patchData, options });
+    const data = fs.readFileSync(tmpFile);
+    expect(Array.from(data)).toEqual([0x11, 0x22, 0x33, 0x44]);
     fs.rmSync(tmpFile, { force: true });
   });
 });

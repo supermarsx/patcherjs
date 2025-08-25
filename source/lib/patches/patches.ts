@@ -1,5 +1,5 @@
 import Logger from '../auxiliary/logger.js';
-const { logInfo, logWarn, logError } = Logger;
+const { logInfo, logError } = Logger;
 
 
 import { join } from 'path';
@@ -14,7 +14,7 @@ import Parser from './parser.js';
 const { parsePatchFile } = Parser;
 
 import BufferUtils from './buffer.js';
-const { patchBuffer, patchLargeFile } = BufferUtils;
+const { patchLargeFile, patchMultipleOffsets } = BufferUtils;
 
 import {
     ConfigurationObject,
@@ -89,7 +89,7 @@ export namespace Patches {
             const filePath: string = resolveEnvPath({ path: patch.fileNamePath });
 
             const fileSize: number = await getFileSizeUsingPath({ filePath });
-            const hasBigOffset: boolean = patchData.some(p => p.offset > 0xffffffffn);
+            const hasBigOffset: boolean = patchData.some(p => (p.offset ?? 0n) > 0xffffffffn);
             const progressInterval: number | undefined = configuration.options.general.progressInterval;
             if (hasBigOffset || fileSize > LARGE_FILE_THRESHOLD) {
                 if (patchOptions.skipWritingBinary === false)
@@ -101,7 +101,7 @@ export namespace Patches {
 
             const fileDataBuffer: Buffer = await readBinaryFile({ filePath });
 
-            const patchedFileData: Buffer = patchMultipleOffsets({ fileDataBuffer, patchData, patchOptions, progressInterval });
+            const patchedFileData: Buffer = patchMultipleOffsets({ buffer: fileDataBuffer, patchData, options: patchOptions, progressInterval });
             const buffer: Buffer = patchedFileData;
 
             if (patchOptions.skipWritingBinary === false)
@@ -147,52 +147,6 @@ export namespace Patches {
         return;
     }
 
-    /**
-     * Patch multiple offsets within a file/buffer in memory using a given patch data
-     * 
-     * @param fileDataBuffer File data buffer read into memory 
-     * @example
-     * ```
-     * patchMultipleOffsets({ fileDataBuffer, patchData, patchOptions });
-     * ```
-     * @returns A fully patched buffer (`fileDataBuffer`) based on the provided `patchdata`.
-     * @since 0.0.1
-     */
-    function patchMultipleOffsets({ fileDataBuffer, patchData, patchOptions, progressInterval }:
-        { fileDataBuffer: Buffer, patchData: PatchArray, patchOptions: PatchOptionsObject, progressInterval?: number }): Buffer {
-
-        let buffer: Buffer = fileDataBuffer;
-        const fileSize: number = buffer.length;
-        const total: number = patchData.length;
-        let processed = 0;
-        for (const patch of patchData) {
-            const { offset, previousValue, newValue, byteLength } = patch;
-            const offsetNumber: number = Number(offset);
-            const { forcePatch, unpatchMode, nullPatch, failOnUnexpectedPreviousValue, warnOnUnexpectedPreviousValue, skipWritePatch, allowOffsetOverflow, verifyPatch, bigEndian } = patchOptions;
-            if (offsetNumber >= fileSize && allowOffsetOverflow !== true) {
-                logWarn(`Offset ${offset} exceeds file size ${fileSize}, skipping patch`);
-                continue;
-            }
-            buffer = patchBuffer({
-                buffer, offset: offsetNumber, previousValue, newValue, byteLength,
-                options: {
-                    forcePatch,
-                    unpatchMode,
-                    nullPatch,
-                    failOnUnexpectedPreviousValue,
-                    warnOnUnexpectedPreviousValue,
-                    skipWritePatch,
-                    allowOffsetOverflow,
-                    verifyPatch,
-                    bigEndian
-                }
-            });
-            processed++;
-            if (progressInterval && progressInterval > 0 && (processed % progressInterval === 0 || processed === total))
-                logInfo(`Processed ${processed}/${total} patches`);
-        }
-        return buffer;
-    }
 }
 
 export default Patches;
