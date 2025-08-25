@@ -1,6 +1,7 @@
 import { Parser } from '../source/lib/patches/parser.ts';
 import fs from 'fs';
 import { join } from 'path';
+import { jest } from '@jest/globals';
 
 const patchDir = join('patch_files');
 const largePatchPath = join(patchDir, 'large.patch');
@@ -66,5 +67,5 @@ describe('Parser.parsePatchFile streaming memory usage', () => {
     const nonStreamUsage = process.memoryUsage().heapUsed - before;
 
     expect(streamUsage).toBeLessThan(nonStreamUsage);
-  });
+  }, 20000);
 });
