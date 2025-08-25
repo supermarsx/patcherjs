@@ -19,9 +19,20 @@ export namespace Uac {
      */
     export async function isAdmin(): Promise<boolean> {
         try {
-            const isAdministrator: boolean = await isElevated.check();
-            logInfo(`Is current user admin: ${isAdministrator}`);
-            return isAdministrator;
+            if (process.platform === 'win32') {
+                const isAdministrator: boolean = await isElevated.check();
+                logInfo(`Is current user admin: ${isAdministrator}`);
+                return isAdministrator;
+            }
+
+            if (typeof process.getuid === 'function') {
+                const isAdministrator: boolean = process.getuid() === 0;
+                logInfo(`Is current user admin: ${isAdministrator}`);
+                return isAdministrator;
+            }
+
+            logInfo('Is current user admin: false');
+            return false;
         } catch {
             return false;
         }
