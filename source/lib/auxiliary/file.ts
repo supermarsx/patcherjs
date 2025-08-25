@@ -1,4 +1,5 @@
 import * as fs from 'fs/promises';
+import { createReadStream as fsCreateReadStream, createWriteStream as fsCreateWriteStream, ReadStream, WriteStream } from 'fs';
 
 import BufferWrappers from '../patches/buffer.wrappers.js';
 const { createBuffer } = BufferWrappers;
@@ -22,6 +23,30 @@ export namespace File {
     export const deleteFolder = FileWrappers.deleteFolder;
     export const firstFilenameInFolder = FileWrappers.firstFilenameInFolder;
     export const getFileSizeUsingPath = FileWrappers.getFileSizeUsingPath;
+
+    /**
+     * Create a readable stream for a file path
+     * @param params.filePath File path to read
+     * @returns Node.js ReadStream
+     * @since 0.0.1
+     */
+    export function createReadStream({ filePath }:
+        { filePath: string }): ReadStream {
+        logInfo(`Creating read stream for ${filePath}`);
+        return fsCreateReadStream(filePath);
+    }
+
+    /**
+     * Create a writable stream for a file path
+     * @param params.filePath File path to write
+     * @returns Node.js WriteStream
+     * @since 0.0.1
+     */
+    export function createWriteStream({ filePath }:
+        { filePath: string }): WriteStream {
+        logInfo(`Creating write stream for ${filePath}`);
+        return fsCreateWriteStream(filePath);
+    }
 
     /**
      * Read a patch file to a string variable

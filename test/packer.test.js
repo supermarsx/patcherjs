@@ -1,5 +1,6 @@
 import { jest } from '@jest/globals';
 import { EventEmitter } from 'events';
+import { PassThrough, Writable } from 'stream';
 
 jest.unstable_mockModule('../source/lib/auxiliary/file.js', () => ({
   default: {
@@ -7,9 +8,22 @@ jest.unstable_mockModule('../source/lib/auxiliary/file.js', () => ({
     deleteFolder: jest.fn(async () => {}),
     firstFilenameInFolder: jest.fn(async () => '/tmp/temp-extracted/file.bin'),
     readBinaryFile: jest.fn(async () => Buffer.from('packed')),
-    writeBinaryFile: jest.fn(async () => {})
+    writeBinaryFile: jest.fn(async () => {}),
+    createReadStream: jest.fn(() => new PassThrough()),
+    createWriteStream: jest.fn(() => new PassThrough())
   }
 }));
+
+jest.unstable_mockModule('fs/promises', async () => {
+  const actual = await jest.requireActual('fs/promises');
+  return {
+    ...actual,
+    open: jest.fn(async () => ({
+      write: jest.fn(async () => {}),
+      close: jest.fn(async () => {})
+    }))
+  };
+});
 
 jest.unstable_mockModule('tmp', () => ({
   default: { tmpNameSync: jest.fn(() => '/tmp/temp') }
@@ -33,9 +47,11 @@ jest.unstable_mockModule('node-7z', () => {
 let Packer;
 let File;
 let Seven;
+let Packaging;
 
 beforeAll(async () => {
   Packer = (await import('../source/lib/filedrops/packer.ts')).Packer;
+  Packaging = (await import('../source/lib/build/packaging.ts')).Packaging;
   File = await import('../source/lib/auxiliary/file.js');
   Seven = await import('node-7z');
 });
@@ -74,5 +90,43 @@ describe('Packer.unpackFile', () => {
     expect(File.default.deleteFile).toHaveBeenCalledWith({ filePath: '/tmp/temp' });
     expect(File.default.deleteFolder).toHaveBeenCalledWith({ folderPath: '/tmp/temp-extracted' });
     expect(result).toEqual(Buffer.from('unpacked'));
+  });
+});
+
+describe('Packaging.runPackings large file handling', () => {
+  test('processes large files using streams without high memory usage', async () => {
+    const CHUNK_SIZE = 1024 * 1024; // 1MB
+    const CHUNKS = 20; // simulate 20MB file
+    File.default.createReadStream.mockImplementation(() => {
+      const stream = new PassThrough();
+      let pushed = 0;
+      const pushData = () => {
+        if (pushed >= CHUNKS) {
+          stream.end();
+          return;
+        }
+        pushed++;
+        stream.write(Buffer.alloc(CHUNK_SIZE));
+        setImmediate(pushData);
+      };
+      setImmediate(pushData);
+      return stream;
+    });
+    File.default.createWriteStream.mockImplementation(() => new Writable({ write(_c, _e, cb) { cb(); } }));
+
+    const configuration = {
+      options: { filedrops: { runFiledrops: true, isFiledropPacked: true, isFiledropCrypted: true } },
+      filedrops: [
+        { enabled: true, decryptKey: 'pw', fileNamePath: 'large.bin', packedFileName: 'large.bin', fileDropName: 'large.drop' }
+      ]
+    };
+
+    const start = process.memoryUsage().heapUsed;
+    await Packaging.runPackings({ configuration });
+    const end = process.memoryUsage().heapUsed;
+
+    expect(File.default.createReadStream).toHaveBeenCalled();
+    expect(File.default.createWriteStream).toHaveBeenCalled();
+    expect(end - start).toBeLessThan(50 * 1024 * 1024);
   });
 });
