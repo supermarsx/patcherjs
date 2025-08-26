@@ -1,12 +1,12 @@
-import { jest } from '@jest/globals';
 import fs from 'fs';
 import { join } from 'path';
+import { jest } from '@jest/globals';
 
 const patchDir = join('patch_files');
 const patchPath = join(patchDir, 'progress.patch');
 const testBinPath = join('test', 'progress.bin');
 
-describe('Patches progress logging', () => {
+describe('Patches progress events', () => {
   beforeAll(() => {
     fs.mkdirSync('test', { recursive: true });
     fs.mkdirSync(patchDir, { recursive: true });
@@ -24,14 +24,9 @@ describe('Patches progress logging', () => {
     fs.rmSync(patchPath, { force: true });
   });
 
-  test('emits progress messages at configured intervals', async () => {
+  test('emits progress for buffer patches', async () => {
     jest.resetModules();
-    const logInfo = jest.fn();
-    jest.unstable_mockModule('../source/lib/auxiliary/logger.ts', () => ({
-      default: { logInfo, logWarn: jest.fn(), logError: jest.fn(), logSuccess: jest.fn() }
-    }));
-
-    const { Patches } = await import('../source/lib/patches/patches.ts');
+    const { Patcher } = await import('../source/lib/composites.ts');
     const { ConfigurationDefaults } = await import('../source/lib/configuration/configuration.defaults.ts');
 
     const config = ConfigurationDefaults.getDefaultConfigurationObject();
@@ -48,13 +43,18 @@ describe('Patches progress logging', () => {
 
     config.options.general.progressInterval = 1;
 
-    await Patches.runPatches({ configuration: config });
+    const events = [];
+    Patcher.patchEmitter.on('progress', e => events.push(e));
 
-    const progressMessages = logInfo.mock.calls.flat().filter(m => m.startsWith('Processed'));
-    expect(progressMessages).toEqual([
-      'Processed 1/3 patches',
-      'Processed 2/3 patches',
-      'Processed 3/3 patches'
+    await Patcher.runPatches({ configuration: config });
+
+    Patcher.patchEmitter.removeAllListeners('progress');
+
+    expect(events).toEqual([
+      { processed: 1, total: 3 },
+      { processed: 2, total: 3 },
+      { processed: 3, total: 3 }
     ]);
   });
+
 });

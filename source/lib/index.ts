@@ -14,7 +14,6 @@ export * from './filedrops/filedrops.js';
 export * from './filedrops/packer.js';
 export * from './build/packaging.js';
 export * from './patches/parser.js';
-export * from './patches/patches.js';
 export * from './auxiliary/uac.js';
 export * from './auxiliary/logger.js';
 export * from './composites.js';

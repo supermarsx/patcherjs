@@ -1,3 +1,7 @@
+import { EventEmitter } from 'events';
+
+export const patchEmitter = new EventEmitter();
+
 import Logger from '../auxiliary/logger.js';
 const { logInfo, logError } = Logger;
 
@@ -14,7 +18,6 @@ import Parser from './parser.js';
 const { parsePatchFile } = Parser;
 
 import BufferUtils from './buffer.js';
-const { patchLargeFile, patchMultipleOffsets } = BufferUtils;
 
 import {
     ConfigurationObject,
@@ -93,7 +96,7 @@ export namespace Patches {
             const progressInterval: number | undefined = configuration.options.general.progressInterval;
             if (hasBigOffset || fileSize > LARGE_FILE_THRESHOLD) {
                 if (patchOptions.skipWritingBinary === false)
-                    await patchLargeFile({ filePath, patchData, options: patchOptions, progressInterval });
+                    await BufferUtils.patchLargeFile({ filePath, patchData, options: patchOptions, progressInterval });
                 else
                     logInfo(`Skipping writing binary file due to options`);
                 return;
@@ -101,7 +104,7 @@ export namespace Patches {
 
             const fileDataBuffer: Buffer = await readBinaryFile({ filePath });
 
-            const patchedFileData: Buffer = patchMultipleOffsets({ buffer: fileDataBuffer, patchData, options: patchOptions, progressInterval });
+            const patchedFileData: Buffer = BufferUtils.patchMultipleOffsets({ buffer: fileDataBuffer, patchData, options: patchOptions, progressInterval });
             const buffer: Buffer = patchedFileData;
 
             if (patchOptions.skipWritingBinary === false)
