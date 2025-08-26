@@ -13,6 +13,8 @@ interface LoggerConfig {
     level: LogLevel;
     filePath?: string;
     timestamps?: boolean;
+    maxSize?: number;
+    rotationCount?: number;
 }
 
 const levelPriority: Record<LogLevel, number> = {
@@ -30,7 +32,9 @@ let config: LoggerConfig = {
     level: getLogLevel(process.env.LOG_LEVEL),
     filePath: process.env.LOG_FILEPATH,
     // include ISO timestamps only when explicitly enabled
-    timestamps: process.env.LOG_TIMESTAMPS === 'true'
+    timestamps: process.env.LOG_TIMESTAMPS === 'true',
+    maxSize: process.env.LOG_MAX_SIZE ? Number(process.env.LOG_MAX_SIZE) : undefined,
+    rotationCount: process.env.LOG_ROTATION_COUNT ? Number(process.env.LOG_ROTATION_COUNT) : undefined
 };
 
 function shouldLog(level: LogLevel): boolean {
@@ -39,11 +43,50 @@ function shouldLog(level: LogLevel): boolean {
 
 let writeQueue: Promise<void> = Promise.resolve();
 
+async function rotateLogs(file: string): Promise<void> {
+    const count = config.rotationCount ?? 1;
+    if (count > 0) {
+        try {
+            await fs.rm(`${file}.${count}`);
+        } catch {
+            // ignore remove errors
+        }
+        for (let i = count - 1; i >= 1; i--) {
+            try {
+                await fs.rename(`${file}.${i}`, `${file}.${i + 1}`);
+            } catch {
+                // ignore rename errors
+            }
+        }
+        try {
+            await fs.rename(file, `${file}.1`);
+        } catch {
+            // ignore rename errors
+        }
+    } else {
+        try {
+            await fs.truncate(file, 0);
+        } catch {
+            // ignore truncate errors
+        }
+    }
+}
+
 function writeToFile(line: string): void {
     if (!config.filePath) return;
     const file = resolve(config.filePath);
     writeQueue = writeQueue.then(async () => {
         try {
+            if (config.maxSize) {
+                try {
+                    const stats = await fs.stat(file);
+                    if (stats.size >= config.maxSize) {
+                        await rotateLogs(file);
+                    }
+                } catch {
+                    // ignore stat errors
+                }
+            }
             await fs.appendFile(file, line + '\n');
         } catch {
             // ignore file write errors

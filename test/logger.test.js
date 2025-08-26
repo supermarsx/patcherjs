@@ -80,4 +80,38 @@ describe('Logger file output', () => {
     expect(content.trim()).toBe('plain');
     fs.rmSync(dir, { recursive: true, force: true });
   });
+
+  test('rotates log file when maxSize exceeded', async () => {
+    jest.resetModules();
+    const { Logger } = await import('../source/lib/auxiliary/logger.ts');
+    const dir = fs.mkdtempSync(join(os.tmpdir(), 'logger-'));
+    const file = join(dir, 'out.log');
+    Logger.setConfig({ level: 'info', filePath: file, timestamps: false, maxSize: 20, rotationCount: 2 });
+    Logger.logInfo('12345678901234567890'); // 20 characters
+    await delay(20);
+    Logger.logInfo('next');
+    await delay(20);
+    const main = await fs.promises.readFile(file, 'utf8');
+    const rotated = await fs.promises.readFile(`${file}.1`, 'utf8');
+    expect(main.trim()).toBe('next');
+    expect(rotated.trim()).toBe('12345678901234567890');
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+
+  test('respects rotation count', async () => {
+    jest.resetModules();
+    const { Logger } = await import('../source/lib/auxiliary/logger.ts');
+    const dir = fs.mkdtempSync(join(os.tmpdir(), 'logger-'));
+    const file = join(dir, 'out.log');
+    Logger.setConfig({ level: 'info', filePath: file, timestamps: false, maxSize: 10, rotationCount: 2 });
+    Logger.logInfo('1111111111');
+    await delay(20);
+    Logger.logInfo('2222222222');
+    await delay(20);
+    Logger.logInfo('3333333333');
+    await delay(20);
+    expect(fs.existsSync(`${file}.2`)).toBe(true);
+    expect(fs.existsSync(`${file}.3`)).toBe(false);
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
 });
