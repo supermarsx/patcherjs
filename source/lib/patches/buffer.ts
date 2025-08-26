@@ -3,6 +3,8 @@ import * as fs from 'fs/promises';
 import Logger from '../auxiliary/logger.js';
 const { logInfo, logWarn, logError } = Logger;
 
+import { patchEmitter } from './patches.js';
+
 import { OptionsType } from '../patches/buffer.types.js';
 import { PatchArray } from './parser.types.js';
 
@@ -231,8 +233,13 @@ export namespace BufferUtils {
                     logInfo(`Skipping buffer write`);
                 }
                 processed++;
-                if (progressInterval && progressInterval > 0 && (processed % progressInterval === 0 || processed === total))
-                    logInfo(`Processed ${processed}/${total} patches`);
+                const shouldReport = !progressInterval || progressInterval <= 0 ||
+                    (processed % progressInterval === 0 || processed === total);
+                if (shouldReport) {
+                    if (progressInterval && progressInterval > 0)
+                        logInfo(`Processed ${processed}/${total} patches`);
+                    patchEmitter.emit('progress', { processed, total });
+                }
             }
         } finally {
             if (handle)
@@ -285,8 +292,13 @@ export namespace BufferUtils {
                 }
             });
             processed++;
-            if (progressInterval && progressInterval > 0 && (processed % progressInterval === 0 || processed === total))
-                logInfo(`Processed ${processed}/${total} patches`);
+            const shouldReport = !progressInterval || progressInterval <= 0 ||
+                (processed % progressInterval === 0 || processed === total);
+            if (shouldReport) {
+                if (progressInterval && progressInterval > 0)
+                    logInfo(`Processed ${processed}/${total} patches`);
+                patchEmitter.emit('progress', { processed, total });
+            }
         }
         return working;
     }

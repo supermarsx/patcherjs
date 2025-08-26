@@ -7,8 +7,8 @@ const { runCommands } = Commands;
 import Filedrops from './filedrops/filedrops.js';
 const { runFiledrops } = Filedrops;
 
-import Patches from './patches/patches.js';
-const { runPatches } = Patches;
+import Patches, { patchEmitter as patchesEmitter } from './patches/patches.js';
+const { runPatches: patchesRunPatches } = Patches;
 
 import Packaging from './build/packaging.js';
 const { runPackings } = Packaging;
@@ -118,7 +118,7 @@ export namespace Patcher {
     const compositeMap: Record<Component, (p: { configuration: ConfigurationObject }) => Promise<void>> = {
         [COMPONENTS.COMMANDS]: runCommands,
         [COMPONENTS.FILEDROPS]: runFiledrops,
-        [COMPONENTS.PATCHES]: runPatches
+        [COMPONENTS.PATCHES]: patchesRunPatches
     };
 
     export async function runFunction({ configuration, functionName }:
@@ -132,6 +132,13 @@ export namespace Patcher {
             logError(`Failed to process function ${error}`);
             throw error;
         }
+    }
+
+    export const patchEmitter = patchesEmitter;
+
+    export async function runPatches({ configuration }:
+        { configuration: ConfigurationObject }): Promise<void> {
+        await patchesRunPatches({ configuration });
     }
 
     /**

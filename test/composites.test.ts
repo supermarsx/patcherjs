@@ -13,7 +13,8 @@ jest.unstable_mockModule('../source/lib/filedrops/filedrops.js', () => ({
 }));
 
 jest.unstable_mockModule('../source/lib/patches/patches.js', () => ({
-  default: { runPatches: jest.fn() }
+  default: { runPatches: jest.fn() },
+  patchEmitter: { on: jest.fn(), emit: jest.fn(), removeAllListeners: jest.fn() }
 }));
 
 jest.unstable_mockModule('../source/lib/build/packaging.js', () => ({
