@@ -14,12 +14,14 @@ export interface CommandResult {
 export namespace Command {
     /**
      * Run a command
-     * 
+     *
      * @param params.command Command to run
      * @param params.parameters Command parameters
      * @param [params.shell=false] Use a shell, pass true to enable (disabled by default for security)
      * @param [params.timeout] Maximum time in milliseconds before the command is killed
      * @param [params.maxBuffer] Maximum size in bytes for each output stream before truncation
+     * @param [params.onStdout] Callback for stdout data
+     * @param [params.onStderr] Callback for stderr data
      * @example
      * ```
      * // run a command with the default options (no shell, no timeout)
@@ -34,10 +36,10 @@ export namespace Command {
      * @returns Command output
      * @since 0.0.1
      */
-    export async function runCommand({ command, parameters, shell = false, timeout, maxBuffer, cwd }:
-        { command: string, parameters: string[], shell?: boolean, timeout?: number, maxBuffer?: number, cwd?: string }): Promise<CommandResult> {
+    export async function runCommand({ command, parameters, shell = false, timeout, maxBuffer, cwd, onStdout, onStderr }:
+        { command: string, parameters: string[], shell?: boolean, timeout?: number, maxBuffer?: number, cwd?: string, onStdout?: (chunk: string) => void, onStderr?: (chunk: string) => void }): Promise<CommandResult> {
         try {
-            const result = await runCommandPromise({ command, parameters, shell, timeout, maxBuffer, cwd });
+            const result = await runCommandPromise({ command, parameters, shell, timeout, maxBuffer, cwd, onStdout, onStderr });
             return result;
         } catch (error) {
             if (error instanceof CommandError) {
@@ -56,22 +58,24 @@ export namespace Command {
 
     /**
      * Runs a command with given parameters on a promise (exec wrapper)
-     * 
+     *
      * @param params.command Command to run
      * @param params.parameters Command parameters
      * @param [params.shell=false] Use a shell, pass true to enable
      * @param [params.timeout] Maximum time in milliseconds before the command is killed
      * @param [params.maxBuffer] Maximum size in bytes for each output stream before truncation
+     * @param [params.onStdout] Callback for stdout data
+     * @param [params.onStderr] Callback for stderr data
      * @example
      * ```
      * // run without a shell and with a timeout
      * runCommandPromise({ command, parameters, timeout: 5000 });
      * ```
-     * @returns Command output 
+     * @returns Command output
      * @since 0.0.1
      */
-    export async function runCommandPromise({ command, parameters, shell = false, timeout, maxBuffer, cwd }:
-        { command: string, parameters: string[], shell?: boolean, timeout?: number, maxBuffer?: number, cwd?: string }): Promise<CommandResult> {
+    export async function runCommandPromise({ command, parameters, shell = false, timeout, maxBuffer, cwd, onStdout, onStderr }:
+        { command: string, parameters: string[], shell?: boolean, timeout?: number, maxBuffer?: number, cwd?: string, onStdout?: (chunk: string) => void, onStderr?: (chunk: string) => void }): Promise<CommandResult> {
 
         return new Promise(function (resolve, reject) {
             const childProcess: ChildProcessWithoutNullStreams = spawn(command, parameters, { shell, cwd });
@@ -100,7 +104,10 @@ export namespace Command {
                 if (stdout.length < limit) {
                     const chunk = data.toString();
                     const remaining = limit - stdout.length;
-                    stdout += chunk.slice(0, remaining);
+                    const toAdd = chunk.slice(0, remaining);
+                    stdout += toAdd;
+                    if (toAdd && onStdout)
+                        onStdout(toAdd);
                 }
             });
 
@@ -108,7 +115,10 @@ export namespace Command {
                 if (stderr.length < limit) {
                     const chunk = data.toString();
                     const remaining = limit - stderr.length;
-                    stderr += chunk.slice(0, remaining);
+                    const toAdd = chunk.slice(0, remaining);
+                    stderr += toAdd;
+                    if (toAdd && onStderr)
+                        onStderr(toAdd);
                 }
             });
 
