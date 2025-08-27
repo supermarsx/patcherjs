@@ -19,7 +19,7 @@ Simple running example
 import { Patcher } from 'patcherjs';
 
 Patcher.runPatcher({});
-Patcher.runPatcher({ configFilePath: './my-config.json', waitForExit: false });
+Patcher.runPatcher({ configFilePath: './my-config.yaml', waitForExit: false });
 ```
 
 ### Use as standalone application or development
@@ -47,10 +47,10 @@ $ git clone https://github.com/supermarsx/patcherjs
 $ npm install
 $ npm run ts-build
 $ node dist/standalone/executable.js
-$ node dist/standalone/executable.js --config ./my-config.json
-$ node dist/standalone/executable.js -c ./my-config.json
+$ node dist/standalone/executable.js --config ./my-config.yaml
+$ node dist/standalone/executable.js -c ./my-config.yaml
 ```
-The `--config` (or `-c`) option allows you to specify a custom configuration file instead of the default `config.json`. You can also use the form `--config=<path>`.
+The `--config` (or `-c`) option allows you to specify a custom configuration file instead of the default `config.json`. Both JSON and YAML files are supported. You can also use the form `--config=<path>`.
 
 #### Running on Linux/macOS
 
@@ -58,8 +58,8 @@ Once the project adds support for these platforms the steps are the same:
 
 ```bash
 npm run ts-build
-node dist/standalone/executable.js --config ./my-config.json
-node dist/standalone/executable.js --config=./my-config.json
+node dist/standalone/executable.js --config ./my-config.yaml
+node dist/standalone/executable.js --config=./my-config.yaml
 ```
 The build pipeline will skip the signing step on non-Windows systems.
 #### npm scripts

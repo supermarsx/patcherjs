@@ -1,4 +1,7 @@
 import * as fs from 'fs/promises';
+import { extname } from 'path';
+
+import yaml from 'js-yaml';
 
 import FileWrappers from '../auxiliary/file.wrappers.js';
 const { getFileSize, isFileReadable } = FileWrappers;
@@ -108,25 +111,45 @@ export namespace Configuration {
         let fileHandle: fs.FileHandle | undefined;
         try {
             const encoding: BufferEncoding = CONFIG_ENCODING;
-            const cantReadFile: boolean = !(await isFileReadable({ filePath }));
-            if (cantReadFile)
-                throw new Error(`Configuration file is not readable, is missing or corrupted`);
-            fileHandle = await fs.open(filePath);
-            const bufferSize: number = await getFileSize({ fileHandle });
-            if (bufferSize === 0)
-                logWarn('Configuration file size is 0, file may be corrupted or invalid');
-            else
-                logSuccess(`Configuration file size, ${bufferSize}`);
-            logInfo(`Reading configuration file handle with ${encoding} encoding`);
-            const fileData: string = await fileHandle.readFile({
-                encoding: encoding
-            });
+            const trimmedPath = filePath.trim();
+            let fileData: string;
+            let isInline = false;
+
+            if (await isFileReadable({ filePath: trimmedPath })) {
+                fileHandle = await fs.open(trimmedPath);
+                const bufferSize: number = await getFileSize({ fileHandle });
+                if (bufferSize === 0)
+                    logWarn('Configuration file size is 0, file may be corrupted or invalid');
+                else
+                    logSuccess(`Configuration file size, ${bufferSize}`);
+                logInfo(`Reading configuration file handle with ${encoding} encoding`);
+                fileData = await fileHandle.readFile({ encoding });
+            } else {
+                isInline = true;
+                fileData = trimmedPath;
+            }
+
             const dataLength: number = fileData.length;
             if (dataLength === 0)
                 logWarn(`Configuration file data size is 0, file may be corrupted or invalid`);
-            else
+            else if (!isInline)
                 logSuccess(`Configuration file read successfully`);
-            const configObject: unknown = JSON.parse(fileData);
+
+            let configObject: unknown;
+            if (isInline) {
+                const trimmedData = fileData.trim();
+                if (trimmedData.startsWith('{'))
+                    configObject = JSON.parse(trimmedData);
+                else
+                    configObject = yaml.load(trimmedData) ?? {};
+            } else {
+                const ext = extname(trimmedPath).toLowerCase();
+                if (ext === '.yaml' || ext === '.yml')
+                    configObject = yaml.load(fileData) ?? {};
+                else
+                    configObject = JSON.parse(fileData);
+            }
+
             const defaultConfig: ConfigurationObject = getDefaultConfigurationObject();
             const mergedConfig = mergeWithDefaults<ConfigurationObject>(defaultConfig, configObject as DeepPartial<ConfigurationObject>);
             validateConfiguration(mergedConfig);

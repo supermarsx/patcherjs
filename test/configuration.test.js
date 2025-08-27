@@ -2,6 +2,7 @@ import fs from 'fs';
 import { join } from 'path';
 import os from 'os';
 import { jest } from '@jest/globals';
+import yaml from 'js-yaml';
 import { ConfigurationDefaults } from '../source/lib/configuration/configuration.defaults.ts';
 
 
@@ -21,6 +22,36 @@ describe('Configuration.readConfigurationFile', () => {
     const result = await Configuration.readConfigurationFile({ filePath });
 
     expect(result).toEqual(configObj);
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+
+  test('parses valid configuration YAML', async () => {
+    const dir = fs.mkdtempSync(join(os.tmpdir(), 'cfg-'));
+    const filePath = join(dir, 'config.yaml');
+    const configObj = ConfigurationDefaults.getDefaultConfigurationObject();
+    configObj.options.general.debug = false;
+    fs.writeFileSync(filePath, yaml.dump(configObj), 'utf-8');
+
+    const { Configuration } = await import('../source/lib/configuration/configuration.ts');
+    const result = await Configuration.readConfigurationFile({ filePath });
+
+    expect(result).toEqual(configObj);
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+
+  test('JSON and YAML configuration files produce identical objects', async () => {
+    const dir = fs.mkdtempSync(join(os.tmpdir(), 'cfg-'));
+    const jsonPath = join(dir, 'config.json');
+    const yamlPath = join(dir, 'config.yaml');
+    const configObj = ConfigurationDefaults.getDefaultConfigurationObject();
+    fs.writeFileSync(jsonPath, JSON.stringify(configObj), 'utf-8');
+    fs.writeFileSync(yamlPath, yaml.dump(configObj), 'utf-8');
+
+    const { Configuration } = await import('../source/lib/configuration/configuration.ts');
+    const jsonResult = await Configuration.readConfigurationFile({ filePath: jsonPath });
+    const yamlResult = await Configuration.readConfigurationFile({ filePath: yamlPath });
+
+    expect(yamlResult).toEqual(jsonResult);
     fs.rmSync(dir, { recursive: true, force: true });
   });
 
