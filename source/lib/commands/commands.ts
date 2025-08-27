@@ -106,16 +106,14 @@ export namespace Commands {
                 const DEFAULT_TIMEOUT = 60_000; // 60 seconds
                 const timeout = command.timeout ?? DEFAULT_TIMEOUT;
                 try {
-                    const { stdout, stderr, exitCode } = await runCommand({
+                    const { exitCode } = await runCommand({
                         command: command.command,
                         parameters: [],
                         timeout,
-                        cwd: command.cwd
+                        cwd: command.cwd,
+                        onStdout: (chunk: string) => logInfo(chunk),
+                        onStderr: (chunk: string) => logError(chunk)
                     });
-                    if (stdout)
-                        logInfo(stdout);
-                    if (stderr)
-                        logError(stderr);
                     logInfo(`Command exited with code ${exitCode}`);
                 } catch (error) {
                     const msg = error instanceof Error ? error.message : String(error);
