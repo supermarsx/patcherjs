@@ -88,6 +88,7 @@
       "packedFileName": "helloworld.dll",
       "fileNamePath": "${HOME}/Someapp/helloworld.dll",
       "decryptKey": "ad4bc8a11481000e4d8daf28412f867a",
+      "sha256": "",
       "enabled": true
     }
   ]

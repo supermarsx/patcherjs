@@ -95,7 +95,8 @@ export type ConfigurationObject = {
             packedFileName: string,
             fileNamePath: string,
             decryptKey: string,
-            enabled: boolean
+            enabled: boolean,
+            sha256?: string
         }
     ] | []
 };

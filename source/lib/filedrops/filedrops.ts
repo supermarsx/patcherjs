@@ -14,6 +14,7 @@ import Logger from '../auxiliary/logger.js';
 const { logInfo, logError, logSuccess } = Logger;
 import { join, dirname } from 'path';
 import { mkdir } from 'fs/promises';
+import { createHash } from 'crypto';
 
 import { ConfigurationObject, FiledropsObject, FiledropsOptionsObject } from '../configuration/configuration.types.js';
 
@@ -73,6 +74,11 @@ export namespace Filedrops {
                 fileData = await unpackFile({ buffer: fileData, password: filedrop.decryptKey });
             const destinationPath: string = resolveEnvPath({ path: filedrop.fileNamePath });
             await writeBinaryFile({ filePath: destinationPath, buffer: fileData });
+            const writtenHash: string = createHash('sha256').update(fileData).digest('hex');
+            if (filedrop.sha256 && writtenHash !== filedrop.sha256) {
+                logError(`SHA256 mismatch for dropped file`);
+                return;
+            }
             logSuccess(`File was dropped successfully`);
         } catch (error) {
             logError(`There was an error while dropping a file: ${error}`);
