@@ -24,6 +24,7 @@
     "debug": "^4.3.4",
     "elevated": "^1.1.5",
     "esbuild": "0.25.8",
+    "js-yaml": "^4.1.0",
     "node-7z": "^3.0.0",
     "supports-color": "^9.4.0",
     "tmp": "^0.2.1",
