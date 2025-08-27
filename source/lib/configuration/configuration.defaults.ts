@@ -70,7 +70,7 @@ export namespace ConfigurationDefaults {
                 services: [],
                 general: []
             },
-            filedrops: []
+            filedrops: [] as ConfigurationObject['filedrops']
         };
 
         return defaultConfigurationObject;

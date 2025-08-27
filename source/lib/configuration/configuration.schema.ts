@@ -143,7 +143,8 @@ export const configurationSchema = {
                     packedFileName: { type: 'string' },
                     fileNamePath: { type: 'string' },
                     decryptKey: { type: 'string' },
-                    enabled: { type: 'boolean' }
+                    enabled: { type: 'boolean' },
+                    sha256: { type: 'string' }
                 },
                 required: ['name', 'fileDropName', 'packedFileName', 'fileNamePath', 'decryptKey', 'enabled'],
                 additionalProperties: true

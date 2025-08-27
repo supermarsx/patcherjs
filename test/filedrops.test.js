@@ -26,6 +26,12 @@ jest.unstable_mockModule('../source/lib/auxiliary/file.js', () => ({
   }
 }));
 
+const logError = jest.fn();
+const logSuccess = jest.fn();
+jest.unstable_mockModule('../source/lib/auxiliary/logger.js', () => ({
+  default: { logInfo: jest.fn(), logError, logSuccess }
+}));
+
 let Filedrops;
 let Crypt;
 let Packer;
@@ -135,5 +141,28 @@ describe('Filedrops.runFiledrops', () => {
     expect(order).toEqual(order.slice().sort((a, b) => a - b));
     expect(Fs.mkdir).toHaveBeenCalledWith(destDir, { recursive: true });
     expect(File.default.writeBinaryFile).toHaveBeenCalledWith({ filePath: dest, buffer: Buffer.from('binary') });
+  });
+
+  test('sha256 mismatch aborts drop', async () => {
+    const config = ConfigurationDefaults.getDefaultConfigurationObject();
+    config.filedrops = [
+      {
+        name: 'd',
+        fileDropName: 'f.bin',
+        packedFileName: 'f.pack',
+        fileNamePath: 'out.bin',
+        decryptKey: 'key',
+        sha256: 'bad',
+        enabled: true
+      }
+    ];
+    const opts = config.options.filedrops;
+    opts.runFiledrops = true;
+    opts.isFiledropPacked = false;
+    opts.isFiledropCrypted = false;
+    opts.backupFiles = false;
+    await Filedrops.runFiledrops({ configuration: config });
+    expect(logError).toHaveBeenCalledWith('SHA256 mismatch for dropped file');
+    expect(logSuccess).not.toHaveBeenCalled();
   });
 });

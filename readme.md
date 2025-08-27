@@ -256,12 +256,14 @@ Patcherjs functions with a configuration json file using the following structure
       "packedFileName": "helloworld.dll", // Original filename inside 'patch_files_unpacked' folder
       "fileNamePath": "${HOME}/Someapp/helloworld.dll", // Destination filename, using HOME for cross-platform support
       "decryptKey": "ad4bc8a11481000e4d8daf28412f867a", // Encryption/decryption password
+      "sha256": "", // Optional expected SHA256 of the final file
       "enabled": true // Set to false to skip
     }
   ]
 }
 
 ```
+Specifying `sha256` for a filedrop verifies the written file's SHA-256 hash and aborts on mismatch.
 When a configuration file is loaded its values are merged with the defaults.
 Arrays in the provided file are merged element-wise with their default
 counterparts so missing fields inherit default values.
