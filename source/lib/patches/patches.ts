@@ -7,6 +7,7 @@ const { logInfo, logError } = Logger;
 
 
 import { join } from 'path';
+import { createHash } from 'crypto';
 
 import File from '../auxiliary/file.js';
 const { backupFile, getFileSizeUsingPath, readBinaryFile, writeBinaryFile } = File;
@@ -95,9 +96,17 @@ export namespace Patches {
             const hasBigOffset: boolean = patchData.some(p => (p.offset ?? 0n) > 0xffffffffn);
             const progressInterval: number | undefined = configuration.options.general.progressInterval;
             if (hasBigOffset || fileSize > LARGE_FILE_THRESHOLD) {
-                if (patchOptions.skipWritingBinary === false)
+                if (patchOptions.skipWritingBinary === false) {
                     await BufferUtils.patchLargeFile({ filePath, patchData, options: patchOptions, progressInterval });
-                else
+                    if (patch.sha256) {
+                        const writtenData: Buffer = await readBinaryFile({ filePath });
+                        const writtenHash: string = createHash('sha256').update(writtenData).digest('hex');
+                        if (writtenHash !== patch.sha256) {
+                            logError(`SHA256 mismatch for patched file`);
+                            throw new Error(`SHA256 mismatch for patched file`);
+                        }
+                    }
+                } else
                     logInfo(`Skipping writing binary file due to options`);
                 return;
             }
@@ -107,9 +116,16 @@ export namespace Patches {
             const patchedFileData: Buffer = BufferUtils.patchMultipleOffsets({ buffer: fileDataBuffer, patchData, options: patchOptions, progressInterval });
             const buffer: Buffer = patchedFileData;
 
-            if (patchOptions.skipWritingBinary === false)
+            if (patchOptions.skipWritingBinary === false) {
                 await writeBinaryFile({ filePath, buffer });
-            else
+                if (patch.sha256) {
+                    const writtenHash: string = createHash('sha256').update(buffer).digest('hex');
+                    if (writtenHash !== patch.sha256) {
+                        logError(`SHA256 mismatch for patched file`);
+                        throw new Error(`SHA256 mismatch for patched file`);
+                    }
+                }
+            } else
                 logInfo(`Skipping writing binary file due to options`);
         } catch (error) {
             logError(`An error has ocurred running the patch ${error}`);

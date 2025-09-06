@@ -3,6 +3,7 @@ import { BufferUtils } from '../source/lib/patches/buffer.ts';
 import { ConfigurationDefaults } from '../source/lib/configuration/configuration.defaults.ts';
 import fs from 'fs';
 import { join } from 'path';
+import { createHash } from 'crypto';
 
 const patchDir = join('patch_files');
 const testPatchPath = join(patchDir, 'test.patch');
@@ -259,6 +260,45 @@ describe('Patches.runPatches', () => {
     await Patches.runPatches({ configuration: config });
     const data = fs.readFileSync(testBinPath);
     expect(data[0]).toBe(0x00);
+  });
+
+  test('verifies SHA256 for patched file', async () => {
+    const config = ConfigurationDefaults.getDefaultConfigurationObject();
+    fs.writeFileSync(testBinPath, Buffer.from([0x00]));
+    const expectedHash = createHash('sha256').update(Buffer.from([0xff])).digest('hex');
+    config.patches = [
+      { name: 'test', patchFilename: 'test.patch', fileNamePath: testBinPath, enabled: true, sha256: expectedHash }
+    ];
+    const pOpts = config.options.patches;
+    pOpts.backupFiles = false;
+    pOpts.fileSizeCheck = false;
+    pOpts.skipWritingBinary = false;
+    pOpts.warnOnUnexpectedPreviousValue = false;
+    pOpts.failOnUnexpectedPreviousValue = false;
+    pOpts.runPatches = true;
+
+    await Patches.runPatches({ configuration: config });
+    const data = fs.readFileSync(testBinPath);
+    expect(data[0]).toBe(0xff);
+  });
+
+  test('throws error on SHA256 mismatch', async () => {
+    const config = ConfigurationDefaults.getDefaultConfigurationObject();
+    fs.writeFileSync(testBinPath, Buffer.from([0x00]));
+    config.patches = [
+      { name: 'test', patchFilename: 'test.patch', fileNamePath: testBinPath, enabled: true, sha256: 'bad' }
+    ];
+    const pOpts = config.options.patches;
+    pOpts.backupFiles = false;
+    pOpts.fileSizeCheck = false;
+    pOpts.skipWritingBinary = false;
+    pOpts.warnOnUnexpectedPreviousValue = false;
+    pOpts.failOnUnexpectedPreviousValue = false;
+    pOpts.runPatches = true;
+
+    await expect(Patches.runPatches({ configuration: config })).rejects.toThrow('SHA256 mismatch for patched file');
+    const data = fs.readFileSync(testBinPath);
+    expect(data[0]).toBe(0xff);
   });
 });
 
