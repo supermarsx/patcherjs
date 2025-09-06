@@ -68,7 +68,8 @@ export const configurationSchema = {
                     name: { type: 'string' },
                     patchFilename: { type: 'string' },
                     fileNamePath: { type: 'string' },
-                    enabled: { type: 'boolean' }
+                    enabled: { type: 'boolean' },
+                    sha256: { type: 'string' }
                 },
                 required: ['name', 'patchFilename', 'fileNamePath', 'enabled'],
                 additionalProperties: true

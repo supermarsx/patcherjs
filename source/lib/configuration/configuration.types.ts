@@ -52,9 +52,11 @@ export type ConfigurationObject = {
             /** Patch filename or path */
             patchFilename: string, 
             /** Filepath of the file to be patched */
-            fileNamePath: string, 
+            fileNamePath: string,
             /** Is this patch enabled */
-            enabled: boolean 
+            enabled: boolean,
+            /** Optional expected SHA256 of the final file */
+            sha256?: string
         }
     ] | [],
     commands: {
