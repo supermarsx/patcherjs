@@ -42,7 +42,8 @@ async function loadModules(platform) {
   }));
 
   const fsMock = {
-    access: jest.fn().mockResolvedValue(),
+    lstat: jest.fn().mockResolvedValue({ isSymbolicLink: () => false }),
+    readlink: jest.fn(),
     unlink: jest.fn().mockResolvedValue()
   };
   jest.unstable_mockModule('fs/promises', () => fsMock);
@@ -91,7 +92,8 @@ describe('CommandsServices parameter builders', () => {
       command: 'systemctl',
       parameters: ['mask', 'svc']
     });
-    expect(Fs.access).toHaveBeenCalledWith('/etc/systemd/system/svc.service');
+    expect(Fs.lstat).toHaveBeenCalledWith('/etc/systemd/system/svc.service');
+    expect(Fs.readlink).not.toHaveBeenCalled();
     expect(Fs.unlink).toHaveBeenCalledWith('/etc/systemd/system/svc.service');
   });
 
