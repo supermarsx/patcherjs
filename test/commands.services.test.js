@@ -41,11 +41,18 @@ async function loadModules(platform) {
     default: logger
   }));
 
+  const fsMock = {
+    lstat: jest.fn().mockResolvedValue({ isSymbolicLink: () => false }),
+    readlink: jest.fn(),
+    unlink: jest.fn().mockResolvedValue()
+  };
+  jest.unstable_mockModule('fs/promises', () => fsMock);
+
   const mod = await import('../source/lib/commands/commands.services.js');
   const Command = await import('../source/lib/commands/command.js');
   const Logger = await import('../source/lib/auxiliary/logger.js');
 
-  return { CommandsServices: mod.CommandsServices, Command, Logger };
+  return { CommandsServices: mod.CommandsServices, Command, Logger, Fs: fsMock };
 }
 
 const removeAliases = ['remove'];
@@ -74,13 +81,20 @@ describe('CommandsServices parameter builders', () => {
   });
 
   test.each(removeAliases)('remove alias %s on Linux', async (fn) => {
-    const { CommandsServices, Command } = await loadModules('linux');
+    const { CommandsServices, Command, Fs } = await loadModules('linux');
     Command.default.runCommand.mockResolvedValue('');
     await CommandsServices[fn]({ serviceName: 'svc' });
-    expect(Command.default.runCommand).toHaveBeenLastCalledWith({
+    expect(Command.default.runCommand).toHaveBeenNthCalledWith(1, {
       command: 'systemctl',
       parameters: ['disable', '--now', 'svc']
     });
+    expect(Command.default.runCommand).toHaveBeenNthCalledWith(2, {
+      command: 'systemctl',
+      parameters: ['mask', 'svc']
+    });
+    expect(Fs.lstat).toHaveBeenCalledWith('/etc/systemd/system/svc.service');
+    expect(Fs.readlink).not.toHaveBeenCalled();
+    expect(Fs.unlink).toHaveBeenCalledWith('/etc/systemd/system/svc.service');
   });
 
   test.each(stopAliases)('stop alias %s on Windows', async (fn) => {
