@@ -4,7 +4,7 @@ const { runCommand } = Command;
 import Logger from '../auxiliary/logger.js';
 const { logInfo, logError } = Logger;
 
-import { access, unlink } from 'fs/promises';
+import { lstat, readlink, unlink } from 'fs/promises';
 
 import {
     CommandServicesObject,
@@ -163,16 +163,22 @@ export namespace CommandsServices {
 
         if (process.platform === 'linux') {
             await runCommand({ command, parameters: ['disable', '--now', serviceName] });
-            const result: CommandResult = await runCommand({ command, parameters: ['mask', serviceName] });
 
             const unitFile = serviceName.endsWith('.service') ? serviceName : `${serviceName}.service`;
             const unitPath = `/etc/systemd/system/${unitFile}`;
             try {
-                await access(unitPath);
-                await unlink(unitPath);
+                const stats = await lstat(unitPath);
+                if (!stats.isSymbolicLink()) {
+                    await unlink(unitPath);
+                } else {
+                    const linkTarget = await readlink(unitPath);
+                    if (linkTarget !== '/dev/null') await unlink(unitPath);
+                }
             } catch {
                 /* ignore errors removing service unit file */
             }
+
+            const result: CommandResult = await runCommand({ command, parameters: ['mask', serviceName] });
             return result;
         }
 
