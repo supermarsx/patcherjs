@@ -1,8 +1,6 @@
 import Logger from '../auxiliary/logger.js';
 const { logError } = Logger;
 
-import { PatchParseError } from '../errors/index.js';
-
 export namespace ParserWrappers {
     /**
      *  Parse an integer from an hexadecimal formatted string
@@ -21,14 +19,14 @@ export namespace ParserWrappers {
         try {
             const radix: number = 16;
             const decimalString: number = parseInt(hexString, radix);
-            if (Number.isNaN(decimalString))
-                throw new PatchParseError(`Invalid hexadecimal string: ${hexString}`);
+            if (Number.isNaN(decimalString)) {
+                logError(`Invalid hexadecimal string: ${hexString}`);
+                return 0;
+            }
             return decimalString;
         } catch (error: any) {
             logError(`An error has occurred: ${error}`);
-            if (error instanceof PatchParseError)
-                throw error;
-            throw new PatchParseError(error?.message ?? String(error));
+            return 0;
         }
     }
 
@@ -41,7 +39,7 @@ export namespace ParserWrappers {
      * hexParseBig({ hexString: 'ffffffff9' });
      * ```
      * result: 68719476729n
-     * @returns BigInt representation of an hexadecimal formatted string
+     * @returns BigInt representation of an hexadecimal formatted string or 0n on failure
      * @since 0.0.2
      */
     export function hexParseBig({ hexString }:
@@ -51,9 +49,7 @@ export namespace ParserWrappers {
             return value;
         } catch (error: any) {
             logError(`An error has occurred: ${error}`);
-            if (error instanceof PatchParseError)
-                throw error;
-            throw new PatchParseError(`Invalid hexadecimal string: ${hexString}`);
+            return BigInt(0);
         }
     }
 
