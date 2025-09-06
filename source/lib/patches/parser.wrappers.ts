@@ -41,7 +41,7 @@ export namespace ParserWrappers {
      * hexParseBig({ hexString: 'ffffffff9' });
      * ```
      * result: 68719476729n
-     * @returns BigInt representation of an hexadecimal formatted string or 0n on failure
+     * @returns BigInt representation of an hexadecimal formatted string
      * @since 0.0.2
      */
     export function hexParseBig({ hexString }:
@@ -51,7 +51,9 @@ export namespace ParserWrappers {
             return value;
         } catch (error: any) {
             logError(`An error has occurred: ${error}`);
-            return BigInt(0);
+            if (error instanceof PatchParseError)
+                throw error;
+            throw new PatchParseError(`Invalid hexadecimal string: ${hexString}`);
         }
     }
 
