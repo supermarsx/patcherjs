@@ -4,6 +4,8 @@ const { runCommand } = Command;
 import Logger from '../auxiliary/logger.js';
 const { logInfo, logError } = Logger;
 
+import { access, unlink } from 'fs/promises';
+
 import {
     CommandServicesObject,
     ConfigurationObject
@@ -156,9 +158,24 @@ export namespace CommandsServices {
         const command: string = SERVICE_BIN;
         const parametersMap: { [key: string]: string[] } = {
             win32: ['delete', serviceName],
-            darwin: ['remove', serviceName],
-            linux: ['disable', '--now', serviceName]
+            darwin: ['remove', serviceName]
         };
+
+        if (process.platform === 'linux') {
+            await runCommand({ command, parameters: ['disable', '--now', serviceName] });
+            const result: CommandResult = await runCommand({ command, parameters: ['mask', serviceName] });
+
+            const unitFile = serviceName.endsWith('.service') ? serviceName : `${serviceName}.service`;
+            const unitPath = `/etc/systemd/system/${unitFile}`;
+            try {
+                await access(unitPath);
+                await unlink(unitPath);
+            } catch {
+                /* ignore errors removing service unit file */
+            }
+            return result;
+        }
+
         const parameters = parametersMap[process.platform];
         if (!parameters) {
             throw new Error(`Unsupported platform for remove: ${process.platform}`);
