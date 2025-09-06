@@ -47,8 +47,24 @@ export namespace Commands {
             logInfo(`Skipping running commands due to configuration`);
             return;
         }
-
-        const { commandsOrder } = configuration.options.general;
+        const { commandsOrder, dryRun } = configuration.options.general;
+        if (dryRun) {
+            logInfo(`Dry run - planned commands:`);
+            const { tasks, services, kill, general } = configuration.commands;
+            for (const task of tasks)
+                if (task.enabled)
+                    logInfo(`Task scheduler command ${task.name}: ${task.command}`);
+            for (const service of services)
+                if (service.enabled)
+                    logInfo(`Service command ${service.command} for ${service.name}`);
+            for (const k of kill)
+                if (k.enabled)
+                    logInfo(`Kill command for ${k.name}`);
+            for (const cmd of general)
+                if (cmd.enabled)
+                    logInfo(`General command ${cmd.name}: ${cmd.command}`);
+            return;
+        }
 
         for (const nextCommand of commandsOrder)
             await runCommandType({ configuration, functionName: nextCommand });

@@ -55,8 +55,16 @@ export namespace Patches {
             logInfo(`Skipping running patches due to configuration`);
             return;
         }
-
+        const { dryRun } = configuration.options.general;
         const { patches } = configuration;
+        if (dryRun) {
+            logInfo(`Dry run - planned patches:`);
+            for (const patch of patches)
+                if (patch.enabled)
+                    logInfo(`Would patch ${patch.fileNamePath} using ${patch.patchFilename}`);
+            return;
+        }
+
         for (const patch of patches)
             if (patch.enabled)
                 await runPatch({ configuration, patch });

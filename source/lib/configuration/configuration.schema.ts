@@ -15,7 +15,8 @@ export const configurationSchema = {
                         logging: { type: 'boolean' },
                         runningOrder: { type: 'array', items: { type: 'string', enum: Object.values(COMPONENTS) } },
                         commandsOrder: { type: 'array', items: { type: 'string', enum: Object.values(COMMAND_TYPES) } },
-                        onlyPackingMode: { type: 'boolean' }
+                        onlyPackingMode: { type: 'boolean' },
+                        dryRun: { type: 'boolean' }
                     },
                     additionalProperties: true
                 },

@@ -143,9 +143,13 @@ describe('Command helpers - parameters', () => {
       parameters: ['disable', 'svc']
     });
     await CommandsServices.remove({ serviceName: 'svc' });
-    expect(Command.default.runCommand).toHaveBeenLastCalledWith({
+    expect(Command.default.runCommand).toHaveBeenNthCalledWith(3, {
       command: 'systemctl',
       parameters: ['disable', '--now', 'svc']
+    });
+    expect(Command.default.runCommand).toHaveBeenLastCalledWith({
+      command: 'systemctl',
+      parameters: ['mask', 'svc']
     });
   });
 

@@ -40,7 +40,15 @@ export namespace Filedrops {
             logInfo(`Skipping filedrops due to configuration`);
             return;
         }
+        const { dryRun } = configuration.options.general;
         const { filedrops } = configuration;
+        if (dryRun) {
+            logInfo(`Dry run - planned filedrops:`);
+            for (const filedrop of filedrops)
+                if (filedrop.enabled)
+                    logInfo(`Would drop ${filedrop.fileDropName} to ${filedrop.fileNamePath}`);
+            return;
+        }
         for (const filedrop of filedrops)
             if (filedrop.enabled)
                 await runFiledrop({ configuration, filedrop });
