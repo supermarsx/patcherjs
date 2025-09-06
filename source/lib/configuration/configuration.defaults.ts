@@ -34,7 +34,8 @@ export namespace ConfigurationDefaults {
                         COMMAND_TYPES.GENERAL
                     ],
                     onlyPackingMode: false,
-                    progressInterval: 0
+                    progressInterval: 0,
+                    dryRun: false
                 },
                 patches: {
                     runPatches: true,

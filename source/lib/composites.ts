@@ -127,6 +127,9 @@ export namespace Patcher {
             const fn = compositeMap[functionName];
             if (!fn)
                 throw new Error(`Unknown function: ${functionName}`);
+            const { dryRun } = configuration.options.general;
+            if (dryRun)
+                logInfo(`Dry run enabled - planning ${functionName}`);
             await fn({ configuration });
         } catch (error) {
             logError(`Failed to process function ${error}`);

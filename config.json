@@ -16,7 +16,8 @@
         "general"
       ],
       "onlyPackingMode": false,
-      "progressInterval": 0
+      "progressInterval": 0,
+      "dryRun": false
     },
     "patches": {
       "runPatches": true,

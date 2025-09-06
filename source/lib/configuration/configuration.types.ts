@@ -13,7 +13,8 @@ export type ConfigurationObject = {
             commandsOrder: CommandType[] | [],
             onlyPackingMode: boolean,
             /** Interval for emitting progress messages during patching */
-            progressInterval: number
+            progressInterval: number,
+            dryRun: boolean
         },
         patches: {
             runPatches: boolean,
