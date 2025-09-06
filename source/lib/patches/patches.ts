@@ -10,7 +10,7 @@ import { join } from 'path';
 import { createHash } from 'crypto';
 
 import File from '../auxiliary/file.js';
-const { backupFile, getFileSizeUsingPath, readBinaryFile, writeBinaryFile } = File;
+const { backupFile, getFileSizeUsingPath, readBinaryFile, writeBinaryFile, createReadStream } = File;
 
 import Path from '../auxiliary/path.js';
 const { resolveEnvPath } = Path;
@@ -99,8 +99,13 @@ export namespace Patches {
                 if (patchOptions.skipWritingBinary === false) {
                     await BufferUtils.patchLargeFile({ filePath, patchData, options: patchOptions, progressInterval });
                     if (patch.sha256) {
-                        const writtenData: Buffer = await readBinaryFile({ filePath });
-                        const writtenHash: string = createHash('sha256').update(writtenData).digest('hex');
+                        const writtenHash: string = await new Promise((resolve, reject) => {
+                            const stream = createReadStream({ filePath });
+                            const hash = createHash('sha256');
+                            stream.on('error', reject);
+                            stream.on('data', (data: Buffer | string) => hash.update(data));
+                            stream.on('end', () => resolve(hash.digest('hex')));
+                        });
                         if (writtenHash !== patch.sha256) {
                             logError(`SHA256 mismatch for patched file`);
                             throw new Error(`SHA256 mismatch for patched file`);
