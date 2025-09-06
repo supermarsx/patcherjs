@@ -85,6 +85,11 @@ describe('Parser.parsePatchFile', () => {
     await expect(Parser.parsePatchFile({ fileData: data })).rejects.toThrow(PatchParseError);
   });
 
+  test('throws for invalid 64-bit hex values', async () => {
+    const data = '00000000: ZZZZZZZZZZZZZZZZ 0000000000000001';
+    await expect(Parser.parsePatchFile({ fileData: data })).rejects.toThrow(PatchParseError);
+  });
+
   test('parses comments and empty lines identically to streaming parser', async () => {
     const data = [
       '',
@@ -111,5 +116,11 @@ describe('Parser.parsePatchFile', () => {
 describe('ParserWrappers.hexParse', () => {
   test('throws for invalid hex strings', () => {
     expect(() => ParserWrappers.hexParse({ hexString: 'g1' })).toThrow(PatchParseError);
+  });
+});
+
+describe('ParserWrappers.hexParseBig', () => {
+  test('throws for invalid hex strings', () => {
+    expect(() => ParserWrappers.hexParseBig({ hexString: 'g1' })).toThrow(PatchParseError);
   });
 });
