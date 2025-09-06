@@ -197,7 +197,9 @@ export namespace Parser {
             return patchObject;
         } catch (error: any) {
             logError(`An error has occurred: ${error}`);
-            throw error;
+            if (error instanceof PatchParseError)
+                throw error;
+            throw new PatchParseError(error?.message ?? String(error));
         }
     }
 }

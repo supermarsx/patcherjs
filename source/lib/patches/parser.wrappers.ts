@@ -1,6 +1,8 @@
 import Logger from '../auxiliary/logger.js';
 const { logError } = Logger;
 
+import { PatchParseError } from '../errors/index.js';
+
 export namespace ParserWrappers {
     /**
      *  Parse an integer from an hexadecimal formatted string
@@ -19,14 +21,14 @@ export namespace ParserWrappers {
         try {
             const radix: number = 16;
             const decimalString: number = parseInt(hexString, radix);
-            if (Number.isNaN(decimalString)) {
-                logError(`Invalid hexadecimal string: ${hexString}`);
-                return 0;
-            }
+            if (Number.isNaN(decimalString))
+                throw new PatchParseError(`Invalid hexadecimal string: ${hexString}`);
             return decimalString;
         } catch (error: any) {
             logError(`An error has occurred: ${error}`);
-            return 0;
+            if (error instanceof PatchParseError)
+                throw error;
+            throw new PatchParseError(error?.message ?? String(error));
         }
     }
 
