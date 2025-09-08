@@ -142,9 +142,25 @@ export namespace Parser {
             const offsetValuesDelimiter = /:\s+/;
             const previousNewValueDelimiter = ' ';
 
-            const [offsetString, valuesString] = patchLine.split(offsetValuesDelimiter);
-            if (!offsetString || !valuesString)
+            const [rawOffsetString, valuesString] = patchLine.split(offsetValuesDelimiter);
+            if (!rawOffsetString || !valuesString)
                 throw new PatchParseError(`Patch at line ${index + 1} is missing offset or values`);
+
+            let offsetString = rawOffsetString.trim();
+            let occurrence: number | undefined;
+            let allOccurrences: boolean | undefined;
+            if (offsetString.includes('@')) {
+                const [patternPart, occPart] = offsetString.split('@');
+                offsetString = patternPart.trim();
+                if (occPart === '*' || occPart.toLowerCase() === 'all')
+                    allOccurrences = true;
+                else {
+                    const occNum = parseInt(occPart, 10);
+                    if (isNaN(occNum) || occNum < 1)
+                        throw new PatchParseError(`Invalid occurrence at line ${index + 1}`);
+                    occurrence = occNum;
+                }
+            }
 
             const [previousValueString, newValueString] = valuesString.split(previousNewValueDelimiter);
             if (!previousValueString || !newValueString)
@@ -189,6 +205,8 @@ export namespace Parser {
             const patchObject = {
                 offset,
                 pattern,
+                occurrence,
+                allOccurrences,
                 previousValue,
                 newValue,
                 byteLength: typedByteLength

@@ -6,6 +6,10 @@ export type PatchObject = {
     offset?: bigint,
     /** Byte pattern to locate offset dynamically */
     pattern?: Buffer | string | number[],
+    /** 1-based occurrence of pattern to patch */
+    occurrence?: number,
+    /** Patch all occurrences of pattern */
+    allOccurrences?: boolean,
     /** Decimal current/previous value to find */
     previousValue: number | bigint,
     /** Decimal new value to previous/current value */

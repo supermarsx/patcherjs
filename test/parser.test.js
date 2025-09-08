@@ -80,6 +80,22 @@ describe('Parser.parsePatchFile', () => {
     await expect(Parser.parsePatchFile({ fileData: data })).rejects.toThrow(PatchParseError);
   });
 
+  test('parses pattern occurrence', async () => {
+    const data = 'aa bb cc dd@2: ddccbbaa 44332211';
+    const patches = await Parser.parsePatchFile({ fileData: data });
+    expect(patches).toEqual([
+      { pattern: Buffer.from([0xaa, 0xbb, 0xcc, 0xdd]), previousValue: 0xddccbbaa, newValue: 0x44332211, byteLength: 4, occurrence: 2 }
+    ]);
+  });
+
+  test('parses pattern all occurrences', async () => {
+    const data = 'aa bb cc dd@*: ddccbbaa 44332211';
+    const patches = await Parser.parsePatchFile({ fileData: data });
+    expect(patches).toEqual([
+      { pattern: Buffer.from([0xaa, 0xbb, 0xcc, 0xdd]), previousValue: 0xddccbbaa, newValue: 0x44332211, byteLength: 4, allOccurrences: true }
+    ]);
+  });
+
   test('parses comments and empty lines identically to streaming parser', async () => {
     const data = [
       '',

@@ -171,12 +171,28 @@ export namespace BufferUtils {
             for (const patch of patchData) {
                 if (patch.pattern) {
                     const patternBuf = patternToBuffer(patch.pattern);
-                    const idx = fileBuffer!.indexOf(patternBuf);
-                    if (idx === -1) {
-                        logWarn(`Pattern not found, skipping patch`);
-                        continue;
+                    let searchStart = 0;
+                    let occurrenceCount = 0;
+                    let found = false;
+                    while (true) {
+                        const idx = fileBuffer!.indexOf(patternBuf, searchStart);
+                        if (idx === -1)
+                            break;
+                        occurrenceCount++;
+                        const isTarget = patch.allOccurrences === true ||
+                            patch.occurrence === occurrenceCount ||
+                            (patch.occurrence === undefined && occurrenceCount === 1);
+                        if (isTarget) {
+                            resolved.push({ ...patch, offset: BigInt(idx) });
+                            found = true;
+                        }
+                        if (patch.allOccurrences !== true &&
+                            (patch.occurrence === undefined || patch.occurrence === occurrenceCount))
+                            break;
+                        searchStart = idx + patternBuf.length;
                     }
-                    resolved.push({ ...patch, offset: BigInt(idx) });
+                    if (!found)
+                        logWarn(`Pattern not found, skipping patch`);
                 } else if (patch.offset !== undefined)
                     resolved.push(patch);
             }
@@ -252,26 +268,43 @@ export namespace BufferUtils {
 
         let working = buffer;
         const fileSize: number = working.length;
-        const total: number = patchData.length;
-        let processed = 0;
+        const resolved: PatchArray = [];
         for (const patch of patchData) {
-            const { previousValue, newValue, byteLength } = patch;
-            let offsetNumber: number | undefined;
             if (patch.pattern) {
                 const patternBuf = patternToBuffer(patch.pattern);
-                const idx = working.indexOf(patternBuf);
-                if (idx === -1) {
-                    logWarn(`Pattern not found, skipping patch`);
-                    continue;
+                let searchStart = 0;
+                let occurrenceCount = 0;
+                let found = false;
+                while (true) {
+                    const idx = working.indexOf(patternBuf, searchStart);
+                    if (idx === -1)
+                        break;
+                    occurrenceCount++;
+                    const isTarget = patch.allOccurrences === true ||
+                        patch.occurrence === occurrenceCount ||
+                        (patch.occurrence === undefined && occurrenceCount === 1);
+                    if (isTarget) {
+                        resolved.push({ ...patch, offset: BigInt(idx) });
+                        found = true;
+                    }
+                    if (patch.allOccurrences !== true &&
+                        (patch.occurrence === undefined || patch.occurrence === occurrenceCount))
+                        break;
+                    searchStart = idx + patternBuf.length;
                 }
-                offsetNumber = idx;
-            } else if (patch.offset !== undefined) {
-                offsetNumber = Number(patch.offset);
-            }
-            if (offsetNumber === undefined) {
+                if (!found)
+                    logWarn(`Pattern not found, skipping patch`);
+            } else if (patch.offset !== undefined)
+                resolved.push(patch);
+            else
                 logWarn(`No offset or pattern provided, skipping patch`);
-                continue;
-            }
+        }
+
+        const total: number = resolved.length;
+        let processed = 0;
+        for (const patch of resolved) {
+            const { previousValue, newValue, byteLength, offset } = patch;
+            const offsetNumber = Number(offset);
             const { forcePatch, unpatchMode, nullPatch, failOnUnexpectedPreviousValue, warnOnUnexpectedPreviousValue, skipWritePatch, allowOffsetOverflow, verifyPatch, bigEndian } = options;
             if (offsetNumber >= fileSize && allowOffsetOverflow !== true) {
                 logWarn(`Offset ${offsetNumber} exceeds file size ${fileSize}, skipping patch`);
