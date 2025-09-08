@@ -1,5 +1,12 @@
 import { EventEmitter } from 'events';
 
+/**
+ * Event emitter for patching operations.
+ *
+ * Currently emits:
+ * - `progress` &mdash; Fired with `{ processed: number; total: number }` while
+ *   applying a patch file.
+ */
 export const patchEmitter = new EventEmitter();
 
 import Logger from '../auxiliary/logger.js';

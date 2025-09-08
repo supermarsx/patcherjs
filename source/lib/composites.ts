@@ -137,6 +137,7 @@ export namespace Patcher {
         }
     }
 
+    /** Emits patch progress events. */
     export const patchEmitter = patchesEmitter;
 
     export async function runPatches({ configuration }:
