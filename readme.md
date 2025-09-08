@@ -99,6 +99,35 @@ Run the Jest suite with the provided npm script. It builds the TypeScript source
 npm test
 ```
 
+## Emitters
+
+`patcherjs` exposes several `EventEmitter` instances that allow consumers to
+observe progress and lifecycle events:
+
+| Emitter | Event | Payload |
+| --- | --- | --- |
+| `patchEmitter` | `progress` | `{ processed: number; total: number }` |
+| `filedropEmitter` | `start` | `{ filedrop: FiledropsObject }` |
+|  | `success` | `{ filedrop: FiledropsObject, destinationPath: string }` |
+|  | `error` | `{ filedrop: FiledropsObject, error: unknown }` |
+| `packagingEmitter` | `start` | `{ filedrop: FiledropsObject }` |
+|  | `success` | `{ filedrop: FiledropsObject, destinationPath: string }` |
+|  | `error` | `{ filedrop: FiledropsObject, error: unknown }` |
+
+The emitters can be imported directly:
+
+```ts
+import { patchEmitter, filedropEmitter, packagingEmitter } from 'patcherjs';
+```
+
+or accessed through the `Patcher` namespace:
+
+```ts
+import { Patcher } from 'patcherjs';
+
+Patcher.patchEmitter.on('progress', console.log);
+```
+
 #### Logger configuration
 
 The logger can prefix each message with an ISO timestamp. Enable timestamps by setting the environment variable `LOG_TIMESTAMPS=true` or by calling `Logger.setConfig({ timestamps: true })`. When not enabled, messages are written without a timestamp.

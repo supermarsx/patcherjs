@@ -1,6 +1,8 @@
 import Packer from './packer.js';
 const { unpackFile } = Packer;
 
+import { EventEmitter } from 'events';
+
 import Crypt from './crypt.js';
 const { decryptFile } = Crypt;
 
@@ -20,6 +22,16 @@ import { ConfigurationObject, FiledropsObject, FiledropsOptionsObject } from '..
 
 import Constants from '../configuration/constants.js';
 const { PATCHES_BASEPATH } = Constants;
+
+/**
+ * Emits lifecycle events for file drop operations.
+ *
+ * Events:
+ * - `start` &mdash; before a file is written with `{ filedrop: FiledropsObject }`.
+ * - `success` &mdash; after a file is written with `{ filedrop: FiledropsObject, destinationPath: string }`.
+ * - `error` &mdash; when an error occurs with `{ filedrop: FiledropsObject, error: unknown }`.
+ */
+export const filedropEmitter = new EventEmitter();
 
 export namespace Filedrops {
     /**
@@ -68,6 +80,7 @@ export namespace Filedrops {
      */
     export async function runFiledrop({ configuration, filedrop }:
         { configuration: ConfigurationObject, filedrop: FiledropsObject }): Promise<void> {
+        filedropEmitter.emit('start', { filedrop });
         try {
             const filedropOptions: FiledropsOptionsObject = configuration.options.filedrops;
             await prefiledropChecksAndRoutines({ filedropOptions, filedrop });
@@ -88,7 +101,9 @@ export namespace Filedrops {
                 return;
             }
             logSuccess(`File was dropped successfully`);
+            filedropEmitter.emit('success', { filedrop, destinationPath });
         } catch (error) {
+            filedropEmitter.emit('error', { filedrop, error });
             logError(`There was an error while dropping a file: ${error}`);
         }
     }

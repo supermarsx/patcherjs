@@ -18,4 +18,13 @@ export * from './auxiliary/uac.js';
 export * from './auxiliary/logger.js';
 export * from './composites.js';
 
+/** Emits patch progress information. */
+export { patchEmitter } from './patches/patches.js';
+
+/** Emits events for file drop operations. */
+export { filedropEmitter } from './filedrops/filedrops.js';
+
+/** Emits events for packaging operations. */
+export { packagingEmitter } from './build/packaging.js';
+
 export default Patcher;
