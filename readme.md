@@ -49,8 +49,9 @@ $ npm run ts-build
 $ node dist/standalone/executable.js
 $ node dist/standalone/executable.js --config ./my-config.yaml
 $ node dist/standalone/executable.js -c ./my-config.yaml
+$ node dist/standalone/executable.js --debug --no-wait
 ```
-The `--config` (or `-c`) option allows you to specify a custom configuration file instead of the default `config.json`. Both JSON and YAML files are supported. You can also use the form `--config=<path>`.
+The `--config` (or `-c`) option allows you to specify a custom configuration file instead of the default `config.json`. Both JSON and YAML files are supported. You can also use the form `--config=<path>`. Use `--debug` to enable debug output and `--no-wait` to exit without waiting for a keypress.
 
 #### Running on Linux/macOS
 
@@ -60,6 +61,7 @@ Once the project adds support for these platforms the steps are the same:
 npm run ts-build
 node dist/standalone/executable.js --config ./my-config.yaml
 node dist/standalone/executable.js --config=./my-config.yaml
+node dist/standalone/executable.js --debug --no-wait
 ```
 The build pipeline will skip the signing step on non-Windows systems.
 #### npm scripts
