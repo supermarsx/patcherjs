@@ -1,4 +1,4 @@
-import Patcher from '../index.js';
+import Patcher, { Debug } from '../index.js';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
@@ -9,6 +9,16 @@ const argv = yargs(hideBin(process.argv))
     alias: 'c',
     type: 'string',
     describe: 'Path to configuration file',
+  })
+  .option('debug', {
+    type: 'boolean',
+    describe: 'Enable debug mode',
+    default: false,
+  })
+  .option('wait', {
+    type: 'boolean',
+    describe: 'Wait for keypress before exiting',
+    default: true,
   })
   .help()
   .version()
@@ -22,7 +32,12 @@ const argv = yargs(hideBin(process.argv))
 
 /** Just run the patcher */
 try {
-  await runPatcher({ configFilePath: argv.config as string | undefined });
+  if (argv.debug) Debug.enable({ logging: argv.debug });
+
+  await runPatcher({
+    configFilePath: argv.config as string | undefined,
+    waitForExit: argv.wait as boolean,
+  });
 } catch (error) {
   console.error(error);
   process.exitCode = 1;
