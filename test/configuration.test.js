@@ -16,6 +16,7 @@ describe('Configuration.readConfigurationFile', () => {
     const filePath = join(dir, 'config.json');
     const configObj = ConfigurationDefaults.getDefaultConfigurationObject();
     configObj.options.general.debug = false;
+    configObj.options.general.progressInterval = 1;
     fs.writeFileSync(filePath, JSON.stringify(configObj), 'utf-8');
 
     const { Configuration } = await import('../source/lib/configuration/configuration.ts');
@@ -30,6 +31,7 @@ describe('Configuration.readConfigurationFile', () => {
     const filePath = join(dir, 'config.yaml');
     const configObj = ConfigurationDefaults.getDefaultConfigurationObject();
     configObj.options.general.debug = false;
+    configObj.options.general.progressInterval = 1;
     fs.writeFileSync(filePath, yaml.dump(configObj), 'utf-8');
 
     const { Configuration } = await import('../source/lib/configuration/configuration.ts');
@@ -44,6 +46,7 @@ describe('Configuration.readConfigurationFile', () => {
     const jsonPath = join(dir, 'config.json');
     const yamlPath = join(dir, 'config.yaml');
     const configObj = ConfigurationDefaults.getDefaultConfigurationObject();
+    configObj.options.general.progressInterval = 1;
     fs.writeFileSync(jsonPath, JSON.stringify(configObj), 'utf-8');
     fs.writeFileSync(yamlPath, yaml.dump(configObj), 'utf-8');
 
@@ -69,6 +72,26 @@ describe('Configuration.readConfigurationFile', () => {
 
   test('validation after merge rejects invalid values', async () => {
     const invalid = { options: { general: { debug: 'false' } } };
+    const defaults = ConfigurationDefaults.getDefaultConfigurationObject();
+    const { Configuration } = await import('../source/lib/configuration/configuration.ts');
+    const merged = Configuration.mergeWithDefaults(defaults, invalid);
+    expect(() => Configuration.validateConfiguration(merged)).toThrow('Configuration validation failed');
+  });
+
+  test('rejects non-number progressInterval in configuration JSON', async () => {
+    const dir = fs.mkdtempSync(join(os.tmpdir(), 'cfg-'));
+    const filePath = join(dir, 'config.json');
+    const invalid = { options: { general: { progressInterval: 'invalid' } } };
+    fs.writeFileSync(filePath, JSON.stringify(invalid), 'utf-8');
+
+    const { Configuration } = await import('../source/lib/configuration/configuration.ts');
+
+    await expect(Configuration.readConfigurationFile({ filePath })).rejects.toThrow('Configuration validation failed');
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+
+  test('validation after merge rejects non-number progressInterval', async () => {
+    const invalid = { options: { general: { progressInterval: 'invalid' } } };
     const defaults = ConfigurationDefaults.getDefaultConfigurationObject();
     const { Configuration } = await import('../source/lib/configuration/configuration.ts');
     const merged = Configuration.mergeWithDefaults(defaults, invalid);

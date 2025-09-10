@@ -16,6 +16,7 @@ export const configurationSchema = {
                         runningOrder: { type: 'array', items: { type: 'string', enum: Object.values(COMPONENTS) } },
                         commandsOrder: { type: 'array', items: { type: 'string', enum: Object.values(COMMAND_TYPES) } },
                         onlyPackingMode: { type: 'boolean' },
+                        progressInterval: { type: 'number' },
                         dryRun: { type: 'boolean' }
                     },
                     additionalProperties: true

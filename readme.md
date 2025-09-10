@@ -216,7 +216,8 @@ Patcherjs functions with a configuration json file using the following structure
         "kill",  // Kill commands
         "general" // General arbitrary commands
       ],
-      "onlyPackingMode": false // Use when you want to pack files using the SEA without access to source
+      "onlyPackingMode": false, // Use when you want to pack files using the SEA without access to source
+      "progressInterval": 0 // Interval for emitting progress messages during patching
     },
     "patches": { // OPTIONS > PATCHES, Patches related options
       "runPatches": true, // Set to false if you want to skip patches for some reason
