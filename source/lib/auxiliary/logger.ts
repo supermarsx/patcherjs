@@ -121,6 +121,10 @@ export namespace Logger {
     export function logError(message: string): void {
         logMessage('error', message, red_bt);
     }
+
+    export async function flush(): Promise<void> {
+        await writeQueue;
+    }
 }
 
 export default Logger;

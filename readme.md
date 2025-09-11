@@ -134,6 +134,8 @@ Patcher.patchEmitter.on('progress', console.log);
 
 The logger can prefix each message with an ISO timestamp. Enable timestamps by setting the environment variable `LOG_TIMESTAMPS=true` or by calling `Logger.setConfig({ timestamps: true })`. When not enabled, messages are written without a timestamp.
 
+Call `await Logger.flush()` to wait for pending log writes to finish. The patcher invokes `flush` on shutdown and registers it with `process.on('beforeExit')`, but it can also be awaited manually when embedding the logger elsewhere.
+
 #### Example files
 
 The project comes with an example `.patch` file and a `.dll` file to be packed, these files should be removed and you should add your own files.
