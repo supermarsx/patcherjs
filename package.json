@@ -36,6 +36,7 @@
     "@types/node-7z": "^2.1.5",
     "@typescript-eslint/eslint-plugin": "^8.35.0",
     "@typescript-eslint/parser": "^8.35.0",
+    "cross-env": "^10.0.0",
     "eslint": "^9.29.0",
     "jest": "^30.0.2",
     "ts-jest": "^29.1.1",
@@ -61,7 +62,7 @@
     "sea-copy-7z": "node ./dist/buildscripts/copyFiles.js sevenzip",
     "generate-docs": "npx typedoc source/",
     "start": "node ./dist/standalone/executable.js",
-    "test": "npm run ts-build && NODE_OPTIONS=--experimental-vm-modules jest",
+    "test": "npm run ts-build && cross-env NODE_OPTIONS=--experimental-vm-modules jest",
     "lint": "ESLINT_USE_FLAT_CONFIG=false eslint -c .eslintrc.json \"source/**/*.ts\"",
     "typecheck": "tsc --noEmit"
   },
