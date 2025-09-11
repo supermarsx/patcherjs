@@ -17,7 +17,7 @@ import Uac from './auxiliary/uac.js';
 const { adminCheck } = Uac;
 
 import Logger from './auxiliary/logger.js';
-const { logInfo, logSuccess, logError } = Logger;
+const { logInfo, logSuccess, logError, flush } = Logger;
 import Debug from './auxiliary/debug.js';
 
 import Console from './auxiliary/console.js';
@@ -32,6 +32,8 @@ const {
     COMPONENTS,
     CONFIG_FILEPATH
 } = Constants;
+
+process.on('beforeExit', flush);
 
 export namespace Patcher {
     /**
@@ -80,6 +82,8 @@ export namespace Patcher {
                 logInfo(`Press any key to close application...`);
                 await waitForKeypress();
             }
+
+            await flush();
         }
     }
 
